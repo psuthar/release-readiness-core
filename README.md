@@ -29,6 +29,7 @@ uv build
 - PR risk input schema: `docs/contracts/pr-risk-input-v1.schema.json`
 - Readiness output schema: `docs/contracts/release-readiness-output-v1.schema.json`
 - Validation config draft schema (SCRUM-167): `docs/contracts/validation-config-v1.schema.json`
+- Contract reference guide: `docs/contracts/README.md`
 
 ### MCP Setup (Cursor + Claude)
 

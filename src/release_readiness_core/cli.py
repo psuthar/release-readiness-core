@@ -9,7 +9,11 @@ from typing import Sequence
 
 from .engine import ValidationResult, evaluate_release_readiness
 from .report import render_markdown_report
-from .runtime_config import parse_runtime_config, summarize_high_priority_hits
+from .runtime_config import (
+    parse_runtime_config,
+    resolve_runtime_defaults,
+    summarize_high_priority_hits,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -38,6 +42,21 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["json", "markdown"],
         help="Output format for report rendering.",
     )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Optional output directory; falls back to config paths.output_dir_default.",
+    )
+    parser.add_argument(
+        "--base-ref",
+        default=None,
+        help="Optional base ref; falls back to env var configured in config env.base_ref_env_var.",
+    )
+    parser.add_argument(
+        "--enforcement-mode",
+        default=None,
+        help="Optional enforcement mode; falls back to env var configured in config env.enforcement_mode_env_var.",
+    )
     return parser
 
 
@@ -56,6 +75,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     ]
     report = evaluate_release_readiness(validations)
     config = parse_runtime_config(json.loads(args.config_json))
+    defaults = resolve_runtime_defaults(config)
+    _base_ref = args.base_ref or defaults["base_ref"]
+    _enforcement_mode = args.enforcement_mode or defaults["enforcement_mode"]
+    _output_dir = args.output_dir or defaults["output_dir"]
     pr_risk_payload = json.loads(args.pr_risk_json)
     high_priority_hits = (
         summarize_high_priority_hits(pr_risk_payload, config.high_priority_evidence_ids)

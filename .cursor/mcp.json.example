@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "talkback": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://talkback-895n.onrender.com/mcp/",
+        "--header",
+        "Authorization:${TALKBACK_MCP_AUTH_HEADER}",
+        "--header",
+        "X-Talkback-Acting-User-Id:${TALKBACK_MCP_ACTING_USER_ID}"
+      ],
+      "env": {
+        "TALKBACK_MCP_AUTH_HEADER": "Bearer <talkback-api-key>",
+        "TALKBACK_MCP_ACTING_USER_ID": "<talkback-user-uuid>"
+      }
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<github-pat>"
+      }
+    },
+    "atlassian": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@xuandev/atlassian-mcp"
+      ],
+      "env": {
+        "ATLASSIAN_DOMAIN": "<your-domain>.atlassian.net",
+        "ATLASSIAN_EMAIL": "<your-email>",
+        "ATLASSIAN_API_TOKEN": "<atlassian-api-token>"
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/validation-config-v1.schema.json",
+  "title": "Release readiness validation config v1 (SCRUM-167 target)",
+  "description": "Shape aligned with TalkBack ops/release-readiness/config.yaml, extended for config-driven evidence keys. Defaults should preserve TalkBack parity.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "validations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["description"],
+        "properties": {
+          "description": { "type": "string" }
+        }
+      },
+      "description": "Registry of known validation keys and human descriptions."
+    },
+    "evidence_boolean_keys": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Top-level evidence JSON keys (smoke/e2e) that set val_map[k]=True when true. Replaces the hardcoded tuple in merge_validations. TalkBack default: auth_session, upload_extraction, nav_assets, viewer_materials, qa_rag, migrations_validated."
+    },
+    "infer_validations_when_pass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["smoke", "e2e"],
+      "properties": {
+        "smoke": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "e2e": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "risk_category_to_required_validation": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Optional map from risk category (from risk_from_paths) to required validation key. TalkBack default includes migrations -> migrations_validated; other categories use identity mapping."
+    },
+    "risk_from_paths": {
+      "type": "array",
+      "description": "Unchanged from TalkBack: rules mapping path patterns to risk categories."
+    },
+    "risky_config_patterns": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "scoring": { "type": "object" },
+    "remediation": { "type": "object" },
+    "e2e_critical_name_patterns": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

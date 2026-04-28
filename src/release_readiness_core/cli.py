@@ -8,6 +8,8 @@ from dataclasses import asdict
 from typing import Sequence
 
 from .engine import ValidationResult, evaluate_release_readiness
+from .report import render_markdown_report
+from .runtime_config import parse_runtime_config, summarize_high_priority_hits
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +21,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--input-json",
         default="[]",
         help="JSON array of validation objects with fields: key, status, detail(optional).",
+    )
+    parser.add_argument(
+        "--config-json",
+        default="{}",
+        help="JSON object with optional fields: report_title, pr_risk.high_priority_evidence_ids.",
+    )
+    parser.add_argument(
+        "--pr-risk-json",
+        default="{}",
+        help="Optional JSON object for PR-risk payload, including evidence entries.",
+    )
+    parser.add_argument(
+        "--output-format",
+        default="json",
+        choices=["json", "markdown"],
+        help="Output format for report rendering.",
     )
     return parser
 
@@ -37,6 +55,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         for item in raw_items
     ]
     report = evaluate_release_readiness(validations)
-    print(json.dumps(asdict(report), indent=2))
+    config = parse_runtime_config(json.loads(args.config_json))
+    pr_risk_payload = json.loads(args.pr_risk_json)
+    high_priority_hits = (
+        summarize_high_priority_hits(pr_risk_payload, config.high_priority_evidence_ids)
+        if isinstance(pr_risk_payload, dict)
+        else {}
+    )
+
+    if args.output_format == "markdown":
+        print(render_markdown_report(config.report_title, report, high_priority_hits))
+    else:
+        print(json.dumps(asdict(report), indent=2))
     return 0
 

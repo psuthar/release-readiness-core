@@ -1,0 +1,22 @@
+[project]
+name = "release-readiness-core"
+version = "0.1.0"
+description = "Project-agnostic release readiness engine and adapters"
+readme = "README.md"
+authors = [
+    { name = "Paresh Suthar", email = "paresh@suthar.com" }
+]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+release-readiness = "release_readiness_core.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

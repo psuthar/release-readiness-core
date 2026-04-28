@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Iterable, List
+from dataclasses import dataclass, field
+from typing import Dict, Iterable, List, Mapping, Sequence
 
 
 @dataclass(frozen=True)
@@ -26,6 +26,14 @@ class ReadinessReport:
     validations: List[ValidationResult]
 
 
+@dataclass(frozen=True)
+class ValidationMergeConfig:
+    """Config-driven key handling for merging evidence into validation booleans."""
+
+    evidence_boolean_keys: Sequence[str] = field(default_factory=tuple)
+    risk_category_to_required_validation: Mapping[str, str] = field(default_factory=dict)
+
+
 def evaluate_release_readiness(results: Iterable[ValidationResult]) -> ReadinessReport:
     """Compute deterministic PASS/WARN/BLOCK summary from validation results."""
     validations = list(results)
@@ -46,3 +54,28 @@ def evaluate_release_readiness(results: Iterable[ValidationResult]) -> Readiness
         blocked=blocked,
         validations=validations,
     )
+
+
+def merge_validations(
+    evidence: Mapping[str, object],
+    risk_categories: Sequence[str],
+    config: ValidationMergeConfig,
+) -> Dict[str, bool]:
+    """Merge explicit validations + configured evidence keys into a bool map."""
+    merged: Dict[str, bool] = {}
+
+    explicit = evidence.get("validations")
+    if isinstance(explicit, dict):
+        for key, value in explicit.items():
+            if isinstance(value, bool):
+                merged[key] = value
+
+    for key in config.evidence_boolean_keys:
+        if evidence.get(key) is True:
+            merged[key] = True
+
+    for risk in risk_categories:
+        required_key = config.risk_category_to_required_validation.get(risk, risk)
+        merged.setdefault(required_key, False)
+
+    return merged

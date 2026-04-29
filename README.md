@@ -54,6 +54,10 @@ uv run pytest
 uv build
 ```
 
+### How-to guides
+
+- Quickstart — adopt the package in a new project: `docs/how-to/quickstart.md`
+
 ### Contracts and Spike Notes
 
 - SCRUM-166 spike notes: `docs/spikes/SCRUM-166-package-boundary-api-contract.md`

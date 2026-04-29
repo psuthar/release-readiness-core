@@ -2,6 +2,15 @@
 
 Project-agnostic deterministic release-readiness engine and adapters.
 
+### Package layout
+
+| Path | Role |
+|------|------|
+| `release_readiness_core.engine` | Core validation merge types and deterministic summary |
+| `release_readiness_core.pr_gate` | Generic N-input PR gate combiner |
+| `release_readiness_core.cli` | CLI entry (`release-readiness`) |
+| `release_readiness_core.adapters` | Optional helpers (Playwright → schema, GitHub check payloads) |
+
 ### Quickstart
 
 ```bash

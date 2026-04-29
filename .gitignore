@@ -11,3 +11,4 @@ dist/
 .cursor/mcp.json
 .mcp.json
 .env.mcp
+.epic-run/

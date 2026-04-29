@@ -30,9 +30,14 @@ uv run release-readiness-evaluate --repo-root . --config path/to/config.yaml \
 Adapter CLIs (ported from TalkBack scripts):
 
 ```bash
-uv run playwright-to-readiness --input playwright-results.json --output e2e_results.json
+uv run playwright-to-readiness --input playwright-results.json --output e2e_results.json \
+  --validation-map ops/release-readiness/e2e_validation_map.yaml
 uv run pr-risk-semantic --pr-risk-json artifacts/pr-risk.json --generator-outcome success
 ```
+
+`--validation-map` is optional; without it, the converter emits an empty `validations`
+object (counts and failures still reported). Spec extensions stripped when computing
+file stems can be overridden with `--spec-extensions ts,js,mjs,e2e`.
 
 The N-input PR gate combiner lives in `release_readiness_core.pr_gate` (`combine_gate_inputs`).
 

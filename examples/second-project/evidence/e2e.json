@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "failed_count": 0,
+  "total_count": 12,
+  "retries": 0,
+  "failures": [],
+  "validations": {
+    "auth_login": true,
+    "todo_crud": true,
+    "search_filtering": true
+  }
+}

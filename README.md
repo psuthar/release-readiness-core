@@ -57,6 +57,7 @@ uv build
 ### How-to guides
 
 - Quickstart — adopt the package in a new project: `docs/how-to/quickstart.md`
+- Map evidence — wire CI artifacts to validation keys: `docs/how-to/map-evidence.md`
 
 ### Contracts and Spike Notes
 

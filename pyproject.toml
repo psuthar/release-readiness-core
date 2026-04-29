@@ -14,6 +14,8 @@ dependencies = [
 [project.scripts]
 release-readiness = "release_readiness_core.cli:main"
 release-readiness-evaluate = "release_readiness_core.readiness_evaluate:main"
+playwright-to-readiness = "release_readiness_core.adapters.playwright_results:main"
+pr-risk-semantic = "release_readiness_core.adapters.pr_risk_semantic:main"
 
 [dependency-groups]
 dev = [

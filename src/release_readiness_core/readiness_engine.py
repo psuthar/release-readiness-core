@@ -104,15 +104,12 @@ def _failure_is_critical(title: str, patterns: list[str]) -> bool:
     return any(p.lower() in t for p in patterns)
 
 
-# Default top-level evidence keys (config may override via `evidence_boolean_keys`).
-DEFAULT_EVIDENCE_BOOLEAN_KEYS: tuple[str, ...] = (
-    "auth_session",
-    "upload_extraction",
-    "nav_assets",
-    "viewer_materials",
-    "qa_rag",
-    "migrations_validated",
-)
+# SCRUM-209 (gap #6): the engine ships an empty default. Projects must opt in
+# to top-level boolean evidence keys via `evidence_boolean_keys` in config.
+# This avoids accidentally satisfying a validation when an evidence JSON
+# happens to contain a colliding key name. TalkBack supplies the historic
+# tuple via SCRUM-167 in its own config.
+DEFAULT_EVIDENCE_BOOLEAN_KEYS: tuple[str, ...] = ()
 
 
 def _evidence_boolean_keys(config: dict) -> tuple[str, ...]:
@@ -405,20 +402,23 @@ def compute_readiness(
     # When pr_risk.json is absent or unparseable, this block is skipped (graceful degradation).
     # Messages are intentionally brief — the PR Risk report (pr_risk.md) is the source of
     # truth for the specific signals; repeating them here would be redundant.
+    # SCRUM-209 (gap #20): messages no longer reference a pr_risk.md file,
+    # since release-readiness-core does not produce one. Adopters consume
+    # the artifact JSON whose path they provide; the report payload itself
+    # carries enough context.
     if pr_risk and isinstance(pr_risk, dict) and not pr_risk.get("_parse_error"):
         enforcement = pr_risk.get("enforcement") or {}
         pr_rec = str(enforcement.get("merge_recommendation") or "").lower()
         if pr_rec == "block":
             blockers.append(
                 "PR Risk indicates a merge block (elevated risk or incomplete evidence). "
-                "Resolve the required items before deploy; see pr_risk.md for detail."
+                "Resolve the required items before deploy."
             )
             failed_checks.append("pr_risk_block")
         elif pr_rec == "warn":
             warnings.append(
                 "PR Risk indicates elevated review may be needed (churn, workflow or config "
-                "changes, or evidence gaps). Complete required validations before deploy; "
-                "see pr_risk.md for detail."
+                "changes, or evidence gaps). Complete required validations before deploy."
             )
             failed_checks.append("pr_risk_warn")
 

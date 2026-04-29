@@ -34,7 +34,55 @@ calibrated.
 
 ---
 
-## 2. GitHub Actions — happy-path workflow
+## 1a. Two-line GitHub Actions adoption (reusable composite action)
+
+For the impatient: `release-readiness-core` ships a reusable composite
+action at `.github/actions/release-readiness/`. Reference it from your
+own workflow:
+
+```yaml
+# .github/workflows/release-readiness.yml
+name: release-readiness
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # ---- collect evidence (project-specific steps go here) -----
+      # ...
+
+      - uses: psuthar/release-readiness-core/.github/actions/release-readiness@<sha>
+        with:
+          package-ref: <sha>          # same SHA — pins the package install
+          config-path: ops/release-readiness/config.yaml
+          smoke-results: evidence/smoke.json
+          e2e-results: evidence/e2e.json
+          coverage: evidence/coverage.json
+          enforcement-mode: block_only
+```
+
+The composite action installs the package, runs
+`release-readiness-evaluate`, and appends the report to
+`$GITHUB_STEP_SUMMARY`. For PR-comment / Check-run publishing, fall
+through to §2 below.
+
+**Even faster:** `release-readiness-init <target>` writes a starter
+config + workflow into your project. Edit the placeholders and you're
+running.
+
+## 2. GitHub Actions — full workflow with PR comment + Check run
 
 A minimal workflow that runs readiness and publishes a Check + PR
 comment:
@@ -280,6 +328,28 @@ Two things to note for non-GitHub CIs:
    request's "must pass" checks rather than a per-test Check Run.
 
 ---
+
+## 5a. Adopting without PR-risk
+
+`compute_readiness` honors a `pr_risk.json` artifact when one is
+present at `<output-dir>/pr_risk.json`. This is the integration point
+TalkBack uses to combine its Go-binary risk scoring with the readiness
+gate.
+
+If your project has no PR-risk source:
+
+- **Just don't write `pr_risk.json`.** The engine skips the entire
+  `pr_risk` block when the file is absent or unreadable. No warning,
+  no penalty, no behavior change.
+- **No config change needed.** `pr_risk` is opt-in by convention
+  (presence of the file), not by config flag.
+- **The relevant `failed_checks` keys** (`pr_risk_block`, `pr_risk_warn`)
+  simply never fire; you don't need entries for them in `remediation`.
+
+If you later decide to add a PR-risk source: emit a JSON file matching
+`docs/contracts/pr-risk-input-v1.schema.json` at
+`<output-dir>/pr_risk.json` before invoking
+`release-readiness-evaluate`. The engine picks it up automatically.
 
 ## 6. Recipes
 

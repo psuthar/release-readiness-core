@@ -92,10 +92,10 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--repo-root", type=Path, default=Path("."))
     ap.add_argument("--config", type=Path, default=Path("config.yaml"))
     ap.add_argument("--base-ref", default=os.environ.get("RELEASE_READINESS_BASE_REF", "origin/main"))
-    ap.add_argument("--smoke-results", type=Path, help="JSON smoke summary")
-    ap.add_argument("--e2e-results", type=Path, help="JSON E2E summary")
-    ap.add_argument("--coverage", type=Path, help="JSON coverage summary")
-    ap.add_argument("--prod-health", type=Path, help="JSON prod health snapshot")
+    ap.add_argument("--smoke-results", type=Path, help="JSON smoke summary (relative paths resolved under --repo-root)")
+    ap.add_argument("--e2e-results", type=Path, help="JSON E2E summary (relative paths resolved under --repo-root)")
+    ap.add_argument("--coverage", type=Path, help="JSON coverage summary (relative paths resolved under --repo-root)")
+    ap.add_argument("--prod-health", type=Path, help="JSON prod health snapshot (relative paths resolved under --repo-root)")
     ap.add_argument("--migration-validated", action="store_true", help="CI validated migrations")
     ap.add_argument(
         "--output-dir",
@@ -111,7 +111,10 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument(
         "--empty-diff",
         action="store_true",
-        help="Treat changed-files list as empty (skip git diff)",
+        help=(
+            "Treat changed-files list as empty (skip git diff). Use this for local "
+            "or non-CI invocations and against fixtures that aren't a git checkout."
+        ),
     )
     ap.add_argument(
         "--enforcement-mode",
@@ -134,14 +137,28 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+def _resolve_under_repo_root(p: Optional[Path], repo_root: Path) -> Optional[Path]:
+    """SCRUM-209: relative artifact paths are interpreted under --repo-root.
+
+    Without this, a CLI invocation from outside the project tree (e.g. with
+    ``--repo-root subdir/ --smoke-results evidence/smoke.json``) silently
+    failed because read_json was called with the literal path resolved from
+    cwd. Now relative paths join under repo_root; absolute paths are
+    untouched.
+    """
+    if p is None:
+        return None
+    return p if p.is_absolute() else repo_root / p
+
+
 def _main_inner(args: argparse.Namespace, repo_root: Path) -> int:
     config_path = args.config if args.config.is_absolute() else repo_root / args.config
     config = load_yaml_config(config_path)
 
-    smoke = read_json(args.smoke_results) if args.smoke_results else None
-    e2e = read_json(args.e2e_results) if args.e2e_results else None
-    coverage = read_json(args.coverage) if args.coverage else None
-    prod_health = read_json(args.prod_health) if args.prod_health else None
+    smoke = read_json(_resolve_under_repo_root(args.smoke_results, repo_root)) if args.smoke_results else None
+    e2e = read_json(_resolve_under_repo_root(args.e2e_results, repo_root)) if args.e2e_results else None
+    coverage = read_json(_resolve_under_repo_root(args.coverage, repo_root)) if args.coverage else None
+    prod_health = read_json(_resolve_under_repo_root(args.prod_health, repo_root)) if args.prod_health else None
 
     commit_msgs = git_commit_messages(repo_root, args.base_ref)
     commit_note_found, commit_note_snippet = detect_validation_note(commit_msgs)

@@ -1,6 +1,6 @@
 [project]
 name = "release-readiness-core"
-version = "0.1.0"
+version = "0.2.0"
 description = "Project-agnostic release readiness engine and adapters"
 readme = "README.md"
 authors = [
@@ -14,7 +14,10 @@ dependencies = [
 [project.scripts]
 release-readiness = "release_readiness_core.cli:main"
 release-readiness-evaluate = "release_readiness_core.readiness_evaluate:main"
+release-readiness-init = "release_readiness_core.init_scaffold:main"
 playwright-to-readiness = "release_readiness_core.adapters.playwright_results:main"
+junit-to-readiness = "release_readiness_core.adapters.junit_xml:main"
+lcov-to-readiness = "release_readiness_core.adapters.lcov_coverage:main"
 pr-risk-semantic = "release_readiness_core.adapters.pr_risk_semantic:main"
 
 [dependency-groups]

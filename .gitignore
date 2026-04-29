@@ -12,3 +12,4 @@ dist/
 .mcp.json
 .env.mcp
 .epic-run/
+examples/**/artifacts/

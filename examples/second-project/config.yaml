@@ -1,0 +1,87 @@
+version: 1
+
+validations:
+  api_health:
+    description: Liveness and readiness endpoints respond with 200.
+  db_migrations:
+    description: Database migrations applied and verified in CI.
+  auth_login:
+    description: Login flow issues valid tokens for known users.
+  todo_crud:
+    description: Create/read/update/delete a todo end-to-end.
+  search_filtering:
+    description: List, filter, and search endpoints return correct results.
+
+evidence_boolean_keys:
+  - api_health
+  - db_migrations
+  - auth_login
+  - todo_crud
+  - search_filtering
+
+infer_validations_when_pass:
+  smoke:
+    - api_health
+  e2e:
+    - auth_login
+    - todo_crud
+    - search_filtering
+
+risk_from_paths:
+  - categories: [db_migrations]
+    patterns:
+      - "migrations/**"
+      - "alembic/**"
+  - categories: [auth_login]
+    patterns:
+      - "src/todo_api/auth/**"
+      - "src/todo_api/users/**"
+  - categories: [search_filtering]
+    patterns:
+      - "src/todo_api/search/**"
+
+risk_category_to_required_validation:
+  db_migrations: db_migrations
+  auth_login: auth_login
+  search_filtering: search_filtering
+
+risky_config_patterns:
+  - "alembic.ini"
+  - "pyproject.toml"
+  - ".github/workflows/*.yml"
+
+scoring:
+  max_score: 100
+  pass_threshold: 80
+  warn_threshold: 60
+  block_score: 0
+  penalties:
+    missing_smoke_artifact: 25
+    missing_e2e_artifact: 15
+    missing_coverage_artifact: 5
+    missing_prod_health_artifact: 5
+    non_critical_e2e_failure: 15
+    e2e_retries_or_flaky: 10
+    coverage_regression: 12
+    risky_config_without_note: 10
+
+e2e_critical_name_patterns:
+  - "auth_login"
+  - "todo_crud"
+
+remediation:
+  smoke_artifact:
+    severity: warn
+    likely_cause: smoke job did not upload results
+    recommended_action: Re-run smoke job and upload smoke.json artifact.
+    fix_type: ci_config
+  e2e_critical:
+    severity: block
+    likely_cause: critical E2E spec failed
+    recommended_action: Fix the failing critical spec or revert the offending change.
+    fix_type: code
+  risk_without_validation:
+    severity: block
+    likely_cause: changed area requires evidence that was not provided
+    recommended_action: Run the relevant validation in CI and emit a boolean in the evidence JSON.
+    fix_type: ci_config

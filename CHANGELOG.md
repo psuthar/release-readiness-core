@@ -5,6 +5,34 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (see `RELEASE.md` for SHA-pinning until a `1.0` is published).
 
+## [0.3.0] — 2026-04-29
+
+### Added
+- **`release-readiness-doctor`** — pre-flight verifier that catches
+  install, config, and evidence-shape problems before a real run. Validates
+  config against the closed-set schema, validates each evidence file, and
+  surfaces common pitfalls (e.g. `failed_count > 0` with empty `failures`).
+  Exits non-zero on any ERROR.
+- Three evidence-shape JSON schemas under `docs/contracts/`:
+  `smoke-input-v1.schema.json`, `e2e-input-v1.schema.json`,
+  `coverage-input-v1.schema.json`. Doctor uses them; adopters can
+  validate their own evidence-emission tooling against them too.
+- `docs/how-to/migrate-from-existing-gate.md` — step-by-step migration
+  for teams replacing a hand-rolled readiness gate. Covers
+  inventory → mapping → parallel-run → cut-over.
+- `docs/how-to/multi-job-ci.md` — `actions/upload-artifact` /
+  `download-artifact` pattern for projects whose smoke / e2e / coverage
+  live in separate jobs.
+- `docs/how-to/branch-protection.md` — concrete UI and `gh api` steps
+  for making the readiness check required.
+- `docs/reference/outputs.md` — exhaustive field-by-field glossary for
+  `release-readiness.json` and `report.json`.
+
+### Changed
+- README "How-to guides" gains the three new how-tos plus a
+  "Reference" section and an explicit note about the two CLIs
+  (`release-readiness-evaluate` vs. lightweight `release-readiness`).
+
 ## [0.2.0] — 2026-04-29
 
 ### Added

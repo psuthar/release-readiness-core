@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/e2e-input-v1.schema.json",
+  "title": "Release readiness E2E input v1",
+  "description": "Shape consumed by --e2e-results. Produced by the playwright-to-readiness or junit-to-readiness adapters; can also be hand-emitted. Additional fields beyond those listed here are ignored.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["status"],
+  "properties": {
+    "status": {
+      "description": "Required. Overall result of the E2E suite.",
+      "type": "string",
+      "enum": ["passed", "failed", "skipped", "pass", "fail", "success"]
+    },
+    "failed_count": {
+      "description": "Number of failed E2E specs.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_count": {
+      "description": "Number of E2E specs executed (including skipped).",
+      "type": "integer",
+      "minimum": 0
+    },
+    "retries": {
+      "description": "Number of specs that retried (treated as flakiness signal). The engine penalizes retries>0 via the e2e_retries_or_flaky penalty.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "failures": {
+      "description": "Failed specs. Title is matched against e2e_critical_name_patterns to decide critical vs. non-critical.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "validations": {
+      "description": "Per-validation booleans. true → satisfied, false → explicitly failed.",
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "critical_failures": {
+      "description": "Optional list of titles to treat as critical regardless of e2e_critical_name_patterns.",
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

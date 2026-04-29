@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/coverage-input-v1.schema.json",
+  "title": "Release readiness coverage input v1",
+  "description": "Shape consumed by --coverage. Produced by lcov-to-readiness or hand-emitted. The engine fires the coverage_regression warning when line_percent < baseline_percent.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "line_percent": {
+      "description": "Line coverage percent (0..100).",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "baseline_percent": {
+      "description": "Optional baseline line-coverage percent. Omit (or set null) to skip the regression check.",
+      "anyOf": [
+        { "type": "number", "minimum": 0, "maximum": 100 },
+        { "type": "null" }
+      ]
+    }
+  }
+}

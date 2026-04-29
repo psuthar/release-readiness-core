@@ -9,23 +9,15 @@ This directory contains versioned JSON contracts used by the standalone package.
 - `smoke-input-v1.schema.json` — shape for `--smoke-results`.
 - `e2e-input-v1.schema.json` — shape for `--e2e-results`.
 - `coverage-input-v1.schema.json` — shape for `--coverage`.
-- `pr-risk-input-v1.schema.json` — shape for the optional
-  `<output-dir>/pr_risk.json` artifact.
+- `pr-risk-input-v1.schema.json` — shape for the optional `<output-dir>/pr_risk.json` artifact.
 
 ### Output
 
-- `release-readiness-output-v1.schema.json` — shape for
-  `release-readiness.json` (the lean machine summary). See
-  `docs/reference/outputs.md` for the full field-by-field glossary
-  including the larger `report.json` payload.
+- `release-readiness-output-v1.schema.json` — shape for `release-readiness.json` (the lean machine summary). See `docs/reference/outputs.md` for the full field-by-field glossary including the larger `report.json` payload.
 
 ### Configuration
 
-- `validation-config-v1.schema.json` — shape for `config.yaml`. Note:
-  the closed set of top-level keys actually enforced at load time lives
-  in `release_readiness_core.readiness_io.KNOWN_TOP_LEVEL_CONFIG_KEYS`;
-  the JSON schema is intentionally permissive
-  (`additionalProperties: true`) to allow project-specific extensions.
+- `validation-config-v1.schema.json` — shape for `config.yaml`. Note: the closed set of top-level keys actually enforced at load time lives in `release_readiness_core.readiness_io.KNOWN_TOP_LEVEL_CONFIG_KEYS`; the JSON schema is intentionally permissive (`additionalProperties: true`) to allow project-specific extensions.
 
 ## Versioning policy
 

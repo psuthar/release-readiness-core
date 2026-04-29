@@ -2,8 +2,7 @@
 
 ## Goal
 
-Define the initial `release-readiness-core` package boundary, public API surface, and
-`pr_risk.json` input contract so extraction work can proceed without interface churn.
+Define the initial `release-readiness-core` package boundary, public API surface, and `pr_risk.json` input contract so extraction work can proceed without interface churn.
 
 ## Package Boundary (v0)
 

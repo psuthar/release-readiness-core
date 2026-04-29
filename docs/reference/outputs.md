@@ -1,8 +1,6 @@
 # Outputs reference — what every report field means
 
-This is the field-by-field reference for everything
-`release-readiness-core` writes to disk. When a reviewer or an adopter
-asks "what does *this* mean?" — point them here.
+This is the field-by-field reference for everything `release-readiness-core` writes to disk. When a reviewer or an adopter asks "what does *this* mean?" — point them here.
 
 The package writes three files:
 
@@ -12,17 +10,13 @@ The package writes three files:
 | `report.json` | Programmatic consumers (downstream automation, dashboards) | JSON |
 | `release-readiness.json` | The gate / branch protection | JSON, lean |
 
-`report.md` and `report.json` cover the same content; `report.json` is
-the source of truth for fields, and `report.md` is its rendering.
-`release-readiness.json` is a separate, intentionally-minimal summary.
+`report.md` and `report.json` cover the same content; `report.json` is the source of truth for fields, and `report.md` is its rendering. `release-readiness.json` is a separate, intentionally-minimal summary.
 
 ---
 
 ## 1. `release-readiness.json` — the gate
 
-The lean machine summary. Designed to be tiny and stable so CI gates
-and other tooling can `jq -r .outcome` without parsing the full
-report.
+The lean machine summary. Designed to be tiny and stable so CI gates and other tooling can `jq -r .outcome` without parsing the full report.
 
 ```json
 {
@@ -40,10 +34,7 @@ report.
 | `warnings` | int | Count of warning strings in `report.json.warnings`. |
 | `blockers` | int | Count of blocker strings in `report.json.blockers`. |
 
-If `compute_readiness` itself crashes — for example, the config fails
-to load — this file is still written, with `execution_failed: true`
-and `error: "<truncated message>"` added. Treat that as `outcome:
-BLOCK` for gating purposes.
+If `compute_readiness` itself crashes — for example, the config fails to load — this file is still written, with `execution_failed: true` and `error: "<truncated message>"` added. Treat that as `outcome: BLOCK` for gating purposes.
 
 ---
 
@@ -125,9 +116,7 @@ Top-level structure:
 | `not_required` | Evidenced (true) but not required by any risk this run. Informational. |
 | `not_evaluated` | Required, but neither smoke nor E2E artifacts were provided — the package can't disprove or prove it. |
 
-A key absent from this map either wasn't required *and* wasn't
-evidenced, or wasn't declared in `validations:` and didn't appear in
-any evidence — pure noise either way.
+A key absent from this map either wasn't required *and* wasn't evidenced, or wasn't declared in `validations:` and didn't appear in any evidence — pure noise either way.
 
 ### Evidence summary
 
@@ -143,9 +132,7 @@ any evidence — pure noise either way.
 }
 ```
 
-`*_present` booleans answer "did the engine see this artifact?".
-`validation_note_*` covers the `Validation:` / `Validate:` commit
-message convention; see `docs/how-to/1-map-evidence.md` §5.
+`*_present` booleans answer "did the engine see this artifact?". `validation_note_*` covers the `Validation:` / `Validate:` commit message convention; see `docs/how-to/1-map-evidence.md` §5.
 
 ### Remediation
 
@@ -161,10 +148,7 @@ message convention; see `docs/how-to/1-map-evidence.md` §5.
 ]
 ```
 
-One entry per `failed_checks` key, populated from `remediation` in
-`config.yaml`. Unmapped keys get a placeholder
-`"Investigate check: <key>"` so reviewers always have *something* to
-go on. Tune via `docs/how-to/2-tune-scoring.md` §4.
+One entry per `failed_checks` key, populated from `remediation` in `config.yaml`. Unmapped keys get a placeholder `"Investigate check: <key>"` so reviewers always have *something* to go on. Tune via `docs/how-to/2-tune-scoring.md` §4.
 
 ### E2E failure detail
 
@@ -173,10 +157,7 @@ go on. Tune via `docs/how-to/2-tune-scoring.md` §4.
 "non_critical_failed_titles": ["DiagnosticsTab.shows_extra_info"]
 ```
 
-The full list of E2E failure titles, classified by whether they
-matched any pattern in `e2e_critical_name_patterns`. Use these instead
-of re-parsing `playwright-results.json` / JUnit XML — they're the
-post-classification view the engine itself used.
+The full list of E2E failure titles, classified by whether they matched any pattern in `e2e_critical_name_patterns`. Use these instead of re-parsing `playwright-results.json` / JUnit XML — they're the post-classification view the engine itself used.
 
 ### Other
 
@@ -192,8 +173,7 @@ post-classification view the engine itself used.
 
 ## 3. `report.md` — the rendered version
 
-`report.md` is `report.json` rendered through
-`render_readiness_result_markdown`. Sections appear in this order:
+`report.md` is `report.json` rendered through `render_readiness_result_markdown`. Sections appear in this order:
 
 1. **Heading** — `# Release readiness report` (or the configured `--report-title`).
 2. **Result** — `## Result: **PASS** (score N.N)`.
@@ -208,9 +188,7 @@ post-classification view the engine itself used.
 11. **Remediation guidance** — table from `remediation_items`.
 12. **Footer** — "Deterministic scoring only (no LLM in the decision path)."
 
-If you're tempted to parse `report.md` programmatically, parse
-`report.json` instead — the markdown is for humans and its layout
-will continue to evolve.
+If you're tempted to parse `report.md` programmatically, parse `report.json` instead — the markdown is for humans and its layout will continue to evolve.
 
 ---
 
@@ -228,9 +206,7 @@ A reverse map for the "where does this come from?" question:
 | `evidence.validation_note_*` | `git log` commit messages between `--base-ref` and HEAD, scanned for `Validation:` / `Validate:` lines. |
 | `pr_risk` | The optional `pr_risk.json` artifact at `<output-dir>/pr_risk.json`. Absent → field absent. |
 
-Find the engine code itself in
-`src/release_readiness_core/readiness_engine.py` if you need to trace a
-specific value back to its rule.
+Find the engine code itself in `src/release_readiness_core/readiness_engine.py` if you need to trace a specific value back to its rule.
 
 ---
 

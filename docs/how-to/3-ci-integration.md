@@ -1,21 +1,14 @@
 # Wire `release-readiness-core` into CI
 
-This guide shows how to run the readiness CLI inside CI and surface its
-PASS/WARN/BLOCK verdict to humans (in PR descriptions or as a status
-check) and to merge automation (as a gate). It covers the GitHub
-happy-path in detail, then explains the generic formatter pattern so
-you aren't trapped on GitHub.
+This guide shows how to run the readiness CLI inside CI and surface its PASS/WARN/BLOCK verdict to humans (in PR descriptions or as a status check) and to merge automation (as a gate). It covers the GitHub happy-path in detail, then explains the generic formatter pattern so you aren't trapped on GitHub.
 
-> Prerequisites: a working local setup (`docs/how-to/0-quickstart.md`)
-> and a `config.yaml` that produces the verdict you expect when run
-> against representative evidence.
+> Prerequisites: a working local setup (`docs/how-to/0-quickstart.md`) and a `config.yaml` that produces the verdict you expect when run against representative evidence.
 
 ---
 
 ## 1. What the CLI emits
 
-`release-readiness-evaluate` writes three artifacts under
-`--output-dir` (default `artifacts/release-readiness/`):
+`release-readiness-evaluate` writes three artifacts under `--output-dir` (default `artifacts/release-readiness/`):
 
 | File | Content | Best consumer |
 |---|---|---|
@@ -28,17 +21,13 @@ Exit code:
 - **0** — outcome is PASS or WARN (and `--enforcement-mode block_only`, the default).
 - **1** — outcome is BLOCK, OR outcome is WARN with `--enforcement-mode warn_and_block`.
 
-Make `--enforcement-mode` your gating dial: most teams start in
-`block_only` and tighten to `warn_and_block` once their config is
-calibrated.
+Make `--enforcement-mode` your gating dial: most teams start in `block_only` and tighten to `warn_and_block` once their config is calibrated.
 
 ---
 
 ## 1a. Two-line GitHub Actions adoption (reusable composite action)
 
-For the impatient: `release-readiness-core` ships a reusable composite
-action at `.github/actions/release-readiness/`. Reference it from your
-own workflow:
+For the impatient: `release-readiness-core` ships a reusable composite action at `.github/actions/release-readiness/`. Reference it from your own workflow:
 
 ```yaml
 # .github/workflows/release-readiness.yml
@@ -73,19 +62,13 @@ jobs:
           enforcement-mode: block_only
 ```
 
-The composite action installs the package, runs
-`release-readiness-evaluate`, and appends the report to
-`$GITHUB_STEP_SUMMARY`. For PR-comment / Check-run publishing, fall
-through to §2 below.
+The composite action installs the package, runs `release-readiness-evaluate`, and appends the report to `$GITHUB_STEP_SUMMARY`. For PR-comment / Check-run publishing, fall through to §2 below.
 
-**Even faster:** `release-readiness-init <target>` writes a starter
-config + workflow into your project. Edit the placeholders and you're
-running.
+**Even faster:** `release-readiness-init <target>` writes a starter config + workflow into your project. Edit the placeholders and you're running.
 
 ## 2. GitHub Actions — full workflow with PR comment + Check run
 
-A minimal workflow that runs readiness and publishes a Check + PR
-comment:
+A minimal workflow that runs readiness and publishes a Check + PR comment:
 
 ```yaml
 # .github/workflows/release-readiness.yml
@@ -183,15 +166,9 @@ jobs:
 
 Notes:
 
-- `actions/checkout@v5` with `fetch-depth: 0` is required because the
-  CLI shells out to `git diff <base-ref>` to compute changed files. If
-  you want to skip that, pass `--empty-diff` and don't set fetch-depth.
-- The `if: always()` on publish steps ensures the report still posts
-  even when the readiness step exits non-zero on BLOCK. Without that,
-  a BLOCK leaves no PR comment.
-- `marocchino/sticky-pull-request-comment` keeps a single PR comment
-  updated across pushes; `actions/github-script` is just one of many
-  ways to publish the Check.
+- `actions/checkout@v5` with `fetch-depth: 0` is required because the CLI shells out to `git diff <base-ref>` to compute changed files. If you want to skip that, pass `--empty-diff` and don't set fetch-depth.
+- The `if: always()` on publish steps ensures the report still posts even when the readiness step exits non-zero on BLOCK. Without that, a BLOCK leaves no PR comment.
+- `marocchino/sticky-pull-request-comment` keeps a single PR comment updated across pushes; `actions/github-script` is just one of many ways to publish the Check.
 
 ### Gating merges
 
@@ -200,9 +177,7 @@ Two flavors:
 - **Soft gate** (recommended at first): `release-readiness` is a non-required check. Reviewers see the WARN/BLOCK verdict but can still merge.
 - **Hard gate**: mark the `release-readiness` check as required in the branch protection rules. With `--enforcement-mode block_only` (default), the workflow fails on BLOCK only. With `warn_and_block`, it also fails on WARN.
 
-Tighten gradually: start with a soft gate, watch for false positives,
-adjust thresholds and penalties (see `docs/how-to/2-tune-scoring.md`),
-then make it required.
+Tighten gradually: start with a soft gate, watch for false positives, adjust thresholds and penalties (see `docs/how-to/2-tune-scoring.md`), then make it required.
 
 ---
 
@@ -216,11 +191,9 @@ Two different consumers, two different outputs:
 | Merge automation / branch protection | Check run with `conclusion` | Programmatic; integrates with required-check rules. |
 | Logs for postmortem | Step summary (`GITHUB_STEP_SUMMARY`) | Persists with the workflow run; easy to link from Slack. |
 
-You typically want all three: comment for humans, check for automation,
-step summary for retro. The workflow above does all three.
+You typically want all three: comment for humans, check for automation, step summary for retro. The workflow above does all three.
 
-The PR-body update pattern (less common, but useful if you want a
-stable section that PRs can edit around):
+The PR-body update pattern (less common, but useful if you want a stable section that PRs can edit around):
 
 ```bash
 gh pr edit "$PR_NUMBER" --body "$(printf '%s\n\n---\n\n%s' \
@@ -232,21 +205,15 @@ gh pr edit "$PR_NUMBER" --body "$(printf '%s\n\n---\n\n%s' \
 
 ## 4. The generic formatter pattern (non-GitHub CIs)
 
-`release-readiness-core` doesn't ship CI integrations *as integrations*
-— it ships **JSON output** with a stable schema, and a tiny Python API
-for combining it with other gates. The integration is your CI's job.
+`release-readiness-core` doesn't ship CI integrations *as integrations* — it ships **JSON output** with a stable schema, and a tiny Python API for combining it with other gates. The integration is your CI's job.
 
 ### Stable contract
 
-The shape that travels between the engine and any CI is the
-`release-readiness.json` summary plus the `report.md` body. That's the
-input contract for any adapter. As long as the adapter reads those two
-files, it can target any CI.
+The shape that travels between the engine and any CI is the `release-readiness.json` summary plus the `report.md` body. That's the input contract for any adapter. As long as the adapter reads those two files, it can target any CI.
 
 ### The `combine_gate_inputs` helper (multi-gate composition)
 
-If your release decision combines readiness with other gates (PR-risk,
-security scan, custom checks), use the package's combiner:
+If your release decision combines readiness with other gates (PR-risk, security scan, custom checks), use the package's combiner:
 
 ```python
 from release_readiness_core.pr_gate import (
@@ -286,8 +253,7 @@ payload = format_gate_output(summary, formatter=gitlab_job_artifact)
 print(json.dumps(payload))
 ```
 
-The formatter is a `Callable[[GateSummary], Dict[str, Any]]`. Anything
-JSON-serializable goes; the engine is intentionally agnostic.
+The formatter is a `Callable[[GateSummary], Dict[str, Any]]`. Anything JSON-serializable goes; the engine is intentionally agnostic.
 
 ---
 
@@ -319,37 +285,22 @@ release-readiness:
 
 Two things to note for non-GitHub CIs:
 
-1. There's no native "Check Run" concept. The closest analog is a
-   pipeline step with a JSON artifact, plus whatever native commenting
-   integration your platform offers (e.g. GitLab's
-   `gitlab-comment-on-mr` snippets or Buildkite's `buildkite-agent
-   annotate`).
-2. To gate merges, you typically wire pipeline status into the merge
-   request's "must pass" checks rather than a per-test Check Run.
+1. There's no native "Check Run" concept. The closest analog is a pipeline step with a JSON artifact, plus whatever native commenting integration your platform offers (e.g. GitLab's `gitlab-comment-on-mr` snippets or Buildkite's `buildkite-agent annotate`).
+2. To gate merges, you typically wire pipeline status into the merge request's "must pass" checks rather than a per-test Check Run.
 
 ---
 
 ## 5a. Adopting without PR-risk
 
-`compute_readiness` honors a `pr_risk.json` artifact when one is
-present at `<output-dir>/pr_risk.json`. This is the integration point
-TalkBack uses to combine its Go-binary risk scoring with the readiness
-gate.
+`compute_readiness` honors a `pr_risk.json` artifact when one is present at `<output-dir>/pr_risk.json`. This is the integration point TalkBack uses to combine its Go-binary risk scoring with the readiness gate.
 
 If your project has no PR-risk source:
 
-- **Just don't write `pr_risk.json`.** The engine skips the entire
-  `pr_risk` block when the file is absent or unreadable. No warning,
-  no penalty, no behavior change.
-- **No config change needed.** `pr_risk` is opt-in by convention
-  (presence of the file), not by config flag.
-- **The relevant `failed_checks` keys** (`pr_risk_block`, `pr_risk_warn`)
-  simply never fire; you don't need entries for them in `remediation`.
+- **Just don't write `pr_risk.json`.** The engine skips the entire `pr_risk` block when the file is absent or unreadable. No warning, no penalty, no behavior change.
+- **No config change needed.** `pr_risk` is opt-in by convention (presence of the file), not by config flag.
+- **The relevant `failed_checks` keys** (`pr_risk_block`, `pr_risk_warn`) simply never fire; you don't need entries for them in `remediation`.
 
-If you later decide to add a PR-risk source: emit a JSON file matching
-`docs/contracts/pr-risk-input-v1.schema.json` at
-`<output-dir>/pr_risk.json` before invoking
-`release-readiness-evaluate`. The engine picks it up automatically.
+If you later decide to add a PR-risk source: emit a JSON file matching `docs/contracts/pr-risk-input-v1.schema.json` at `<output-dir>/pr_risk.json` before invoking `release-readiness-evaluate`. The engine picks it up automatically.
 
 ## 6. Recipes
 
@@ -373,8 +324,7 @@ jq -r .outcome artifacts/release-readiness.json
 # PASS | WARN | BLOCK
 ```
 
-Useful for downstream "release-train" automation that wants the verdict
-without re-parsing the full report.
+Useful for downstream "release-train" automation that wants the verdict without re-parsing the full report.
 
 ### Recipe — combine readiness with a separate PR-risk gate
 
@@ -392,8 +342,7 @@ summary = combine_gate_inputs([
 print(json.dumps(to_payload(summary), indent=2))
 ```
 
-The combiner uses `BLOCK > WARN > PASS` precedence. Any input
-contributing BLOCK forces an overall BLOCK.
+The combiner uses `BLOCK > WARN > PASS` precedence. Any input contributing BLOCK forces an overall BLOCK.
 
 ---
 

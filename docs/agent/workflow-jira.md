@@ -42,13 +42,11 @@ Hard stops:
 
 ## Testing Policy Boundary
 
-Testing requirements, hard stops, and validation gates are owned by `docs/agent/testing-validation.md`.
-This workflow references that policy and does not redefine test minimums.
+Testing requirements, hard stops, and validation gates are owned by `docs/agent/testing-validation.md`. This workflow references that policy and does not redefine test minimums.
 
 ## Jira Completion Comment (Mandatory)
 
-Post a regular issue comment (not only transition comments) using `jira_add_comment` with `body`.
-Never use `comment` for this tool call; it causes API rejection and format drift retries.
+Post a regular issue comment (not only transition comments) using `jira_add_comment` with `body`. Never use `comment` for this tool call; it causes API rejection and format drift retries.
 
 Required structure:
 

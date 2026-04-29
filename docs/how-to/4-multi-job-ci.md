@@ -1,26 +1,16 @@
 # Multi-job CI — when smoke, E2E, and coverage live in separate jobs
 
-The walkthrough in `ci-integration.md` runs everything in one job for
-clarity. Real CIs almost never look like that — smoke runs on one
-matrix, E2E runs on another (often parallelized across browsers),
-coverage is a separate job, and the readiness step at the end gathers
-the artifacts.
+The walkthrough in `ci-integration.md` runs everything in one job for clarity. Real CIs almost never look like that — smoke runs on one matrix, E2E runs on another (often parallelized across browsers), coverage is a separate job, and the readiness step at the end gathers the artifacts.
 
-This guide shows the artifact-sharing pattern in GitHub Actions and
-the equivalent shape in non-GitHub CIs.
+This guide shows the artifact-sharing pattern in GitHub Actions and the equivalent shape in non-GitHub CIs.
 
-> Prerequisites: a working single-job pipeline first
-> (`docs/how-to/0-quickstart.md` and `docs/how-to/3-ci-integration.md`).
-> Don't split until the simple version passes locally and against
-> `release-readiness-doctor`.
+> Prerequisites: a working single-job pipeline first (`docs/how-to/0-quickstart.md` and `docs/how-to/3-ci-integration.md`). Don't split until the simple version passes locally and against `release-readiness-doctor`.
 
 ---
 
 ## 1. Pattern: one readiness job depending on N evidence jobs
 
-In GitHub Actions, each evidence-emitting job uploads its JSON via
-`actions/upload-artifact`, and the readiness job downloads them all
-before invoking the evaluator.
+In GitHub Actions, each evidence-emitting job uploads its JSON via `actions/upload-artifact`, and the readiness job downloads them all before invoking the evaluator.
 
 ```yaml
 # .github/workflows/release-readiness.yml
@@ -118,15 +108,8 @@ jobs:
 
 Two things to call out:
 
-- **`if: always()`** on the readiness job ensures it runs even when a
-  dependency fails. Without this, a failing smoke job skips readiness
-  entirely — and reviewers see no readiness verdict on a PR that most
-  needs one.
-- **The "stage evidence" step** is the project-specific glue. The
-  example combines two browsers' E2E results into one by picking the
-  worst — your project might want to merge them, run readiness twice,
-  or fail if browsers disagreed. Don't optimize this prematurely;
-  start with "pick the worst" and iterate.
+- **`if: always()`** on the readiness job ensures it runs even when a dependency fails. Without this, a failing smoke job skips readiness entirely — and reviewers see no readiness verdict on a PR that most needs one.
+- **The "stage evidence" step** is the project-specific glue. The example combines two browsers' E2E results into one by picking the worst — your project might want to merge them, run readiness twice, or fail if browsers disagreed. Don't optimize this prematurely; start with "pick the worst" and iterate.
 
 ---
 
@@ -136,21 +119,13 @@ The pattern generalizes. For each independent evidence source:
 
 1. Run it in its own job, emitting its readiness-shape JSON.
 2. Upload the JSON as `readiness-evidence-<name>`.
-3. The readiness job downloads all artifacts matching
-   `pattern: readiness-evidence-*` and stages them into one
-   `evidence/` directory.
-4. The CLI is invoked once with `--smoke-results`, `--e2e-results`,
-   `--coverage`, and (if configured) `--prod-health` pointing at the
-   staged files.
+3. The readiness job downloads all artifacts matching `pattern: readiness-evidence-*` and stages them into one `evidence/` directory.
+4. The CLI is invoked once with `--smoke-results`, `--e2e-results`, `--coverage`, and (if configured) `--prod-health` pointing at the staged files.
 
-If you have a fifth evidence source (e.g. a custom security scan),
-either:
+If you have a fifth evidence source (e.g. a custom security scan), either:
 
-- Map it onto an existing slot (e.g. fold security-scan results into
-  the smoke JSON via `validations: {security_scan: true}`), or
-- Treat it as a separate gate input and combine via
-  `release_readiness_core.pr_gate.combine_gate_inputs` — see
-  `ci-integration.md` §4 (generic formatter pattern).
+- Map it onto an existing slot (e.g. fold security-scan results into the smoke JSON via `validations: {security_scan: true}`), or
+- Treat it as a separate gate input and combine via `release_readiness_core.pr_gate.combine_gate_inputs` — see `ci-integration.md` §4 (generic formatter pattern).
 
 ---
 
@@ -158,19 +133,11 @@ either:
 
 The shape transfers directly. In every CI you need three primitives:
 
-1. **Per-job artifacts:** the equivalent of `upload-artifact`. GitLab
-   has `artifacts:`, Buildkite has `buildkite-agent artifact upload`,
-   CircleCI has `store_artifacts`, Jenkins has `archiveArtifacts`.
-2. **Cross-job artifact retrieval:** the equivalent of
-   `download-artifact`. Same vendors expose either an explicit fetch
-   step or a `dependencies:` declaration that auto-fetches.
-3. **Conditional execution:** the equivalent of `if: always()`. GitLab
-   has `when: always`, Buildkite has `soft_fail`, CircleCI has
-   `when: always`.
+1. **Per-job artifacts:** the equivalent of `upload-artifact`. GitLab has `artifacts:`, Buildkite has `buildkite-agent artifact upload`, CircleCI has `store_artifacts`, Jenkins has `archiveArtifacts`.
+2. **Cross-job artifact retrieval:** the equivalent of `download-artifact`. Same vendors expose either an explicit fetch step or a `dependencies:` declaration that auto-fetches.
+3. **Conditional execution:** the equivalent of `if: always()`. GitLab has `when: always`, Buildkite has `soft_fail`, CircleCI has `when: always`.
 
-Once those three primitives are wired, the readiness step is identical
-to the single-job case: collect the staged JSON, invoke
-`release-readiness-evaluate`.
+Once those three primitives are wired, the readiness step is identical to the single-job case: collect the staged JSON, invoke `release-readiness-evaluate`.
 
 ---
 
@@ -178,25 +145,19 @@ to the single-job case: collect the staged JSON, invoke
 
 ### "Readiness ran but didn't see my evidence"
 
-90% of the time this is `merge-multiple: true` flattening artifact
-directories in unexpected ways. Verify by listing the staged dir
-before invoking readiness:
+90% of the time this is `merge-multiple: true` flattening artifact directories in unexpected ways. Verify by listing the staged dir before invoking readiness:
 
 ```yaml
 - run: ls -la evidence-raw/ && find evidence/ -type f
 ```
 
-If a file isn't there, the upload step probably named it differently
-than the read step expects.
+If a file isn't there, the upload step probably named it differently than the read step expects.
 
 ### "Readiness reports BLOCK but every dependency was green"
 
-The dependency jobs probably exited 0 even though their evidence said
-failed. Check each evidence JSON manually — `failed_count > 0` with
-`status == "passed"` is a common bug in custom emitters.
+The dependency jobs probably exited 0 even though their evidence said failed. Check each evidence JSON manually — `failed_count > 0` with `status == "passed"` is a common bug in custom emitters.
 
-`release-readiness-doctor` catches this if you wire it as a separate
-job:
+`release-readiness-doctor` catches this if you wire it as a separate job:
 
 ```yaml
   doctor:
@@ -215,23 +176,16 @@ job:
             --coverage evidence/coverage.json
 ```
 
-A doctor failure is cheap and catches most "evidence emitter is
-buggy" cases before they hit the real gate.
+A doctor failure is cheap and catches most "evidence emitter is buggy" cases before they hit the real gate.
 
 ### "Coverage shows up as missing, but my coverage job uploaded the file"
 
-Either the artifact name didn't match the download pattern, or the
-coverage job uploaded `lcov.info` instead of running
-`lcov-to-readiness`. The CLI consumes the readiness shape, not raw
-lcov.
+Either the artifact name didn't match the download pattern, or the coverage job uploaded `lcov.info` instead of running `lcov-to-readiness`. The CLI consumes the readiness shape, not raw lcov.
 
 ---
 
 ## 5. Cross-references
 
-- `docs/how-to/3-ci-integration.md` — the single-job version; this guide
-  builds on it.
-- `docs/how-to/5-branch-protection.md` — once the multi-job workflow is
-  green, this is how you make it required.
-- `release-readiness-doctor --help` — pre-flight verifier; ideal for
-  catching emitter bugs before they reach the gate.
+- `docs/how-to/3-ci-integration.md` — the single-job version; this guide builds on it.
+- `docs/how-to/5-branch-protection.md` — once the multi-job workflow is green, this is how you make it required.
+- `release-readiness-doctor --help` — pre-flight verifier; ideal for catching emitter bugs before they reach the gate.

@@ -59,6 +59,7 @@ uv build
 - Quickstart — adopt the package in a new project: `docs/how-to/quickstart.md`
 - Map evidence — wire CI artifacts to validation keys: `docs/how-to/map-evidence.md`
 - Tune scoring — penalties, thresholds, remediation: `docs/how-to/tune-scoring.md`
+- CI integration — GitHub Checks and the generic adapter pattern: `docs/how-to/ci-integration.md`
 
 ### Contracts and Spike Notes
 

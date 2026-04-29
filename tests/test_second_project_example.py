@@ -87,5 +87,7 @@ def test_second_project_blocks_when_evidence_missing_for_risk(tmp_path: Path):
         migration_validated_cli=False,
     )
     assert res.outcome == "BLOCK"
-    assert "db_migrations" in res.risks_triggered
+    # Risk category and required validation differ now (config maps
+    # schema_changes -> db_migrations) — verify the mapping is honored.
+    assert "schema_changes" in res.risks_triggered
     assert "db_migrations" in res.validations_required

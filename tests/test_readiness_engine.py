@@ -137,6 +137,91 @@ def test_migrations_without_validation_blocks():
     assert "risk_without_validation" in res.failed_checks
 
 
+def test_risk_category_mapping_uses_config_when_present():
+    """SCRUM-207: a config-supplied mapping replaces identity for that category."""
+    cfg = {
+        **BASE_CONFIG,
+        "risk_category_to_required_validation": {"migrations": "migrations_validated"},
+    }
+    # No evidence at all for migrations_validated → BLOCK with the mapped key required.
+    res = compute_readiness(
+        config=cfg,
+        changed_files=["db/migrations/000099_add_thing.up.sql"],
+        smoke=smoke_passed(),
+        e2e=e2e_passed(),
+        coverage={"line_percent": 50, "baseline_percent": 50},
+        prod_health={"ok": True},
+        migration_validated_cli=False,
+    )
+    assert res.outcome == "BLOCK"
+    assert "migrations_validated" in res.validations_required
+    assert "migrations" not in res.validations_required
+
+
+def test_risk_category_mapping_satisfied_via_cli_flag():
+    """When the mapping points at migrations_validated, --migration-validated still satisfies it."""
+    cfg = {
+        **BASE_CONFIG,
+        "risk_category_to_required_validation": {"migrations": "migrations_validated"},
+    }
+    res = compute_readiness(
+        config=cfg,
+        changed_files=["db/migrations/000099_add_thing.up.sql"],
+        smoke=smoke_passed(),
+        e2e=e2e_passed(),
+        coverage={"line_percent": 50, "baseline_percent": 50},
+        prod_health={"ok": True},
+        migration_validated_cli=True,
+    )
+    assert res.outcome == "PASS"
+
+
+def test_risk_category_non_identity_mapping():
+    """SCRUM-207: an unrelated project can map auth_endpoints risk → auth_login validation."""
+    cfg = {
+        **BASE_CONFIG,
+        "validations": {**BASE_CONFIG["validations"], "auth_login": {"description": "auth"}},
+        "risk_from_paths": [
+            {"categories": ["auth_endpoints"], "patterns": ["src/auth/**"]},
+        ],
+        "risk_category_to_required_validation": {"auth_endpoints": "auth_login"},
+    }
+    # auth_login satisfied via explicit nested validation evidence.
+    res = compute_readiness(
+        config=cfg,
+        changed_files=["src/auth/login.py"],
+        smoke=smoke_passed(),
+        e2e=e2e_passed(validations={"auth_login": True}),
+        coverage={"line_percent": 50, "baseline_percent": 50},
+        prod_health={"ok": True},
+        migration_validated_cli=False,
+    )
+    assert res.outcome == "PASS"
+    assert "auth_login" in res.validations_required
+    assert "auth_endpoints" not in res.validations_required
+
+
+def test_risk_category_falls_back_to_identity_when_mapping_absent():
+    """Without risk_category_to_required_validation, identity mapping still applies."""
+    cfg = {
+        **BASE_CONFIG,
+        "risk_from_paths": [
+            {"categories": ["custom_area"], "patterns": ["src/custom/**"]},
+        ],
+    }
+    res = compute_readiness(
+        config=cfg,
+        changed_files=["src/custom/thing.py"],
+        smoke=smoke_passed(),
+        e2e=e2e_passed(validations={"custom_area": True}),
+        coverage={"line_percent": 50, "baseline_percent": 50},
+        prod_health={"ok": True},
+        migration_validated_cli=False,
+    )
+    assert res.outcome == "PASS"
+    assert "custom_area" in res.validations_required
+
+
 def test_happy_path_passes():
     res = compute_readiness(
         config=BASE_CONFIG,

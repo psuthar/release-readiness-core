@@ -43,17 +43,17 @@ A regression test (`tests/test_second_project_example.py`) drives the CLI agains
 
 Listed in priority order. Each item is independent and could become a follow-up ticket. The package **is** usable today against an unrelated project — these are friction points, not blockers.
 
-### Gap 1 — `risk_category_to_required_validation` schema knob is silently ignored
+### Gap 1 — `risk_category_to_required_validation` schema knob is silently ignored — **RESOLVED in SCRUM-207**
 
 **Severity:** medium (correctness)
 **File:** `src/release_readiness_core/readiness_engine.py` (the loop building `validations_required`)
 **Schema reference:** `docs/contracts/validation-config-v1.schema.json` documents `risk_category_to_required_validation` as a configurable mapping.
 
-The engine hardcodes `if r == "migrations": validations_required.add("migrations_validated")` and otherwise uses identity mapping. It does **not** read `risk_category_to_required_validation` from config.
+The engine hardcoded `if r == "migrations": validations_required.add("migrations_validated")` and otherwise used identity mapping. It did not read `risk_category_to_required_validation` from config.
 
-In the second-project fixture this happened to work because risk category names were chosen to match validation keys. Any project that needs `auth_endpoints → auth_session` (or anything other than identity / TalkBack's `migrations → migrations_validated`) will silently get the wrong required-validation set. Schema documents a feature that doesn't exist.
+In the second-project fixture this happened to work because risk category names were chosen to match validation keys. Any project that needed `auth_endpoints → auth_session` (or anything other than identity / TalkBack's `migrations → migrations_validated`) silently got the wrong required-validation set.
 
-**Suggested fix:** read `risk_category_to_required_validation` from config; fall back to identity. The hardcoded `if r == "migrations"` should be representable via that map (TalkBack ships it as default config), not in source.
+**Resolution (SCRUM-207):** the engine now reads `risk_category_to_required_validation` from config and falls back to identity for unmapped categories. The hardcoded `migrations` case is gone; TalkBack supplies the equivalent mapping in its config. The second-project fixture now demonstrates a non-identity mapping (`schema_changes → db_migrations`).
 
 ### Gap 2 — "Production health snapshot not provided (optional)" warning suppresses PASS
 

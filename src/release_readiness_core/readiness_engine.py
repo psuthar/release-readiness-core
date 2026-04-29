@@ -416,13 +416,15 @@ def compute_readiness(
             )
             failed_checks.append("pr_risk_warn")
 
-    # Risk validation blockers
+    # Risk validation blockers.
+    # Each risk category maps to a required validation key. The mapping is config-driven
+    # via `risk_category_to_required_validation`; categories not listed there fall back to
+    # identity (the validation key has the same name as the risk category). TalkBack's
+    # historic `migrations -> migrations_validated` rule lives in its config now, not here.
+    risk_to_validation = config.get("risk_category_to_required_validation", {}) or {}
     validations_required: set[str] = set()
     for r in risks:
-        if r == "migrations":
-            validations_required.add("migrations_validated")
-        else:
-            validations_required.add(r)
+        validations_required.add(risk_to_validation.get(r, r))
 
     validations_required_list = sorted(validations_required)
     missing_vals = [v for v in validations_required_list if v and not val_map.get(v)]

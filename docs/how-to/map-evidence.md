@@ -220,16 +220,27 @@ requirement.
 ### Anything you've named in `risk_category_to_required_validation`
 
 When risk patterns trigger, the engine builds a list of required
-validations. The schema documents
-`risk_category_to_required_validation` for mapping risk categories
-(e.g. `auth_endpoints`) to validation keys (e.g. `auth_login`).
+validations. The mapping is config-driven — declare your risk
+categories under `risk_from_paths` using whatever vocabulary fits the
+*change* (e.g. `schema_changes`, `auth_endpoints`), then map those
+categories to the validation keys that prove the change is safe:
 
-> ⚠️ Known gap (SCRUM-178 #1): the engine currently identity-maps
-> risk categories to required validations and does **not** yet read
-> `risk_category_to_required_validation` from config (the only special
-> case is the hardcoded `migrations → migrations_validated`). Until
-> that ticket lands, name your risk categories the same as your
-> validation keys.
+```yaml
+risk_from_paths:
+  - categories: [schema_changes]
+    patterns: ["migrations/**", "alembic/**"]
+  - categories: [auth_endpoints]
+    patterns: ["src/auth/**"]
+
+risk_category_to_required_validation:
+  schema_changes: db_migrations
+  auth_endpoints: auth_login
+```
+
+Risk categories not listed in
+`risk_category_to_required_validation` fall back to identity mapping
+(the validation key has the same name as the risk category), which is
+fine when your vocabulary is consistent across the two.
 
 ---
 

@@ -1,6 +1,5 @@
-"""Optional workflow adapters (Playwright JSON, GitHub check semantics, etc.).
+"""Optional workflow adapters (Playwright JSON, GitHub check semantics, etc.)."""
 
-Concrete modules are added in SCRUM-176; this package provides a stable import path.
-"""
+from . import playwright_results, pr_risk_semantic
 
-__all__: list[str] = []
+__all__ = ["playwright_results", "pr_risk_semantic"]

@@ -27,6 +27,15 @@ uv run release-readiness-evaluate --repo-root . --config path/to/config.yaml \
   --empty-diff --output-dir artifacts/release-readiness
 ```
 
+Adapter CLIs (ported from TalkBack scripts):
+
+```bash
+uv run playwright-to-readiness --input playwright-results.json --output e2e_results.json
+uv run pr-risk-semantic --pr-risk-json artifacts/pr-risk.json --generator-outcome success
+```
+
+The N-input PR gate combiner lives in `release_readiness_core.pr_gate` (`combine_gate_inputs`).
+
 ### Install from Git (SHA-pinned)
 
 ```bash

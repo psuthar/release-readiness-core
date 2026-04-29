@@ -41,7 +41,7 @@ when the validation is required but missing.
 
 A validation is **required** for a given run when changed files match a
 risk pattern that maps to it (see `risk_from_paths` in the schema and
-`docs/how-to/tune-scoring.md`). A validation that's *not required* but
+`docs/how-to/2-tune-scoring.md`). A validation that's *not required* but
 has evidence still appears in the report — labeled `not_required` —
 giving reviewers extra signal without gating.
 
@@ -415,8 +415,8 @@ before the rendering layer trimmed it.
 
 ## 8. Cross-references
 
-- `docs/how-to/quickstart.md` — broader walkthrough; minimum config.
-- `docs/how-to/tune-scoring.md` — penalties, thresholds, and the
+- `docs/how-to/0-quickstart.md` — broader walkthrough; minimum config.
+- `docs/how-to/2-tune-scoring.md` — penalties, thresholds, and the
   `risk_from_paths` block that decides which validations become
   *required*.
 - `docs/contracts/validation-config-v1.schema.json` — full schema for

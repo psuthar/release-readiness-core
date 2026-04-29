@@ -76,13 +76,13 @@ uv build
 
 ### How-to guides
 
-- Quickstart — adopt the package in a new project: `docs/how-to/quickstart.md`
-- Map evidence — wire CI artifacts to validation keys: `docs/how-to/map-evidence.md`
-- Tune scoring — penalties, thresholds, remediation: `docs/how-to/tune-scoring.md`
-- CI integration — GitHub Checks and the generic adapter pattern: `docs/how-to/ci-integration.md`
-- Multi-job CI — split smoke / e2e / coverage across jobs: `docs/how-to/multi-job-ci.md`
-- Branch protection — make the readiness check required: `docs/how-to/branch-protection.md`
-- Migrating from an existing gate: `docs/how-to/migrate-from-existing-gate.md`
+- Quickstart — adopt the package in a new project: `docs/how-to/0-quickstart.md`
+- Map evidence — wire CI artifacts to validation keys: `docs/how-to/1-map-evidence.md`
+- Tune scoring — penalties, thresholds, remediation: `docs/how-to/2-tune-scoring.md`
+- CI integration — GitHub Checks and the generic adapter pattern: `docs/how-to/3-ci-integration.md`
+- Multi-job CI — split smoke / e2e / coverage across jobs: `docs/how-to/4-multi-job-ci.md`
+- Branch protection — make the readiness check required: `docs/how-to/5-branch-protection.md`
+- Migrating from an existing gate: `docs/how-to/6-migrate-from-existing-gate.md`
 
 ### Reference
 

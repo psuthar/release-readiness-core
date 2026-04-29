@@ -118,9 +118,9 @@ What each block does:
 
 - **`version`** — schema version, currently `1`.
 - **`validations`** — registry of the validation keys your project knows about. Required keys appear here with a human description.
-- **`evidence_boolean_keys`** — top-level keys in your smoke / e2e JSON that mark a validation as satisfied when set to `true`. Without this, the engine falls back to TalkBack-flavored defaults (see `docs/how-to/map-evidence.md` for why you almost always want to set this explicitly).
+- **`evidence_boolean_keys`** — top-level keys in your smoke / e2e JSON that mark a validation as satisfied when set to `true`. Without this, the engine falls back to TalkBack-flavored defaults (see `docs/how-to/1-map-evidence.md` for why you almost always want to set this explicitly).
 - **`infer_validations_when_pass`** — optional inference: when smoke or e2e passes overall, mark these validation keys as satisfied even without explicit booleans.
-- **`scoring`** — thresholds and per-signal penalties. Defaults below preserve the deterministic engine's behavior. Tune per `docs/how-to/tune-scoring.md`.
+- **`scoring`** — thresholds and per-signal penalties. Defaults below preserve the deterministic engine's behavior. Tune per `docs/how-to/2-tune-scoring.md`.
 
 Everything else (`risk_from_paths`, `risky_config_patterns`,
 `remediation`, `e2e_critical_name_patterns`, etc.) is optional — start
@@ -273,9 +273,9 @@ arrays so a CI gate doesn't have to re-parse `playwright-results.json`.
 
 ## 6. Next steps
 
-- **Wire your real evidence:** `docs/how-to/map-evidence.md` covers smoke / e2e schemas, the Playwright adapter, and how `infer_validations_when_pass` interacts with explicit JSON validations.
-- **Tune the scoring:** `docs/how-to/tune-scoring.md` walks through penalties, thresholds, and avoiding the common "warning suppresses PASS at 100" anti-pattern.
-- **Plug into CI:** `docs/how-to/ci-integration.md` shows the GitHub Checks pattern and a generic adapter pattern for non-GitHub CI.
+- **Wire your real evidence:** `docs/how-to/1-map-evidence.md` covers smoke / e2e schemas, the Playwright adapter, and how `infer_validations_when_pass` interacts with explicit JSON validations.
+- **Tune the scoring:** `docs/how-to/2-tune-scoring.md` walks through penalties, thresholds, and avoiding the common "warning suppresses PASS at 100" anti-pattern.
+- **Plug into CI:** `docs/how-to/3-ci-integration.md` shows the GitHub Checks pattern and a generic adapter pattern for non-GitHub CI.
 - **Reference docs:** `docs/contracts/README.md` has the JSON schemas for inputs and outputs.
 
 If something in this quickstart didn't behave as advertised, please open

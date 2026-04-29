@@ -5,6 +5,17 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 (see `RELEASE.md` for SHA-pinning until a `1.0` is published).
 
+## [0.3.1] — 2026-04-29
+
+### Changed
+- How-to filenames under `docs/how-to/` now carry a numeric prefix
+  matching their intended reading order (`0-quickstart.md`,
+  `1-map-evidence.md`, `2-tune-scoring.md`, `3-ci-integration.md`,
+  `4-multi-job-ci.md`, `5-branch-protection.md`,
+  `6-migrate-from-existing-gate.md`). Adopters who hard-coded the old
+  paths in their own docs need to update; nothing in the package's
+  runtime behavior changed.
+
 ## [0.3.0] — 2026-04-29
 
 ### Added
@@ -17,13 +28,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `smoke-input-v1.schema.json`, `e2e-input-v1.schema.json`,
   `coverage-input-v1.schema.json`. Doctor uses them; adopters can
   validate their own evidence-emission tooling against them too.
-- `docs/how-to/migrate-from-existing-gate.md` — step-by-step migration
+- `docs/how-to/6-migrate-from-existing-gate.md` — step-by-step migration
   for teams replacing a hand-rolled readiness gate. Covers
   inventory → mapping → parallel-run → cut-over.
-- `docs/how-to/multi-job-ci.md` — `actions/upload-artifact` /
+- `docs/how-to/4-multi-job-ci.md` — `actions/upload-artifact` /
   `download-artifact` pattern for projects whose smoke / e2e / coverage
   live in separate jobs.
-- `docs/how-to/branch-protection.md` — concrete UI and `gh api` steps
+- `docs/how-to/5-branch-protection.md` — concrete UI and `gh api` steps
   for making the readiness check required.
 - `docs/reference/outputs.md` — exhaustive field-by-field glossary for
   `release-readiness.json` and `report.json`.
@@ -75,8 +86,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   is required (SCRUM-170).
 
 ### Documentation
-- New `docs/how-to/quickstart.md`, `map-evidence.md`, `tune-scoring.md`,
-  `ci-integration.md`.
+- New `docs/how-to/0-quickstart.md`, `1-map-evidence.md`,
+  `2-tune-scoring.md`, `3-ci-integration.md`.
 - New `docs/spikes/SCRUM-178-second-project-validation.md` with the gap
   list driving the 0.2.0 changes; gaps #1, #2, #3, #4, #5, #6, #7, #20
   marked resolved.

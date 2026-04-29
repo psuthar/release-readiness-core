@@ -97,7 +97,7 @@ Top-level structure:
 | `reasons` | string[] | Human-readable explanations of the score and risk path (e.g. "Score=85.0/100 (PASS: score>=80…)"). |
 | `warnings` | string[] | Soft-failure messages that demoted the run (or were demoted *to* by hard rules). PASS is impossible while this is non-empty. |
 | `blockers` | string[] | Hard-failure messages. Any non-empty list forces BLOCK. |
-| `failed_checks` | string[] | Short keys for each warning/blocker — the join key for `remediation` in `config.yaml`. Examples: `smoke_artifact`, `e2e_critical`, `coverage_regression`. See `docs/how-to/tune-scoring.md` §4 for the full list. |
+| `failed_checks` | string[] | Short keys for each warning/blocker — the join key for `remediation` in `config.yaml`. Examples: `smoke_artifact`, `e2e_critical`, `coverage_regression`. See `docs/how-to/2-tune-scoring.md` §4 for the full list. |
 | `outcome_overrides` | string[] | Non-empty when the final outcome differs from what `score` alone would produce. The most common case: `warnings_suppress_pass` (score in PASS range but warnings demoted to WARN). |
 
 ### What changed and what risks fired
@@ -145,7 +145,7 @@ any evidence — pure noise either way.
 
 `*_present` booleans answer "did the engine see this artifact?".
 `validation_note_*` covers the `Validation:` / `Validate:` commit
-message convention; see `docs/how-to/map-evidence.md` §5.
+message convention; see `docs/how-to/1-map-evidence.md` §5.
 
 ### Remediation
 
@@ -164,7 +164,7 @@ message convention; see `docs/how-to/map-evidence.md` §5.
 One entry per `failed_checks` key, populated from `remediation` in
 `config.yaml`. Unmapped keys get a placeholder
 `"Investigate check: <key>"` so reviewers always have *something* to
-go on. Tune via `docs/how-to/tune-scoring.md` §4.
+go on. Tune via `docs/how-to/2-tune-scoring.md` §4.
 
 ### E2E failure detail
 
@@ -236,7 +236,7 @@ specific value back to its rule.
 
 ## 5. Cross-references
 
-- `docs/how-to/quickstart.md` — first-time read.
-- `docs/how-to/map-evidence.md` — how validations get satisfied.
-- `docs/how-to/tune-scoring.md` — penalties, thresholds, and the full `failed_checks` key list.
+- `docs/how-to/0-quickstart.md` — first-time read.
+- `docs/how-to/1-map-evidence.md` — how validations get satisfied.
+- `docs/how-to/2-tune-scoring.md` — penalties, thresholds, and the full `failed_checks` key list.
 - `docs/contracts/release-readiness-output-v1.schema.json` — machine-readable schema for `release-readiness.json`.

@@ -55,9 +55,7 @@ uv run lcov-to-readiness --input coverage/lcov.info --output coverage.json \
 uv run pr-risk-semantic --pr-risk-json artifacts/pr-risk.json --generator-outcome success
 ```
 
-`--validation-map` is optional on Playwright and JUnit; without it the converter
-emits an empty `validations` object (counts and failures still reported). For
-Playwright, override default spec extensions with `--spec-extensions ts,js,mjs,e2e`.
+`--validation-map` is optional on Playwright and JUnit; without it the converter emits an empty `validations` object (counts and failures still reported). For Playwright, override default spec extensions with `--spec-extensions ts,js,mjs,e2e`.
 
 The N-input PR gate combiner lives in `release_readiness_core.pr_gate` (`combine_gate_inputs`).
 
@@ -102,21 +100,12 @@ release-readiness-doctor --config ops/release-readiness/config.yaml \
   --coverage evidence/coverage.json
 ```
 
-Doctor catches config typos, evidence-shape mismatches, and common
-inconsistencies (e.g. `failed_count > 0` but `failures: []`) before
-they reach a real run. Exits non-zero on any error.
+Doctor catches config typos, evidence-shape mismatches, and common inconsistencies (e.g. `failed_count > 0` but `failures: []`) before they reach a real run. Exits non-zero on any error.
 
 ### Two CLIs — when to use which
 
-- `release-readiness-evaluate` — the **full evaluator**. Loads
-  `config.yaml`, reads evidence files, computes PASS/WARN/BLOCK, writes
-  `report.json` / `report.md` / `release-readiness.json`. **Use this in
-  CI.**
-- `release-readiness` — a **lightweight summary** of validation booleans
-  given inline JSON. No scoring, no thresholds, no artifacts on disk.
-  Useful for quick sanity checks (`release-readiness --input-json
-  '[{"key":"x","status":"PASS"}]'`) or as a debugging probe in scripts.
-  **Not a substitute for the evaluator in production CI.**
+- `release-readiness-evaluate` — the **full evaluator**. Loads `config.yaml`, reads evidence files, computes PASS/WARN/BLOCK, writes `report.json` / `report.md` / `release-readiness.json`. **Use this in CI.**
+- `release-readiness` — a **lightweight summary** of validation booleans given inline JSON. No scoring, no thresholds, no artifacts on disk. Useful for quick sanity checks (`release-readiness --input-json '[{"key":"x","status":"PASS"}]'`) or as a debugging probe in scripts. **Not a substitute for the evaluator in production CI.**
 
 ### Contracts and Spike Notes
 
@@ -161,12 +150,9 @@ Both files are gitignored.
 
 This repository supports the same Jira automation command patterns as TalkBack.
 
-- `implement SCRUM-xxx`  
-  Standard ticket workflow: code + tests + PR + Jira transition to In Review.
-- `implement SCRUM-xxx FULL_AUTO`  
-  Includes standard workflow plus post-PR gate polling, merge, and Jira Done transition.
-- `run epic SCRUM-xxx` / `continue epic SCRUM-xxx`  
-  Epic automation mode that runs each child ticket as FULL_AUTO and drains remaining work.
+- `implement SCRUM-xxx` Standard ticket workflow: code + tests + PR + Jira transition to In Review.
+- `implement SCRUM-xxx FULL_AUTO` Includes standard workflow plus post-PR gate polling, merge, and Jira Done transition.
+- `run epic SCRUM-xxx` / `continue epic SCRUM-xxx` Epic automation mode that runs each child ticket as FULL_AUTO and drains remaining work.
 
 Policy ownership:
 - Entry point: `CLAUDE.md`

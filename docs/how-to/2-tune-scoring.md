@@ -1,15 +1,10 @@
 # Tune scoring, penalties, and remediation
 
-This guide is for adopters who have a working `release-readiness-core`
-setup (per `quickstart.md` and `map-evidence.md`) and want to make the
-deterministic scoring fit their project.
+This guide is for adopters who have a working `release-readiness-core` setup (per `quickstart.md` and `map-evidence.md`) and want to make the deterministic scoring fit their project.
 
-The engine's scoring is opinionated by default but every block is
-configurable. Knowing what each knob does — and how the knobs interact
-— is the difference between a useful gate and a noisy one.
+The engine's scoring is opinionated by default but every block is configurable. Knowing what each knob does — and how the knobs interact — is the difference between a useful gate and a noisy one.
 
-> Worked example throughout: `examples/second-project/config.yaml`.
-> All snippets below match that file unless explicitly different.
+> Worked example throughout: `examples/second-project/config.yaml`. All snippets below match that file unless explicitly different.
 
 ---
 
@@ -33,11 +28,7 @@ The outcome is a function of `score`, `blockers`, and `warnings`:
 
 This is implemented in `decide_outcome()` in `readiness_engine.py`.
 
-The order matters: blockers beat thresholds, then thresholds beat
-warnings, then warnings demote PASS to WARN. There is no path from
-"score >= pass_threshold + warnings present" to PASS — that's the
-**warnings-suppress-PASS** rule and it's the single biggest source of
-"why isn't this PASS-ing?" surprise.
+The order matters: blockers beat thresholds, then thresholds beat warnings, then warnings demote PASS to WARN. There is no path from "score >= pass_threshold + warnings present" to PASS — that's the **warnings-suppress-PASS** rule and it's the single biggest source of "why isn't this PASS-ing?" surprise.
 
 ---
 
@@ -63,29 +54,19 @@ scoring:
 ### `max_score`, `pass_threshold`, `warn_threshold`
 
 - `max_score` is the perfect-state ceiling. Penalties subtract from it.
-- `pass_threshold` is the floor for a possible PASS. Score must reach
-  it AND there must be 0 warnings.
-- `warn_threshold` is the floor below which any run is **BLOCK**, even
-  with no blockers. Treat it as "I lost so much confidence the score
-  alone is a stop."
-- `block_score` is the floor the engine clamps to when any blocker
-  fires. Default is 0 — without it, you could see "score 90, outcome
-  BLOCK" because the blocker doesn't carry a penalty by itself.
+- `pass_threshold` is the floor for a possible PASS. Score must reach it AND there must be 0 warnings.
+- `warn_threshold` is the floor below which any run is **BLOCK**, even with no blockers. Treat it as "I lost so much confidence the score alone is a stop."
+- `block_score` is the floor the engine clamps to when any blocker fires. Default is 0 — without it, you could see "score 90, outcome BLOCK" because the blocker doesn't carry a penalty by itself.
 
 Tuning rule of thumb:
 
-- Keep `max_score = 100` unless you have a specific reason; almost
-  everything downstream assumes a 0–100 scale.
-- `warn_threshold` should be far enough below `pass_threshold` that
-  hitting it represents a serious confidence loss. 20 points is the
-  default gap and it's a reasonable starting point.
-- Lowering `pass_threshold` only helps if you also reduce penalty sizes
-  — otherwise you're just papering over noisy gates.
+- Keep `max_score = 100` unless you have a specific reason; almost everything downstream assumes a 0–100 scale.
+- `warn_threshold` should be far enough below `pass_threshold` that hitting it represents a serious confidence loss. 20 points is the default gap and it's a reasonable starting point.
+- Lowering `pass_threshold` only helps if you also reduce penalty sizes — otherwise you're just papering over noisy gates.
 
 ### `penalties` — per-signal soft deductions
 
-Each key here corresponds to a check the engine knows about. The names
-are stable and listed in `readiness_engine.py`. The defaults:
+Each key here corresponds to a check the engine knows about. The names are stable and listed in `readiness_engine.py`. The defaults:
 
 | Key | Default | When it fires |
 |---|---|---|
@@ -100,15 +81,9 @@ are stable and listed in `readiness_engine.py`. The defaults:
 
 Tuning principles:
 
-- **Bigger penalty ≠ stricter gate.** It only matters relative to your
-  thresholds. Bumping `missing_e2e_artifact` from 15 to 25 has no effect
-  if you also drop `pass_threshold` from 80 to 70.
-- **Don't zero out penalties to hide noise.** If a missing coverage
-  artifact is genuinely fine, set `penalties.missing_coverage_artifact:
-  0` AND understand you're losing the soft signal. The matching warning
-  *still* appears (and still suppresses PASS — see §6).
-- **The smoke penalty deserves its size.** Smoke is your last-ditch
-  liveness check; making it cheap to skip is a footgun.
+- **Bigger penalty ≠ stricter gate.** It only matters relative to your thresholds. Bumping `missing_e2e_artifact` from 15 to 25 has no effect if you also drop `pass_threshold` from 80 to 70.
+- **Don't zero out penalties to hide noise.** If a missing coverage artifact is genuinely fine, set `penalties.missing_coverage_artifact: 0` AND understand you're losing the soft signal. The matching warning *still* appears (and still suppresses PASS — see §6).
+- **The smoke penalty deserves its size.** Smoke is your last-ditch liveness check; making it cheap to skip is a footgun.
 
 ---
 
@@ -120,28 +95,20 @@ e2e_critical_name_patterns:
   - "todo_crud"
 ```
 
-The engine matches each E2E failure's title against this list (case-
-insensitive, substring match). Any match promotes that failure to a
-**critical blocker** — the outcome becomes BLOCK regardless of score.
-Non-matching failures stay as warnings (with the `non_critical_e2e_failure`
-penalty applied).
+The engine matches each E2E failure's title against this list (case- insensitive, substring match). Any match promotes that failure to a **critical blocker** — the outcome becomes BLOCK regardless of score. Non-matching failures stay as warnings (with the `non_critical_e2e_failure` penalty applied).
 
 Use this list to encode "if any of these break, ship is unsafe":
 - Login / auth flows.
-- Anything that touches data the user paid for or that you'd hate to
-  corrupt (CRUD on core entities).
+- Anything that touches data the user paid for or that you'd hate to corrupt (CRUD on core entities).
 - Anything you'd page someone for at 3am.
 
-Anti-pattern: putting *every* test name in `e2e_critical_name_patterns`.
-Now nothing is critical, because everything is.
+Anti-pattern: putting *every* test name in `e2e_critical_name_patterns`. Now nothing is critical, because everything is.
 
 ---
 
 ## 4. The `remediation` map — actionable failure messages
 
-When a check fails, the engine emits a `failed_checks` entry like
-`smoke_artifact` or `e2e_critical`. The `remediation` block in your
-config maps each key to a structured remediation row:
+When a check fails, the engine emits a `failed_checks` entry like `smoke_artifact` or `e2e_critical`. The `remediation` block in your config maps each key to a structured remediation row:
 
 ```yaml
 remediation:
@@ -164,31 +131,21 @@ remediation:
     fix_type: ci_config
 ```
 
-Each `remediation` entry surfaces in the markdown report's "Remediation
-guidance" table and in `report.json` as `remediation_items[]`. CI
-gates and reviewer agents read these to suggest concrete next steps
-without having to know the engine's internals.
+Each `remediation` entry surfaces in the markdown report's "Remediation guidance" table and in `report.json` as `remediation_items[]`. CI gates and reviewer agents read these to suggest concrete next steps without having to know the engine's internals.
 
 The full set of `failed_checks` keys produced by the engine:
 
-`smoke_artifact`, `smoke_parse_error`, `smoke_failed`, `e2e_artifact`,
-`e2e_skipped`, `e2e_critical`, `e2e_non_critical`, `e2e_retries`,
-`coverage_regression`, `risky_config_without_note`, `pr_risk_block`,
-`pr_risk_warn`, `risk_without_validation`.
+`smoke_artifact`, `smoke_parse_error`, `smoke_failed`, `e2e_artifact`, `e2e_skipped`, `e2e_critical`, `e2e_non_critical`, `e2e_retries`, `coverage_regression`, `risky_config_without_note`, `pr_risk_block`, `pr_risk_warn`, `risk_without_validation`.
 
-Cover at least these in `remediation` for any production-bound config;
-the engine will emit a "Investigate check: <name>" placeholder for any
-key you skip, which is fine for triage but not great for adopters.
+Cover at least these in `remediation` for any production-bound config; the engine will emit a "Investigate check: <name>" placeholder for any key you skip, which is fine for triage but not great for adopters.
 
 ---
 
 ## 5. Worked example: tuning a PASS into WARN
 
-Start with `examples/second-project/config.yaml`. The fixture's
-synthetic evidence produces `PASS, score=100`.
+Start with `examples/second-project/config.yaml`. The fixture's synthetic evidence produces `PASS, score=100`.
 
-Now imagine you want to tighten the gate so a coverage shortfall fails
-the build.
+Now imagine you want to tighten the gate so a coverage shortfall fails the build.
 
 **Change 1** — add a stricter coverage baseline:
 
@@ -199,8 +156,7 @@ the build.
 + "baseline_percent": 85.0
 ```
 
-Now `coverage_regression` fires, the warning lands, and the score
-drops by 12 (the `coverage_regression` penalty).
+Now `coverage_regression` fires, the warning lands, and the score drops by 12 (the `coverage_regression` penalty).
 
 Re-run:
 
@@ -210,12 +166,9 @@ Re-run:
 - Coverage regression: 84.5% vs baseline 85.0%
 ```
 
-Why WARN, not PASS? Score 88 is above `pass_threshold` (80), but the
-new warning suppresses promotion. **The penalty alone wouldn't have
-demoted the run** — the warning did.
+Why WARN, not PASS? Score 88 is above `pass_threshold` (80), but the new warning suppresses promotion. **The penalty alone wouldn't have demoted the run** — the warning did.
 
-**Change 2** — make coverage regression a blocker by raising its
-penalty above the warn threshold:
+**Change 2** — make coverage regression a blocker by raising its penalty above the warn threshold:
 
 ```yaml
 scoring:
@@ -224,16 +177,9 @@ scoring:
     coverage_regression: 30   # was 12
 ```
 
-Re-run: score drops by 30 (from 100 to 70). 70 ≥ 60 (warn threshold), so
-still WARN, not BLOCK. To force BLOCK on coverage shortfall you'd raise
-the penalty above 40 (so score lands < 60), or — cleaner — use
-`risk_from_paths` to require an explicit "coverage_acceptable" validation
-that you only emit when the regression is acceptable.
+Re-run: score drops by 30 (from 100 to 70). 70 ≥ 60 (warn threshold), so still WARN, not BLOCK. To force BLOCK on coverage shortfall you'd raise the penalty above 40 (so score lands < 60), or — cleaner — use `risk_from_paths` to require an explicit "coverage_acceptable" validation that you only emit when the regression is acceptable.
 
-The lesson: **soft penalties alone can't cause BLOCK** unless they push
-score below `warn_threshold`. Real BLOCK conditions belong in the
-blocker path: smoke fail, critical E2E, missing required validation, or
-a `pr_risk` enforcement of `BLOCK`.
+The lesson: **soft penalties alone can't cause BLOCK** unless they push score below `warn_threshold`. Real BLOCK conditions belong in the blocker path: smoke fail, critical E2E, missing required validation, or a `pr_risk` enforcement of `BLOCK`.
 
 ---
 
@@ -241,39 +187,24 @@ a `pr_risk` enforcement of `BLOCK`.
 
 ### "PASS at score 100 still demoted to WARN"
 
-This is the `outcome_overrides` exit you'll see most often. It happens
-because a warning fired but its penalty was 0 or trivially small. The
-warning text *itself* is the cause, not the score.
+This is the `outcome_overrides` exit you'll see most often. It happens because a warning fired but its penalty was 0 or trivially small. The warning text *itself* is the cause, not the score.
 
 Two valid responses:
 
 - If the warning is genuinely noise: gate it behind a config knob (e.g. supply a stub `prod_health.json`), or don't pass the relevant CLI flag at all so the corresponding warning never fires.
 - If the warning reflects something real: leave it. PASS is not the goal; "deploy is safe" is the goal.
 
-The anti-pattern is **lowering `pass_threshold` so that warnings fit
-under the bar**. That doesn't suppress the warning — it's still a
-warning, still demotes to WARN. It just degrades the signal.
+The anti-pattern is **lowering `pass_threshold` so that warnings fit under the bar**. That doesn't suppress the warning — it's still a warning, still demotes to WARN. It just degrades the signal.
 
 ### Penalties bigger than `(max_score - warn_threshold)`
 
-A single 50-point penalty against a 100-point ceiling and a 60 warn
-threshold means one failure → BLOCK no matter what. That's fine if you
-mean it, but you should mean it. Otherwise you're using a soft penalty
-to do a blocker's job — express it as a blocker instead (via
-`risk_from_paths` requiring a validation, or a critical E2E pattern).
+A single 50-point penalty against a 100-point ceiling and a 60 warn threshold means one failure → BLOCK no matter what. That's fine if you mean it, but you should mean it. Otherwise you're using a soft penalty to do a blocker's job — express it as a blocker instead (via `risk_from_paths` requiring a validation, or a critical E2E pattern).
 
 ### Disabling a check by zeroing its penalty
 
-`penalties.missing_e2e_artifact: 0` doesn't disable the missing-E2E
-warning; it just removes the score penalty. The warning still appears
-and still suppresses PASS. To genuinely opt out of a check, don't pass
-the relevant CLI flag — but then any required-validation logic that
-depends on E2E evidence will report `not_evaluated`, which is its own
-form of demotion.
+`penalties.missing_e2e_artifact: 0` doesn't disable the missing-E2E warning; it just removes the score penalty. The warning still appears and still suppresses PASS. To genuinely opt out of a check, don't pass the relevant CLI flag — but then any required-validation logic that depends on E2E evidence will report `not_evaluated`, which is its own form of demotion.
 
-For artifacts that are *legitimately* optional in your project (e.g.
-no production-health monitoring source, no coverage tracking), use
-`optional_artifacts` to suppress the warning and the penalty together:
+For artifacts that are *legitimately* optional in your project (e.g. no production-health monitoring source, no coverage tracking), use `optional_artifacts` to suppress the warning and the penalty together:
 
 ```yaml
 optional_artifacts:
@@ -281,16 +212,11 @@ optional_artifacts:
   - coverage
 ```
 
-When an artifact is in this list and absent at run time, the engine
-neither warns nor deducts. Use sparingly — the artifacts are only
-"optional" for projects that genuinely don't have them; suppressing
-them in a project that does is just hiding signal.
+When an artifact is in this list and absent at run time, the engine neither warns nor deducts. Use sparingly — the artifacts are only "optional" for projects that genuinely don't have them; suppressing them in a project that does is just hiding signal.
 
 ### Blanket-critical E2E patterns
 
-`e2e_critical_name_patterns: ["test"]` matches every E2E failure as
-critical. Now you can't tell which failure actually mattered. Be
-specific: name the flows, not the substrings.
+`e2e_critical_name_patterns: ["test"]` matches every E2E failure as critical. Now you can't tell which failure actually mattered. Be specific: name the flows, not the substrings.
 
 ---
 

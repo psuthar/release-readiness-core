@@ -139,7 +139,7 @@ Watch real PRs for at least one full release cycle (or two weeks,
 whichever is longer). Look for:
 
 - **False BLOCKs.** Some signal is too aggressive. Tune via
-  `docs/how-to/tune-scoring.md`.
+  `docs/how-to/2-tune-scoring.md`.
 - **False PASSes.** Your old gate caught something this one missed.
   Trace the missing signal back to step 2's mapping.
 - **Disagreements.** When the two gates disagree, log it. The discussion
@@ -154,7 +154,7 @@ When the two gates have agreed on at least 10–15 PRs, including
 non-trivial WARN/BLOCK cases, cut over:
 
 1. Mark the `release-readiness` check as **required** in branch
-   protection (see `docs/how-to/branch-protection.md`).
+   protection (see `docs/how-to/5-branch-protection.md`).
 2. Remove the old gate. Don't leave it running "just in case" — two
    gates checking similar signals creates ambiguity about which one is
    authoritative when they disagree, and the project culture stops
@@ -183,8 +183,8 @@ Promote to `warn_and_block` only when WARN false-positives are rare.
 
 ## 7. Cross-references
 
-- `docs/how-to/quickstart.md` — the green-field path; review even if you're migrating, since vocabulary matches.
-- `docs/how-to/map-evidence.md` — deep dive on validation keys and the two evidence channels.
-- `docs/how-to/tune-scoring.md` — when to adjust thresholds vs. remove a noisy warning.
-- `docs/how-to/branch-protection.md` — how to actually flip the required-check bit at cut-over.
+- `docs/how-to/0-quickstart.md` — the green-field path; review even if you're migrating, since vocabulary matches.
+- `docs/how-to/1-map-evidence.md` — deep dive on validation keys and the two evidence channels.
+- `docs/how-to/2-tune-scoring.md` — when to adjust thresholds vs. remove a noisy warning.
+- `docs/how-to/5-branch-protection.md` — how to actually flip the required-check bit at cut-over.
 - `docs/reference/outputs.md` — what every field in the report means; useful when explaining a verdict to skeptical reviewers.

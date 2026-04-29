@@ -10,7 +10,7 @@ This guide shows the artifact-sharing pattern in GitHub Actions and
 the equivalent shape in non-GitHub CIs.
 
 > Prerequisites: a working single-job pipeline first
-> (`docs/how-to/quickstart.md` and `docs/how-to/ci-integration.md`).
+> (`docs/how-to/0-quickstart.md` and `docs/how-to/3-ci-integration.md`).
 > Don't split until the simple version passes locally and against
 > `release-readiness-doctor`.
 
@@ -229,9 +229,9 @@ lcov.
 
 ## 5. Cross-references
 
-- `docs/how-to/ci-integration.md` — the single-job version; this guide
+- `docs/how-to/3-ci-integration.md` — the single-job version; this guide
   builds on it.
-- `docs/how-to/branch-protection.md` — once the multi-job workflow is
+- `docs/how-to/5-branch-protection.md` — once the multi-job workflow is
   green, this is how you make it required.
 - `release-readiness-doctor --help` — pre-flight verifier; ideal for
   catching emitter bugs before they reach the gate.

@@ -296,7 +296,7 @@ specific: name the flows, not the substrings.
 
 ## 7. Cross-references
 
-- `docs/how-to/quickstart.md` — bootstrap a fresh project before tuning.
-- `docs/how-to/map-evidence.md` — wire validation evidence; `risk_from_paths` and `risk_category_to_required_validation` are the source of *required* validations that interact with this scoring layer.
-- `docs/how-to/ci-integration.md` — surface PASS/WARN/BLOCK in GitHub Checks and other CIs.
+- `docs/how-to/0-quickstart.md` — bootstrap a fresh project before tuning.
+- `docs/how-to/1-map-evidence.md` — wire validation evidence; `risk_from_paths` and `risk_category_to_required_validation` are the source of *required* validations that interact with this scoring layer.
+- `docs/how-to/3-ci-integration.md` — surface PASS/WARN/BLOCK in GitHub Checks and other CIs.
 - `docs/contracts/validation-config-v1.schema.json` — every field referenced here, machine-readable.

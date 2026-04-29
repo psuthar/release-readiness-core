@@ -4,7 +4,7 @@ Console script: ``release-readiness-init``.
 
 The init command exists so a new adopter can go from "I want to try
 this" to "I have a working config and CI workflow" in one command,
-instead of copy-pasting from `docs/how-to/quickstart.md`. After running
+instead of copy-pasting from `docs/how-to/0-quickstart.md`. After running
 init, an adopter customizes the validation keys and risk patterns, then
 wires their CI evidence — the package handles the boilerplate.
 
@@ -33,9 +33,9 @@ from typing import Iterable, Sequence
 CONFIG_TEMPLATE = """\
 # release-readiness-core starter config — replace placeholders before shipping.
 # Reference docs:
-#   - docs/how-to/quickstart.md
-#   - docs/how-to/map-evidence.md
-#   - docs/how-to/tune-scoring.md
+#   - docs/how-to/0-quickstart.md
+#   - docs/how-to/1-map-evidence.md
+#   - docs/how-to/2-tune-scoring.md
 #   - docs/contracts/validation-config-v1.schema.json
 
 version: 1
@@ -98,7 +98,7 @@ scoring:
 
 # Per-failed-check remediation guidance surfaced in the report.
 # Keys are the failed-check identifiers emitted by the engine. See
-# docs/how-to/tune-scoring.md for the full list.
+# docs/how-to/2-tune-scoring.md for the full list.
 remediation:
   smoke_artifact:
     severity: warn

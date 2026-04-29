@@ -147,8 +147,8 @@ SHA-pin policy.
 
 ## 6. Cross-references
 
-- `docs/how-to/ci-integration.md` — the workflow + Check publishing
+- `docs/how-to/3-ci-integration.md` — the workflow + Check publishing
   setup that branch protection relies on.
-- `docs/how-to/migrate-from-existing-gate.md` — recommended flow if
+- `docs/how-to/6-migrate-from-existing-gate.md` — recommended flow if
   there's an existing required check this is replacing.
 - `RELEASE.md` — SHA-pin policy.

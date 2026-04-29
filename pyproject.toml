@@ -1,6 +1,6 @@
 [project]
 name = "release-readiness-core"
-version = "0.3.0"
+version = "0.3.1"
 description = "Project-agnostic release readiness engine and adapters"
 readme = "README.md"
 authors = [

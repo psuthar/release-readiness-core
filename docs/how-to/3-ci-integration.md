@@ -6,7 +6,7 @@ check) and to merge automation (as a gate). It covers the GitHub
 happy-path in detail, then explains the generic formatter pattern so
 you aren't trapped on GitHub.
 
-> Prerequisites: a working local setup (`docs/how-to/quickstart.md`)
+> Prerequisites: a working local setup (`docs/how-to/0-quickstart.md`)
 > and a `config.yaml` that produces the verdict you expect when run
 > against representative evidence.
 
@@ -201,7 +201,7 @@ Two flavors:
 - **Hard gate**: mark the `release-readiness` check as required in the branch protection rules. With `--enforcement-mode block_only` (default), the workflow fails on BLOCK only. With `warn_and_block`, it also fails on WARN.
 
 Tighten gradually: start with a soft gate, watch for false positives,
-adjust thresholds and penalties (see `docs/how-to/tune-scoring.md`),
+adjust thresholds and penalties (see `docs/how-to/2-tune-scoring.md`),
 then make it required.
 
 ---
@@ -399,7 +399,7 @@ contributing BLOCK forces an overall BLOCK.
 
 ## 7. Cross-references
 
-- `docs/how-to/quickstart.md` — fundamentals; the CLI surface this guide assumes.
-- `docs/how-to/map-evidence.md` — wiring CI evidence into the engine.
-- `docs/how-to/tune-scoring.md` — turning a noisy gate into a useful one before you require it.
+- `docs/how-to/0-quickstart.md` — fundamentals; the CLI surface this guide assumes.
+- `docs/how-to/1-map-evidence.md` — wiring CI evidence into the engine.
+- `docs/how-to/2-tune-scoring.md` — turning a noisy gate into a useful one before you require it.
 - `docs/contracts/pr-risk-input-v1.schema.json`, `release-readiness-output-v1.schema.json` — the JSON shapes referenced above, machine-readable.

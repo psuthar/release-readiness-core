@@ -15,6 +15,22 @@ It assumes you have Python 3.9+ and either `pip` or `uv` available.
 
 ---
 
+## 0. Scaffold (optional, recommended)
+
+Skip §§1–2 by using the scaffold command:
+
+```bash
+pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+release-readiness-init my-project
+```
+
+This writes `ops/release-readiness/config.yaml`,
+`ops/release-readiness/validation_map.yaml`, and a starter
+`.github/workflows/release-readiness.yml` under `my-project/`. Skim
+the placeholders, swap in your validation keys, and you have a
+working baseline. The rest of this guide explains what the scaffold
+emits.
+
 ## 1. Install
 
 The package is published from this Git repository. Pin a SHA in production:

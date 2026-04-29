@@ -151,7 +151,68 @@ isn't already marked `false` by an explicit JSON entry.
 
 ---
 
-## 4. The Playwright adapter
+## 4. Adapter CLIs — convert common CI artifacts
+
+Three adapters convert popular tool-specific outputs to the readiness
+JSON shapes:
+
+| Adapter | Reads | Writes | When to use |
+|---|---|---|---|
+| `playwright-to-readiness` | Playwright JSON reporter | `e2e.json` | You use Playwright. |
+| `junit-to-readiness` | JUnit XML | `e2e.json` (or `smoke.json`) | You use Cypress, Jest, pytest, Mocha, Karma, or anything that emits JUnit XML. |
+| `lcov-to-readiness` | LCOV `info` text | `coverage.json` | You generate LCOV (most JS / Python / Go coverage tooling does). |
+
+You don't need adapters at all — you can hand-write JSON in the
+documented shapes. The adapters exist because most teams already have
+runners that emit one of the formats above.
+
+### `junit-to-readiness`
+
+```bash
+junit-to-readiness \
+  --input test-results.xml \
+  --output evidence/e2e.json \
+  --validation-map ops/release-readiness/validation_map.yaml
+```
+
+JUnit's `<testcase>` elements give us classnames like
+`auth.LoginFlow` and test names like `logs_in`. The validation map
+matches against either:
+
+- the full classname (`auth.LoginFlow`)
+- the last segment of the classname (`LoginFlow`)
+- the test name (`logs_in`)
+
+So you can group tests by suite (most common) or by individual name as
+needed:
+
+```yaml
+auth_login:
+  - LoginFlow
+  - oauth.OAuthCallback   # full classname when LoginFlow alone is too broad
+todo_crud:
+  - todo-crud-create
+  - todo-crud-edit
+  - todo-crud-delete
+```
+
+`<failure>` and `<error>` both count as failures; `<skipped>` is
+counted but doesn't fail the run.
+
+### `lcov-to-readiness`
+
+```bash
+lcov-to-readiness \
+  --input coverage/lcov.info \
+  --output evidence/coverage.json \
+  --baseline-percent 85
+```
+
+`--baseline-percent` is the threshold below which the engine fires the
+`coverage_regression` warning (and applies the configured penalty). Omit
+it to ship coverage as informational without a regression check.
+
+### `playwright-to-readiness`
 
 If your project uses Playwright, the `playwright-to-readiness` CLI
 converts Playwright's JSON reporter output into the e2e schema this

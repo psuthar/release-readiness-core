@@ -63,10 +63,13 @@ def render_readiness_result_markdown(r: ReadinessResult, config_version: Any, ti
     ]
     if r.outcome_overrides:
         lines.append(f"| Outcome override | {r.outcome_overrides[0]} |")
+    # SCRUM-209 (gap #5): only show the row when a note is present, since
+    # adopters who don't use the validation-note convention have no idea what
+    # it is and "no" produces a visible-but-meaningless row.
     note_present = r.evidence.get("validation_note_present", False)
     note_source = r.evidence.get("validation_note_source", "none")
-    note_display = f"yes ({note_source})" if note_present else "no"
-    lines.append(f"| Validation note | {note_display} |")
+    if note_present:
+        lines.append(f"| Validation note | yes ({note_source}) |")
     lines.extend(
         [
             "",
@@ -90,12 +93,15 @@ def render_readiness_result_markdown(r: ReadinessResult, config_version: Any, ti
             lines.append(f"- `{x}`")
     else:
         lines.append("- (none)")
-    lines.extend(["", "### Validations", ""])
-    lines.append("| Key | Status |")
-    lines.append("|-----|--------|")
-    for k, status in sorted(r.validations.items()):
-        req_marker = " *(required)*" if k in r.validations_required else ""
-        lines.append(f"| {k} | {status}{req_marker} |")
+    # SCRUM-209 (gap #4): omit the section entirely when there are no
+    # validations to show, instead of rendering an empty markdown table.
+    if r.validations:
+        lines.extend(["", "### Validations", ""])
+        lines.append("| Key | Status |")
+        lines.append("|-----|--------|")
+        for k, status in sorted(r.validations.items()):
+            req_marker = " *(required)*" if k in r.validations_required else ""
+            lines.append(f"| {k} | {status}{req_marker} |")
     if r.failed_checks:
         lines.extend(["", "### Failed checks", ""])
         for f in r.failed_checks:

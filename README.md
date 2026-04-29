@@ -15,6 +15,15 @@ Project-agnostic deterministic release-readiness engine and adapters.
 
 ### Quickstart
 
+The fastest path:
+
+```bash
+pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+release-readiness-init my-project
+```
+
+Or run the engine directly against an inline JSON list:
+
 ```bash
 uv sync
 uv run release-readiness --input-json '[{"key":"go-test","status":"PASS"}]'
@@ -27,17 +36,28 @@ uv run release-readiness-evaluate --repo-root . --config path/to/config.yaml \
   --empty-diff --output-dir artifacts/release-readiness
 ```
 
-Adapter CLIs (ported from TalkBack scripts):
+Adapter CLIs:
 
 ```bash
+# Playwright JSON reporter -> readiness e2e shape
 uv run playwright-to-readiness --input playwright-results.json --output e2e_results.json \
-  --validation-map ops/release-readiness/e2e_validation_map.yaml
+  --validation-map ops/release-readiness/validation_map.yaml
+
+# JUnit XML (Cypress / Jest / pytest / Mocha / etc.) -> readiness e2e shape
+uv run junit-to-readiness --input test-results.xml --output e2e_results.json \
+  --validation-map ops/release-readiness/validation_map.yaml
+
+# LCOV info -> readiness coverage shape
+uv run lcov-to-readiness --input coverage/lcov.info --output coverage.json \
+  --baseline-percent 85
+
+# PR-risk semantic combiner (consumes existing pr-risk.json)
 uv run pr-risk-semantic --pr-risk-json artifacts/pr-risk.json --generator-outcome success
 ```
 
-`--validation-map` is optional; without it, the converter emits an empty `validations`
-object (counts and failures still reported). Spec extensions stripped when computing
-file stems can be overridden with `--spec-extensions ts,js,mjs,e2e`.
+`--validation-map` is optional on Playwright and JUnit; without it the converter
+emits an empty `validations` object (counts and failures still reported). For
+Playwright, override default spec extensions with `--spec-extensions ts,js,mjs,e2e`.
 
 The N-input PR gate combiner lives in `release_readiness_core.pr_gate` (`combine_gate_inputs`).
 
@@ -60,6 +80,8 @@ uv build
 - Map evidence — wire CI artifacts to validation keys: `docs/how-to/map-evidence.md`
 - Tune scoring — penalties, thresholds, remediation: `docs/how-to/tune-scoring.md`
 - CI integration — GitHub Checks and the generic adapter pattern: `docs/how-to/ci-integration.md`
+- Release process and SHA-pin policy: `RELEASE.md`
+- Changelog: `CHANGELOG.md`
 
 ### Contracts and Spike Notes
 

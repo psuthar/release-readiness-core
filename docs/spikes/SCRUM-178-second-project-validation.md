@@ -64,59 +64,40 @@ The engine unconditionally added a warning when `prod_health` was missing, even 
 
 **Resolution (SCRUM-208):** added the `optional_artifacts` config knob. Declaring an artifact in that list suppresses both the warning and the score penalty when it's absent at run time. The `examples/second-project/` fixture now declares `optional_artifacts: [prod_health]` and the stub `prod_health.json` was deleted; the regression test still observes PASS without it. Default behavior (warning + penalty) is preserved when `optional_artifacts` is omitted, so TalkBack semantics are unchanged.
 
-### Gap 3 — `--smoke-results` and friends resolve from `cwd`, not `--repo-root`
+### Gap 3 — `--smoke-results` and friends resolve from `cwd`, not `--repo-root` — **RESOLVED in SCRUM-209**
 
 **Severity:** low (DX, but easy to trip on)
-**File:** `src/release_readiness_core/readiness_evaluate.py` — `read_json(args.smoke_results)` is called with the raw `Path` argument.
+**File:** `src/release_readiness_core/readiness_evaluate.py`
 
-Running from the package root with `--repo-root examples/second-project --smoke-results evidence/smoke.json` produces "Smoke results artifact missing" because the artifact path is interpreted relative to `cwd` (`/code/release-readiness-core`), not `examples/second-project`. The CLI silently produces a BLOCK and the user has to read source to figure out why.
+Relative artifact paths now resolve under `--repo-root` (consistent with how `--config` resolves). Verified by `tests/test_friction_fixes.py::test_evaluate_cli_resolves_artifact_paths_under_repo_root` which drives the CLI from a working directory unrelated to the project root.
 
-The README example sidesteps this because `--repo-root .` makes `cwd == repo-root`. Once you try to drive the package from outside the project tree, behavior diverges from intuition.
-
-**Suggested fix:** when an artifact path is relative, resolve it under `--repo-root` (consistent with how `--config` is resolved). Or add an explicit warning when a path argument was provided but the file isn't found.
-
-### Gap 4 — `validations` table renders even when empty
+### Gap 4 — `validations` table renders even when empty — **RESOLVED in SCRUM-209**
 
 **Severity:** low (cosmetic)
 **File:** `readiness_markdown.py`
 
-The first run (no inferred validations) rendered:
+The renderer now omits the `### Validations` section entirely when `r.validations` is empty.
 
-```
-### Validations
-
-| Key | Status |
-|-----|--------|
-```
-
-— an empty table with no rows. Empty sections should be omitted or replaced with "(none)" for consistency with the "Risks from changed paths" section.
-
-### Gap 5 — "Validation note: no" in the report header is unexplained
+### Gap 5 — "Validation note: no" in the report header is unexplained — **RESOLVED in SCRUM-209**
 
 **Severity:** low (docs)
 **Where:** report header.
 
-Adopters reading their first report won't know what a "Validation note" is or what `yes` would mean. The concept is documented obliquely (commit-message convention), but not on the report itself or in the README quickstart.
+The header row is now suppressed when no validation note is present, since the negative case provides no useful signal to adopters who don't use the convention. When a note IS present the row continues to render, with the source label.
 
-**Suggested fix:** tooltip-style footnote, or just remove this row from the default header until the docs how-to (SCRUM-180/181) explains the concept.
-
-### Gap 6 — `DEFAULT_EVIDENCE_BOOLEAN_KEYS` constant still has TalkBack vocabulary
+### Gap 6 — `DEFAULT_EVIDENCE_BOOLEAN_KEYS` constant still has TalkBack vocabulary — **RESOLVED in SCRUM-209**
 
 **Severity:** low (correctness, latent)
-**File:** `readiness_engine.py` — the `("auth_session", "upload_extraction", "nav_assets", "viewer_materials", "qa_rag", "migrations_validated")` tuple.
+**File:** `readiness_engine.py`
 
-If a config omits `evidence_boolean_keys` entirely, the engine falls back to TalkBack's keys. For a non-TalkBack project this is benign-ish (their evidence won't have those top-level booleans, so nothing happens), but it bakes TalkBack vocabulary into the "library defaults." A non-TalkBack adopter who forgets to set `evidence_boolean_keys` and uses keys that happen to collide ("auth_session" is plausible) will get unintended behavior.
+`DEFAULT_EVIDENCE_BOOLEAN_KEYS` is now an empty tuple. Adopters opt in via `evidence_boolean_keys` in config. TalkBack supplies the historic tuple via its config (SCRUM-167) so its behavior is preserved; non-TalkBack projects no longer inherit unrelated defaults.
 
-**Suggested fix:** make the default empty tuple (`()`); require config to opt in. TalkBack supplies the list explicitly via SCRUM-167 anyway.
-
-### Gap 7 — `--empty-diff` is mandatory for non-git use cases, but the help text doesn't say so
+### Gap 7 — `--empty-diff` is mandatory for non-git use cases, but the help text doesn't say so — **RESOLVED in SCRUM-209**
 
 **Severity:** low (docs)
 **File:** `readiness_evaluate.py` arg help.
 
-Without `--empty-diff`, the package shells out to `git diff <base-ref> -- <repo-root>` to compute changed files. If the project isn't a git repo, or if the user is running against a checked-out fixture, this produces empty changed-files silently (or errors, depending on git's mood). The flag is described only as "Treat changed-files list as empty (skip git diff)"; there's no hint that this is the right flag for "I'm not running this inside git CI."
-
-**Suggested fix:** README should call out `--empty-diff` for non-CI/local invocations; help text should mention it as the alternative path.
+Help text expanded to describe the non-CI / non-git use case explicitly.
 
 ## Outcome
 

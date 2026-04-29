@@ -9,7 +9,8 @@ Project-agnostic deterministic release-readiness engine and adapters.
 | `release_readiness_core.engine` | Core validation merge types and deterministic summary |
 | `release_readiness_core.pr_gate` | Generic N-input PR gate combiner |
 | `release_readiness_core.readiness_engine` | Full artifact-based PASS/WARN/BLOCK evaluation |
-| `release_readiness_core.cli` | CLI entry (`release-readiness`) |
+| `release_readiness_core.cli` | CLI entries `release-readiness` (validation summary) and `release-readiness-evaluate` (YAML + artifacts) |
+| `release_readiness_core.readiness_io` | JSON/YAML/git helpers for evaluate |
 | `release_readiness_core.adapters` | Optional helpers (Playwright → schema, GitHub check payloads) |
 
 ### Quickstart
@@ -17,6 +18,13 @@ Project-agnostic deterministic release-readiness engine and adapters.
 ```bash
 uv sync
 uv run release-readiness --input-json '[{"key":"go-test","status":"PASS"}]'
+```
+
+Evaluate from a YAML config and optional JSON artifacts (writes `report.json`, `report.md`, and `artifacts/release-readiness.json` under the repo root):
+
+```bash
+uv run release-readiness-evaluate --repo-root . --config path/to/config.yaml \
+  --empty-diff --output-dir artifacts/release-readiness
 ```
 
 ### Install from Git (SHA-pinned)

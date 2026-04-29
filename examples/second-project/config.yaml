@@ -19,6 +19,11 @@ evidence_boolean_keys:
   - todo_crud
   - search_filtering
 
+# todo-api has no production-health monitoring source — opt out so a
+# missing prod_health.json doesn't suppress PASS.
+optional_artifacts:
+  - prod_health
+
 infer_validations_when_pass:
   smoke:
     - api_health

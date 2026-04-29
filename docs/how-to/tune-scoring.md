@@ -271,6 +271,21 @@ the relevant CLI flag — but then any required-validation logic that
 depends on E2E evidence will report `not_evaluated`, which is its own
 form of demotion.
 
+For artifacts that are *legitimately* optional in your project (e.g.
+no production-health monitoring source, no coverage tracking), use
+`optional_artifacts` to suppress the warning and the penalty together:
+
+```yaml
+optional_artifacts:
+  - prod_health
+  - coverage
+```
+
+When an artifact is in this list and absent at run time, the engine
+neither warns nor deducts. Use sparingly — the artifacts are only
+"optional" for projects that genuinely don't have them; suppressing
+them in a project that does is just hiding signal.
+
 ### Blanket-critical E2E patterns
 
 `e2e_critical_name_patterns: ["test"]` matches every E2E failure as

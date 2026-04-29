@@ -2,11 +2,14 @@
 
 from .engine import ValidationMergeConfig, evaluate_release_readiness, merge_validations
 from .pr_gate import GateInput, GateSummary, combine_gate_inputs, format_gate_output
+from .readiness_engine import ReadinessResult, compute_readiness
 
 __all__ = [
     "evaluate_release_readiness",
     "ValidationMergeConfig",
     "merge_validations",
+    "ReadinessResult",
+    "compute_readiness",
     "GateInput",
     "GateSummary",
     "combine_gate_inputs",

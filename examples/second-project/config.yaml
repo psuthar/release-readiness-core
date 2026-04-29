@@ -28,11 +28,11 @@ infer_validations_when_pass:
     - search_filtering
 
 risk_from_paths:
-  - categories: [db_migrations]
+  - categories: [schema_changes]
     patterns:
       - "migrations/**"
       - "alembic/**"
-  - categories: [auth_login]
+  - categories: [auth_endpoints]
     patterns:
       - "src/todo_api/auth/**"
       - "src/todo_api/users/**"
@@ -40,10 +40,11 @@ risk_from_paths:
     patterns:
       - "src/todo_api/search/**"
 
+# Map risk categories (named by what changed) to validation keys (named by
+# what's verified). Categories not listed here fall back to identity mapping.
 risk_category_to_required_validation:
-  db_migrations: db_migrations
-  auth_login: auth_login
-  search_filtering: search_filtering
+  schema_changes: db_migrations
+  auth_endpoints: auth_login
 
 risky_config_patterns:
   - "alembic.ini"

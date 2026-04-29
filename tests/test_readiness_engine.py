@@ -236,6 +236,56 @@ def test_happy_path_passes():
     assert res.failed_checks == []
 
 
+def test_optional_prod_health_not_declared_warns():
+    """Default behavior preserved: missing prod_health → warning + penalty."""
+    res = compute_readiness(
+        config=BASE_CONFIG,
+        changed_files=[],
+        smoke=smoke_passed(),
+        e2e=e2e_passed(),
+        coverage={"line_percent": 50, "baseline_percent": 50},
+        prod_health=None,
+        migration_validated_cli=False,
+    )
+    assert any("Production health snapshot" in w for w in res.warnings)
+    assert res.score < 100  # penalty fired
+
+
+def test_optional_prod_health_declared_no_warning_no_penalty():
+    """SCRUM-208: when prod_health is opted-in via optional_artifacts, missing it is silent."""
+    cfg = {**BASE_CONFIG, "optional_artifacts": ["prod_health"]}
+    res = compute_readiness(
+        config=cfg,
+        changed_files=[],
+        smoke=smoke_passed(),
+        e2e=e2e_passed(),
+        coverage={"line_percent": 50, "baseline_percent": 50},
+        prod_health=None,
+        migration_validated_cli=False,
+    )
+    assert not any("Production health" in w for w in res.warnings)
+    assert res.outcome == "PASS"
+    assert res.score == 100.0
+
+
+def test_optional_coverage_declared_no_warning_no_penalty():
+    """SCRUM-208: same opt-in path covers coverage."""
+    cfg = {**BASE_CONFIG, "optional_artifacts": ["coverage", "prod_health"]}
+    res = compute_readiness(
+        config=cfg,
+        changed_files=[],
+        smoke=smoke_passed(),
+        e2e=e2e_passed(),
+        coverage=None,
+        prod_health=None,
+        migration_validated_cli=False,
+    )
+    assert not any("Coverage" in w for w in res.warnings)
+    assert not any("Production health" in w for w in res.warnings)
+    assert res.outcome == "PASS"
+    assert res.score == 100.0
+
+
 def test_build_remediation_items_fallback_for_unknown_key():
     items = build_remediation_items(["unknown_check"], {})
     assert len(items) == 1

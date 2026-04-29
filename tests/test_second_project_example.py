@@ -51,8 +51,6 @@ def test_second_project_example_pass(clean_artifacts: Path):
             "evidence/e2e.json",
             "--coverage",
             "evidence/coverage.json",
-            "--prod-health",
-            "evidence/prod_health.json",
             "--empty-diff",
             "--output-dir",
             "artifacts/release-readiness",

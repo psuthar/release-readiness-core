@@ -336,10 +336,16 @@ def compute_readiness(
             score -= float(penalties.get("missing_e2e_artifact", 10))
             failed_checks.append("e2e_skipped")
 
-    if coverage is None:
+    # Optional artifacts: when an adopter declares an artifact in
+    # `optional_artifacts`, missing it suppresses both the warning and the
+    # score penalty. Without that declaration, the historic warning + penalty
+    # behavior is preserved (TalkBack ships no `optional_artifacts` and so
+    # continues to see "missing prod_health" as a warning).
+    optional_artifacts = set(config.get("optional_artifacts") or [])
+    if coverage is None and "coverage" not in optional_artifacts:
         warnings.append("Coverage summary not provided (confidence reduced)")
         score -= float(penalties.get("missing_coverage_artifact", 5))
-    if prod_health is None:
+    if prod_health is None and "prod_health" not in optional_artifacts:
         warnings.append("Production health snapshot not provided (optional)")
         score -= float(penalties.get("missing_prod_health_artifact", 5))
 

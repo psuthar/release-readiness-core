@@ -169,8 +169,9 @@ will emit later.
 ```
 
 (Optional — add `evidence/prod_health.json` if your project has a
-production-health source. Without it you'll get a warning that
-suppresses PASS; see the next section.)
+production-health source. If your project doesn't have one, declare
+`optional_artifacts: [prod_health]` in your `config.yaml` and the
+warning won't fire — see `tune-scoring.md` for the full opt-out list.)
 
 Re-run, this time pointing at the artifacts:
 
@@ -194,15 +195,25 @@ Expected:
 ```
 
 The score is 95/100 (one optional warning) but PASS requires score ≥ 80
-**and** zero warnings, so the outcome demotes to WARN. Add a stub
-`prod_health.json`:
+**and** zero warnings, so the outcome demotes to WARN. Two ways to
+clear it:
 
-```json
-{ "status": "healthy" }
-```
+- **Provide a stub `prod_health.json`** (e.g. `{ "status": "healthy" }`)
+  and re-run with `--prod-health evidence/prod_health.json`. Use this
+  when your project genuinely has a production-health source you want to
+  start tracking.
+- **Declare it optional in `config.yaml`** when your project has no
+  production-health monitoring at all:
 
-…and re-run with `--prod-health evidence/prod_health.json`. You should
-see:
+  ```yaml
+  optional_artifacts:
+    - prod_health
+  ```
+
+  The warning is suppressed and so is the score penalty. Coverage can
+  be opted out the same way.
+
+Either gets you to:
 
 ```
 ## Result: **PASS** (score 100.0)

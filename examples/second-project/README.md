@@ -26,6 +26,11 @@ project, so there is no diff to take). Outputs land in
 `examples/second-project/artifacts/release-readiness/report.{json,md}` and
 `examples/second-project/artifacts/release-readiness.json`.
 
+Note: there is no `--prod-health` flag here — the fixture's `config.yaml`
+declares `optional_artifacts: [prod_health]` because todo-api has no
+production-health monitoring source. The package treats the missing
+artifact as silent rather than emitting a PASS-suppressing warning.
+
 ## Why this project
 
 - Vocabulary is intentionally unlike TalkBack: validations are

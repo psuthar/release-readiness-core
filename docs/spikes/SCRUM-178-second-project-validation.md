@@ -55,19 +55,14 @@ In the second-project fixture this happened to work because risk category names 
 
 **Resolution (SCRUM-207):** the engine now reads `risk_category_to_required_validation` from config and falls back to identity for unmapped categories. The hardcoded `migrations` case is gone; TalkBack supplies the equivalent mapping in its config. The second-project fixture now demonstrates a non-identity mapping (`schema_changes → db_migrations`).
 
-### Gap 2 — "Production health snapshot not provided (optional)" warning suppresses PASS
+### Gap 2 — "Production health snapshot not provided (optional)" warning suppresses PASS — **RESOLVED in SCRUM-208**
 
 **Severity:** medium (DX)
 **File:** `readiness_engine.py` — `if prod_health is None: warnings.append(...); score -= penalty`
 
-The engine unconditionally adds a warning when `prod_health` is missing, even though the message itself says "(optional)". A warning suppresses PASS via `decide_outcome` (PASS requires `score >= pass_threshold AND no warnings`). So projects without a production-health monitoring source are forced to either:
+The engine unconditionally added a warning when `prod_health` was missing, even though the message itself said "(optional)". A warning suppresses PASS via `decide_outcome` (PASS requires `score >= pass_threshold AND no warnings`). So projects without a production-health monitoring source had to either ship a stub `prod_health.json` (what the example did originally) or accept a WARN. Same problem applied to coverage.
 
-- ship a stub `prod_health.json` (what the example does today), or
-- patch out the warning.
-
-There's no config knob to disable the prod-health check entirely. Same one-shot pattern applies to coverage. Adopters will discover this only by running the package and being surprised by a WARN they didn't expect.
-
-**Suggested fix:** treat missing-but-optional artifacts as score-only deductions, not warnings; or add a config flag like `optional_artifacts: [prod_health, coverage]` that suppresses both the warning and the penalty.
+**Resolution (SCRUM-208):** added the `optional_artifacts` config knob. Declaring an artifact in that list suppresses both the warning and the score penalty when it's absent at run time. The `examples/second-project/` fixture now declares `optional_artifacts: [prod_health]` and the stub `prod_health.json` was deleted; the regression test still observes PASS without it. Default behavior (warning + penalty) is preserved when `optional_artifacts` is omitted, so TalkBack semantics are unchanged.
 
 ### Gap 3 — `--smoke-results` and friends resolve from `cwd`, not `--repo-root`
 

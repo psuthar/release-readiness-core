@@ -31,6 +31,21 @@ the placeholders, swap in your validation keys, and you have a
 working baseline. The rest of this guide explains what the scaffold
 emits.
 
+After editing the config and gathering some evidence files, verify
+your setup with the doctor before pushing:
+
+```bash
+release-readiness-doctor \
+  --config ops/release-readiness/config.yaml \
+  --smoke-results evidence/smoke.json \
+  --e2e-results evidence/e2e.json \
+  --coverage evidence/coverage.json
+```
+
+Doctor catches typos, missing fields, and common inconsistencies
+(e.g. `failed_count > 0` with `failures: []`) before they hit a real
+CI run. Exits non-zero on any error.
+
 ## 1. Install
 
 The package is published from this Git repository. Pin a SHA in production:

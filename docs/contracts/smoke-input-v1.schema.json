@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/smoke-input-v1.schema.json",
+  "title": "Release readiness smoke input v1",
+  "description": "Shape consumed by --smoke-results. Top-level booleans named in `evidence_boolean_keys` (in config.yaml) satisfy the corresponding validation key. Additional fields beyond those listed here are ignored.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "status": {
+      "description": "Required. Overall result of the smoke suite. Treated as a pass when one of: passed, pass, success.",
+      "type": "string",
+      "examples": ["passed", "failed", "skipped"]
+    },
+    "passed": {
+      "description": "Optional shortcut. When true, equivalent to status='passed'.",
+      "type": "boolean"
+    },
+    "failed_count": {
+      "description": "Number of failed smoke tests. The engine treats >0 as a hard blocker via 'Smoke tests did not pass'.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_count": {
+      "description": "Number of smoke tests executed.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "validations": {
+      "description": "Optional per-validation booleans. Keys map to validation_keys in config.yaml. true → satisfied, false → explicitly failed (cannot be re-promoted by inference).",
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "config_validation_note": {
+      "description": "Optional free-form note that satisfies the validation-note check for risky-config changes.",
+      "type": "string"
+    }
+  }
+}

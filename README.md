@@ -80,8 +80,43 @@ uv build
 - Map evidence — wire CI artifacts to validation keys: `docs/how-to/map-evidence.md`
 - Tune scoring — penalties, thresholds, remediation: `docs/how-to/tune-scoring.md`
 - CI integration — GitHub Checks and the generic adapter pattern: `docs/how-to/ci-integration.md`
+- Multi-job CI — split smoke / e2e / coverage across jobs: `docs/how-to/multi-job-ci.md`
+- Branch protection — make the readiness check required: `docs/how-to/branch-protection.md`
+- Migrating from an existing gate: `docs/how-to/migrate-from-existing-gate.md`
+
+### Reference
+
+- Outputs glossary — every field in `report.json` / `release-readiness.json` explained: `docs/reference/outputs.md`
+- JSON contracts: `docs/contracts/`
 - Release process and SHA-pin policy: `RELEASE.md`
 - Changelog: `CHANGELOG.md`
+
+### Pre-flight
+
+Before wiring CI, run the doctor against your scaffolded config:
+
+```bash
+release-readiness-doctor --config ops/release-readiness/config.yaml \
+  --smoke-results evidence/smoke.json \
+  --e2e-results evidence/e2e.json \
+  --coverage evidence/coverage.json
+```
+
+Doctor catches config typos, evidence-shape mismatches, and common
+inconsistencies (e.g. `failed_count > 0` but `failures: []`) before
+they reach a real run. Exits non-zero on any error.
+
+### Two CLIs — when to use which
+
+- `release-readiness-evaluate` — the **full evaluator**. Loads
+  `config.yaml`, reads evidence files, computes PASS/WARN/BLOCK, writes
+  `report.json` / `report.md` / `release-readiness.json`. **Use this in
+  CI.**
+- `release-readiness` — a **lightweight summary** of validation booleans
+  given inline JSON. No scoring, no thresholds, no artifacts on disk.
+  Useful for quick sanity checks (`release-readiness --input-json
+  '[{"key":"x","status":"PASS"}]'`) or as a debugging probe in scripts.
+  **Not a substitute for the evaluator in production CI.**
 
 ### Contracts and Spike Notes
 

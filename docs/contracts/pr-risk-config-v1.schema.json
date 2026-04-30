@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/pr-risk-config-v1.schema.json",
+  "title": "PR Risk config v1 (SCRUM-238)",
+  "description": "Config-driven domains, sensitive-domain set, and gate registry for release_readiness_core.pr_risk. Phase 1 (SCRUM-239) introduces the schema and a loader; Phases 2-4 wire the classifier, gate registry, and evidence detectors to read from this config.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "domains": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/domain" }
+    },
+    "sensitive_domains": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "gates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/gate" }
+    }
+  },
+  "$defs": {
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "patterns"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "patterns": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/path_pattern" }
+        }
+      }
+    },
+    "path_pattern": {
+      "description": "Closed set of path-pattern predicates. Exactly one of {prefix, contains, exact, endswith, any_contains, and} must be present.",
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["prefix"], "properties": { "prefix": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["contains"], "properties": { "contains": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["exact"], "properties": { "exact": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["endswith"], "properties": { "endswith": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["any_contains"], "properties": { "any_contains": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } } },
+        { "type": "object", "additionalProperties": false, "required": ["and"], "properties": { "and": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/path_pattern" } } } }
+      ]
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "priority", "fix_type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "priority": { "type": "string", "enum": ["high", "medium", "supporting"] },
+        "fix_type": { "type": "string", "enum": ["code", "test", "config", "process", "infra", "db"] },
+        "applies_when": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/gate_predicate" }
+        },
+        "applies_when_extra": { "type": "string" },
+        "validation_line": { "type": "string" },
+        "checklist": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/checklist_item" }
+        },
+        "evidence": { "$ref": "#/$defs/gate_evidence" },
+        "variants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/gate_variant" }
+        }
+      }
+    },
+    "gate_predicate": {
+      "description": "Closed set of applies_when predicates. Exactly one primary key from {factor_id, not_factor_id, risk_band, not_risk_band, domain_factor, intent_mismatch, concentration_mode, hotspots_present, proximity_distant_with_sensitive} must be present.",
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["factor_id"], "properties": { "factor_id": { "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }] } } },
+        { "type": "object", "additionalProperties": false, "required": ["not_factor_id"], "properties": { "not_factor_id": { "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }] } } },
+        { "type": "object", "additionalProperties": false, "required": ["risk_band"], "properties": { "risk_band": { "type": "array", "minItems": 1, "items": { "type": "string", "enum": ["low", "medium", "high", "critical"] } } } },
+        { "type": "object", "additionalProperties": false, "required": ["not_risk_band"], "properties": { "not_risk_band": { "type": "array", "minItems": 1, "items": { "type": "string", "enum": ["low", "medium", "high", "critical"] } } } },
+        { "type": "object", "additionalProperties": false, "required": ["domain_factor"], "properties": { "domain_factor": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["intent_mismatch"], "properties": { "intent_mismatch": { "type": "boolean" } } },
+        { "type": "object", "additionalProperties": false, "required": ["concentration_mode"], "properties": { "concentration_mode": { "type": "string", "minLength": 1 }, "min_file_count": { "type": "integer", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["hotspots_present"], "properties": { "hotspots_present": { "type": "boolean" } } },
+        { "type": "object", "additionalProperties": false, "required": ["proximity_distant_with_sensitive"], "properties": { "proximity_distant_with_sensitive": { "type": "boolean" }, "min_non_test_files": { "type": "integer", "minimum": 0 }, "domains": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } } }
+      ]
+    },
+    "gate_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template"],
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": [
+            "test_domain",
+            "signal_check",
+            "migrations",
+            "add_tests",
+            "validation_note",
+            "intent_alignment",
+            "intent_strength",
+            "intent_aligned_or_weak",
+            "proximity",
+            "hotspot"
+          ]
+        },
+        "args": { "type": "object" }
+      }
+    },
+    "checklist_item": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": { "type": "string", "minLength": 1 },
+            "by_evidence_level": {
+              "type": "object",
+              "additionalProperties": { "type": "string", "minLength": 1 },
+              "propertyNames": { "enum": ["none", "unit", "e2e"] }
+            },
+            "by_validation_note": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "gate_variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["when"],
+      "properties": {
+        "when": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "risk_band": { "type": "array", "items": { "type": "string", "enum": ["low", "medium", "high", "critical"] } },
+            "not_risk_band": { "type": "array", "items": { "type": "string", "enum": ["low", "medium", "high", "critical"] } }
+          }
+        },
+        "title": { "type": "string" },
+        "applies_when_extra": { "type": "string" },
+        "checklist": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/checklist_item" }
+        }
+      }
+    }
+  }
+}

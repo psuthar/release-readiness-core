@@ -14,7 +14,7 @@ from release_readiness_core.pr_risk.types import Mitigation, RiskFactor, Signals
 MITIGATION_MAP: dict = {
     "git_unavailable": [
         "Ensure CI checks out enough history (`fetch-depth: 0`) so `git diff base...HEAD` works.",
-        "Run `go run ./cmd/prrisk --base-ref <ref>` locally with a valid base.",
+        "Run `release-readiness-pr-risk --base-ref <ref>` locally with a valid base.",
     ],
     "diff_very_large": [
         "Split the PR into smaller reviews (backend vs frontend vs docs).",
@@ -59,8 +59,8 @@ MITIGATION_MAP: dict = {
         "Schedule deploy during low-traffic window if infra changes.",
     ],
     "go_mod_deps": [
-        "Run `go test ./...` and check for transitive license/compatibility issues.",
-        "Consider `go mod verify` in CI.",
+        "Re-run the project's full test suite and check for transitive license / compatibility issues.",
+        "Verify the lockfile integrity in CI (e.g. `go mod verify`, `npm ci`, `pip-compile --strict`).",
     ],
     "tests_missing": [
         "Add or update unit/integration tests for changed packages.",

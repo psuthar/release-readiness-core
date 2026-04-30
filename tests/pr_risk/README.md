@@ -1,9 +1,10 @@
 # PR Risk Parity Test Corpus
 
-Fixtures here are **byte-for-byte references** captured from TalkBack's Go
-PR Risk binary (`talkback/cmd/prrisk`, `internal/prrisk@v2.8`). They drive the
-parity gate that proves the Python port (SCRUM-231) computes identical
-results for the same diff.
+Fixtures here are **byte-for-byte references** captured from the upstream
+reference implementation of the PR Risk scorer (the Go binary at
+`internal/prrisk@v2.8` that the Python port in this package was derived
+from). They drive the parity gate that proves the Python implementation
+computes identical results for the same diff.
 
 ## Layout
 
@@ -41,14 +42,14 @@ repo.
 ### Re-running
 
 ```bash
-# Build the prrisk binary once (faster than `go run` per PR).
-( cd /path/to/talkback && go build -o /tmp/prrisk-bin ./cmd/prrisk )
+# Build the upstream prrisk binary once (faster than re-compiling per PR).
+( cd /path/to/source-repo && go build -o /tmp/prrisk-bin ./cmd/prrisk )
 
 # Capture from a list of PR numbers on stdin.
 gh -R <owner>/<repo> pr list --state merged --limit 80 \
     --json number --jq '.[].number' \
   | scripts/capture_pr_risk_fixtures.sh \
-      --target /path/to/talkback \
+      --target /path/to/source-repo \
       --output tests/pr_risk/fixtures \
       --prrisk-cmd /tmp/prrisk-bin \
       --repo-slug <owner>/<repo>

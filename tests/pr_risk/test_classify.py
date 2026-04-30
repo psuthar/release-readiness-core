@@ -65,7 +65,7 @@ from release_readiness_core.pr_risk.types import (
         ("deploy/render.yaml", DOMAIN_DEPLOY),
         ("Dockerfile", DOMAIN_DEPLOY),
         ("scripts/build.sh", DOMAIN_SCRIPTS),
-        ("cmd/talkback/main.go", DOMAIN_API),
+        ("cmd/myapp/main.go", DOMAIN_API),
         ("internal/foo/bar.go", DOMAIN_API),
         ("go.mod", DOMAIN_OTHER),
         ("README.md", DOMAIN_OTHER),

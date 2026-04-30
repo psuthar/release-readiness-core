@@ -1,8 +1,12 @@
-"""PR Risk scorer (Python port of TalkBack's Go cmd/prrisk + internal/prrisk).
+"""Deterministic PR risk scorer driven by git diff signals.
 
-Schema/report version remains v2.8 during the Go→Python port (SCRUM-231).
-The public API surfaces incrementally across SCRUM-232..236; until then,
-the CLI exits non-zero with a "not implemented" message.
+Computes a 0-100 risk score, a band (low / medium / high / critical), a
+merge recommendation (pass / warn / block), and an explainable factor /
+reducer / required-action breakdown. The CLI ``release-readiness-pr-risk``
+emits ``pr_risk.json`` (full result), ``pr-risk.json`` (lean semantic
+summary for CI gates), and ``pr_risk.md`` (human-readable report).
+
+Schema/report version is exposed via ``report_version_string()``.
 """
 
 from release_readiness_core.pr_risk.version import (

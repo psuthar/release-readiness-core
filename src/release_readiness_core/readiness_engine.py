@@ -1,7 +1,4 @@
-"""Full release readiness evaluation (artifacts → PASS/WARN/BLOCK).
-
-Ported from TalkBack ``release_readiness_engine`` for standalone reuse.
-"""
+"""Full release readiness evaluation (artifacts → PASS/WARN/BLOCK)."""
 
 from __future__ import annotations
 
@@ -104,11 +101,10 @@ def _failure_is_critical(title: str, patterns: list[str]) -> bool:
     return any(p.lower() in t for p in patterns)
 
 
-# SCRUM-209 (gap #6): the engine ships an empty default. Projects must opt in
-# to top-level boolean evidence keys via `evidence_boolean_keys` in config.
-# This avoids accidentally satisfying a validation when an evidence JSON
-# happens to contain a colliding key name. TalkBack supplies the historic
-# tuple via SCRUM-167 in its own config.
+# Engine ships an empty default. Projects must opt in to top-level boolean
+# evidence keys via `evidence_boolean_keys` in config. This avoids accidentally
+# satisfying a validation when an evidence JSON happens to contain a colliding
+# key name. (SCRUM-209.)
 DEFAULT_EVIDENCE_BOOLEAN_KEYS: tuple[str, ...] = ()
 
 
@@ -335,9 +331,9 @@ def compute_readiness(
 
     # Optional artifacts: when an adopter declares an artifact in
     # `optional_artifacts`, missing it suppresses both the warning and the
-    # score penalty. Without that declaration, the historic warning + penalty
-    # behavior is preserved (TalkBack ships no `optional_artifacts` and so
-    # continues to see "missing prod_health" as a warning).
+    # score penalty. Without that declaration, the warning + penalty behavior
+    # is preserved (so a project that ships no `optional_artifacts` still sees
+    # "missing prod_health" as a warning).
     optional_artifacts = set(config.get("optional_artifacts") or [])
     if coverage is None and "coverage" not in optional_artifacts:
         warnings.append("Coverage summary not provided (confidence reduced)")
@@ -425,8 +421,9 @@ def compute_readiness(
     # Risk validation blockers.
     # Each risk category maps to a required validation key. The mapping is config-driven
     # via `risk_category_to_required_validation`; categories not listed there fall back to
-    # identity (the validation key has the same name as the risk category). TalkBack's
-    # historic `migrations -> migrations_validated` rule lives in its config now, not here.
+    # identity (the validation key has the same name as the risk category). Projects
+    # declare any non-identity rules (e.g. `migrations -> migrations_validated`) in their
+    # own config now, not here.
     risk_to_validation = config.get("risk_category_to_required_validation", {}) or {}
     validations_required: set[str] = set()
     for r in risks:

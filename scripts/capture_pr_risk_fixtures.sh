@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # capture_pr_risk_fixtures.sh
 #
-# Capture PR Risk Go fixtures from a TalkBack-like source repo for parity
-# testing of the Python port (SCRUM-231).
+# Capture PR Risk fixtures from any source repository that ships an upstream
+# `cmd/prrisk` binary, for parity testing this package's Python implementation
+# against that upstream reference.
 #
 # Reads merged-PR numbers from stdin (one per line) and, for each:
 #   1. resolves the merge SHA + parent SHA via gh
@@ -29,7 +30,7 @@ usage() {
 Usage: $(basename "$0") --target <repo> --output <dir> [options] < pr-numbers.txt
 
 Required:
-  --target <path>     Source git repo (e.g. /path/to/talkback)
+  --target <path>     Source git repo containing cmd/prrisk
   --output <path>     Fixture root (e.g. tests/pr_risk/fixtures)
 
 Optional:
@@ -43,10 +44,10 @@ Optional:
 Reads PR numbers from stdin (one per line; non-numeric lines ignored).
 
 Example:
-  ( cd ../talkback && go build -o /tmp/prrisk-bin ./cmd/prrisk )
-  gh -R psuthar/talkback pr list --state merged --limit 80 --json number --jq '.[].number' \\
+  ( cd /path/to/source-repo && go build -o /tmp/prrisk-bin ./cmd/prrisk )
+  gh -R <owner>/<repo> pr list --state merged --limit 80 --json number --jq '.[].number' \\
     | scripts/capture_pr_risk_fixtures.sh \\
-        --target ../talkback \\
+        --target /path/to/source-repo \\
         --output tests/pr_risk/fixtures \\
         --prrisk-cmd /tmp/prrisk-bin
 EOF

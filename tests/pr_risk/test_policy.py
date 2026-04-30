@@ -189,7 +189,8 @@ def test_compute_enforcement_populates_recommendation_and_strategy() -> None:
     e = compute_enforcement(r)
     assert e.merge_recommendation == "warn"
     assert "checklist-driven" in e.recommended_review.strategy
-    # Phase 4 fields stay empty until SCRUM-236.
-    assert e.required_validations == []
-    assert e.recommended_review.routing_hints == []
-    assert e.evidence_status == []
+    # Phase 4 wiring: required_validations always includes the CI baseline line.
+    assert e.required_validations  # at least one
+    assert any("required status checks" in v for v in e.required_validations)
+    # Evidence status always emits ci_baseline.
+    assert any(ev.id == "ci_baseline" for ev in e.evidence_status)

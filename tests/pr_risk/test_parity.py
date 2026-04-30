@@ -132,13 +132,44 @@ def test_cli_help_works() -> None:
     assert "release-readiness-pr-risk" in res.stdout
 
 
-def test_cli_stub_exits_2_on_run() -> None:
-    """Until Phase 4 lands, invoking the CLI without --help must exit 2."""
+def test_cli_runs_against_a_repo(tmp_path: Path) -> None:
+    """Phase 4 CLI should run end-to-end against a synthetic repo and produce the three artifacts."""
+    import subprocess as _sp
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _sp.run(["git", "-C", str(repo), "init", "--initial-branch=main"], check=True, capture_output=True)
+    _sp.run(["git", "-C", str(repo), "config", "user.email", "t@t.test"], check=True, capture_output=True)
+    _sp.run(["git", "-C", str(repo), "config", "user.name", "T"], check=True, capture_output=True)
+    _sp.run(["git", "-C", str(repo), "config", "commit.gpgsign", "false"], check=True, capture_output=True)
+    (repo / "README.md").write_text("a\n")
+    _sp.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    _sp.run(["git", "-C", str(repo), "commit", "-m", "init"], check=True, capture_output=True)
+    base = _sp.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+    ).stdout.strip()
+    (repo / "internal" / "auth").mkdir(parents=True)
+    (repo / "internal" / "auth" / "login.go").write_text("package auth\n")
+    _sp.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True)
+    _sp.run(["git", "-C", str(repo), "commit", "-m", "feat: auth"], check=True, capture_output=True)
+    out_dir = tmp_path / "artifacts" / "release-readiness"
+
     res = subprocess.run(
-        [sys.executable, "-m", "release_readiness_core.pr_risk.cli", "--repo-root", "."],
+        [
+            sys.executable,
+            "-m",
+            "release_readiness_core.pr_risk.cli",
+            "--repo-root",
+            str(repo),
+            "--base-ref",
+            base,
+            "--output-dir",
+            str(out_dir),
+        ],
         capture_output=True,
         text=True,
         check=False,
     )
-    assert res.returncode == 2, f"expected stub exit 2, got {res.returncode}: {res.stderr}"
-    assert "not yet implemented" in res.stderr
+    assert res.returncode == 0, res.stderr
+    assert (out_dir / "pr_risk.json").is_file()
+    assert (out_dir / "pr_risk.md").is_file()
+    assert (out_dir.parent / "pr-risk.json").is_file()

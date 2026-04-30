@@ -16,12 +16,19 @@ from typing import List
 
 from release_readiness_core.pr_risk._internal import factor_ids, ok_bool
 from release_readiness_core.pr_risk._round import round_half_away
+from release_readiness_core.pr_risk.evidence import (
+    compute_evidence_status,
+    evidence_aware_upgrade,
+    evidence_blocking_reasons,
+)
 from release_readiness_core.pr_risk.reducers import reducer_ids
+from release_readiness_core.pr_risk.routing import compute_routing_hints
 from release_readiness_core.pr_risk.types import (
     Enforcement,
     RecommendedReview,
     Result,
 )
+from release_readiness_core.pr_risk.validations import compute_required_validations
 
 
 def _fmt0(x: float) -> str:
@@ -175,23 +182,34 @@ def dedupe_strings(ss: List[str]) -> List[str]:
 
 
 def compute_enforcement(r: Result) -> Enforcement:
-    """Phase 3 enforcement (no evidence/validation/routing — Phase 4 lands those).
+    """Full evidence-aware enforcement (Phase 4 — mirrors Go ComputeEnforcement)."""
+    validations = compute_required_validations(r.signals, r.required_actions)
+    hints = compute_routing_hints(r.signals, r.factors, r.context_insights)
 
-    Populates merge_recommendation, rationale, review strategy / requirements,
-    blocking_reasons, and policy reasons. Required validations / routing hints /
-    evidence status remain empty defaults until SCRUM-236.
-    """
+    evidence_status, evidence_summary = compute_evidence_status(r)
+
     rec = merge_recommendation(r)
+    rec = evidence_aware_upgrade(rec, evidence_status, r.required_actions)
+
     strategy = review_strategy_for(rec, r.risk_band)
     reqs = review_requirements(rec, r.risk_band, r.risk_score)
     blocking = compute_blocking_reasons(r, rec)
+    if rec != "pass":
+        blocking = dedupe_strings(
+            blocking + evidence_blocking_reasons(evidence_status, r.required_actions)
+        )
+    else:
+        blocking = dedupe_strings(blocking)
     reasons = compute_policy_reasons(r, rec)
+
     return Enforcement(
         merge_recommendation=rec,
         rationale=merge_rationale(r, rec),
-        recommended_review=RecommendedReview(strategy=strategy, routing_hints=[]),
-        required_validations=[],
+        recommended_review=RecommendedReview(strategy=strategy, routing_hints=hints),
+        required_validations=validations,
         review_requirements=reqs,
         blocking_reasons=blocking,
         reasons=reasons,
+        evidence_status=evidence_status,
+        evidence_summary=evidence_summary,
     )

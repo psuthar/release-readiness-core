@@ -18,10 +18,12 @@ from release_readiness_core.pr_risk._context_bridge import (
 )
 from release_readiness_core.pr_risk._internal import clamp_100 as _clamp100_internal
 from release_readiness_core.pr_risk._round import round_half_away
+from release_readiness_core.pr_risk.actions import compute_required_actions
 from release_readiness_core.pr_risk.categories import compute_categories
 from release_readiness_core.pr_risk.classify import touches_sensitive_code_without_tests
 from release_readiness_core.pr_risk.context import analyze as context_analyze_fn
 from release_readiness_core.pr_risk.floors import apply_risk_floor
+from release_readiness_core.pr_risk.integrations import build_integrations
 from release_readiness_core.pr_risk.interpret import build_interpretation
 from release_readiness_core.pr_risk.mitigate import go_mod_changed, mitigate
 from release_readiness_core.pr_risk.policy import compute_enforcement
@@ -46,17 +48,6 @@ from release_readiness_core.pr_risk.version import (
     VERSION_MINOR,
     report_version_string,
 )
-
-
-# ---------------------------------------------------------------------------
-# Phase 4 stubs. SCRUM-236 will replace these with full implementations.
-
-def _stub_compute_required_actions(*args, **kwargs) -> list:
-    return []
-
-
-def _stub_build_integrations(*args, **kwargs) -> Integrations:
-    return Integrations()
 
 
 # Public helpers exposed for tests / callers.
@@ -232,7 +223,7 @@ def score(s: Signals, w: ScoreWeights, jira_key: str = "") -> Result:
 
     risk_band = band(final_score)
     cats = compute_categories(s, factors, reducers, c_insights)
-    req = _stub_compute_required_actions(s, factors, reducers, final_score, risk_band, c_insights)
+    req = compute_required_actions(s, factors, reducers, final_score, risk_band, c_insights)
 
     score_math = ScoreMath(
         factors_subtotal=factor_sum,
@@ -266,7 +257,7 @@ def score(s: Signals, w: ScoreWeights, jira_key: str = "") -> Result:
     )
     res.interpretation = build_interpretation(res)
     res.enforcement = compute_enforcement(res)
-    res.integrations = _stub_build_integrations(
+    res.integrations = build_integrations(
         factors, final_score, s.base_ref, jira_key, req, score_math, res.enforcement
     )
     return res

@@ -85,10 +85,17 @@ def test_runtime_priority_for_uses_config():
     assert runtime.priority_for("nonexistent_gate") == "medium"
 
 
-def test_runtime_classify_and_detector_for_are_phase_stubs():
+def test_runtime_classify_smoke():
+    """Phase 2 (SCRUM-240) implemented runtime.classify; smoke-check it returns
+    a non-empty domain string. Per-domain assertions live in test_classify.py."""
     runtime = PRRiskRuntime.from_default()
-    with pytest.raises(NotImplementedError, match="Phase 2"):
-        runtime.classify("any/path")
+    assert runtime.classify("internal/auth/foo.go") == "auth"
+    assert runtime.classify("internal/foo/bar_test.go") == "tests"
+    assert runtime.classify("README.md") == "other"
+
+
+def test_runtime_detector_for_is_phase4_stub():
+    runtime = PRRiskRuntime.from_default()
     with pytest.raises(NotImplementedError, match="Phase 4"):
         runtime.detector_for("ci_fetch_depth_zero")
 

@@ -421,7 +421,13 @@ _DETECTORS = {
 }
 
 
-def evidence_for_action_id(id_: str, label: str, r: Result) -> ValidationEvidence:
+def evidence_for_action_id(id_: str, label: str, r: Result, *, runtime=None) -> ValidationEvidence:
+    """Resolve the evidence detector for a gate id.
+
+    ``runtime`` is accepted for forward-compat with Phase 4 (SCRUM-242), where
+    detectors will be compiled from config. Phase 2 ignores it.
+    """
+    del runtime  # Phase 4 will use this.
     detector = _DETECTORS.get(id_)
     if detector is None:
         return ValidationEvidence(
@@ -437,10 +443,16 @@ def evidence_for_action_id(id_: str, label: str, r: Result) -> ValidationEvidenc
     return detector(label, r)
 
 
-def compute_evidence_status(r: Result) -> Tuple[List[ValidationEvidence], EvidenceSummary]:
+def compute_evidence_status(
+    r: Result, *, runtime=None
+) -> Tuple[List[ValidationEvidence], EvidenceSummary]:
+    """Compute evidence status for every required action plus the CI baseline.
+
+    ``runtime`` is accepted for forward-compat with Phase 4 (SCRUM-242).
+    """
     out: List[ValidationEvidence] = [_ev_ci_baseline(r.signals)]
     for a in r.required_actions:
-        out.append(evidence_for_action_id(a.id, a.title, r))
+        out.append(evidence_for_action_id(a.id, a.title, r, runtime=runtime))
 
     summary = EvidenceSummary()
     for e in out:

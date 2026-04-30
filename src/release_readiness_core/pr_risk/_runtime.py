@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from release_readiness_core.pr_risk._classifier import Classifier
 from release_readiness_core.pr_risk._config import (
     Gate,
     PRRiskConfig,
@@ -41,6 +42,7 @@ class PRRiskRuntime:
     """
 
     config: PRRiskConfig
+    _classifier: Optional[Classifier] = None
     _custom_detectors: Dict[str, Callable[..., Any]] = field(default_factory=dict)
 
     @classmethod
@@ -66,11 +68,31 @@ class PRRiskRuntime:
         """Convenience accessor for ``config.sensitive_domains``."""
         return list(self.config.sensitive_domains)
 
-    def classify(self, path: str) -> str:  # noqa: ARG002 - Phase 2 fills this in.
-        """Return the domain id for a path. Stub until Phase 2 (SCRUM-240)."""
-        raise NotImplementedError(
-            "PRRiskRuntime.classify is not wired in yet (Phase 2 / SCRUM-240)"
-        )
+    @property
+    def classifier(self) -> Classifier:
+        """Lazily-compiled config-driven classifier (Phase 2 / SCRUM-240)."""
+        if self._classifier is None:
+            self._classifier = Classifier(self.config)
+        return self._classifier
+
+    def classify_area(self, path: str) -> str:
+        """Return the product-area domain id for ``path``. Mirrors the previous
+        hardcoded ``classify.classify_area`` semantics — first matching domain
+        in declared order wins; ``"other"`` when no domain matches."""
+        return self.classifier.classify_area(path)
+
+    def classify(self, path: str) -> str:
+        """Return the domain id for ``path`` (with test detection).
+
+        ``is_test_path`` lives in ``classify.py`` because it's a language /
+        framework heuristic, not project policy. We import lazily to avoid a
+        circular import (``classify.py`` imports this module).
+        """
+        from release_readiness_core.pr_risk.classify import is_test_path
+
+        if is_test_path(path):
+            return "tests"
+        return self.classify_area(path)
 
     # ------------------------------------------------------------------
     # Phase 3 (gate registry).

@@ -53,8 +53,15 @@ def compute_required_actions(
     risk_score: float,
     risk_band: str,
     insights: Optional[ContextInsights],
+    *,
+    runtime=None,
 ) -> List[RequiredAction]:
-    """Build the deterministic list of pre-merge required actions, sorted by priority."""
+    """Build the deterministic list of pre-merge required actions, sorted by priority.
+
+    ``runtime`` is accepted for forward-compat with Phase 3 (SCRUM-241), where
+    the gate registry will be config-driven. Phase 2 ignores it.
+    """
+    del runtime  # Phase 3 will use this.
     has = factor_ids(factors)
     has_validation_note = s.validation_note_found
     gate_critical = risk_band == "critical" or risk_score >= 70

@@ -10,7 +10,10 @@ populated by stub helpers in this module that return empty results.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from release_readiness_core.pr_risk._runtime import PRRiskRuntime
 
 from release_readiness_core.pr_risk._context_bridge import (
     context_input_from_signals,
@@ -88,8 +91,19 @@ def web_churn(s: Signals) -> int:
 
 # ---------------------------------------------------------------------------
 
-def score(s: Signals, w: ScoreWeights, jira_key: str = "") -> Result:
-    """Apply weighted deterministic factors. jira_key is optional (for Integrations hook)."""
+def score(
+    s: Signals,
+    w: ScoreWeights,
+    jira_key: str = "",
+    *,
+    runtime: Optional["PRRiskRuntime"] = None,
+) -> Result:
+    """Apply weighted deterministic factors. jira_key is optional (for Integrations hook).
+
+    ``runtime`` is optional; threaded into the config-driven classifier (Phase 2)
+    so adopters with a custom ``pr-risk-config.yaml`` get their domains and
+    sensitive-domain set. ``None`` uses the bundled-default runtime.
+    """
     now = datetime.now(timezone.utc)
     factors: List[RiskFactor] = []
     factor_sum = 0.0
@@ -199,7 +213,7 @@ def score(s: Signals, w: ScoreWeights, jira_key: str = "") -> Result:
             "go.mod and/or go.sum modified",
         )
 
-    if touches_sensitive_code_without_tests(s):
+    if touches_sensitive_code_without_tests(s, runtime=runtime):
         add(
             "tests_missing",
             "Sensitive areas changed without test file changes in this diff",
@@ -207,7 +221,7 @@ def score(s: Signals, w: ScoreWeights, jira_key: str = "") -> Result:
             "no *_test.go / web test paths in diff; consider adding or updating tests",
         )
 
-    ctx_in = context_input_from_signals(s)
+    ctx_in = context_input_from_signals(s, runtime=runtime)
     c_insights, ctx_factors = context_analyze_fn(ctx_in, risk_context_weights(w))
     for cf in ctx_factors:
         add(cf.id, cf.label, cf.points, cf.detail)
@@ -223,7 +237,9 @@ def score(s: Signals, w: ScoreWeights, jira_key: str = "") -> Result:
 
     risk_band = band(final_score)
     cats = compute_categories(s, factors, reducers, c_insights)
-    req = compute_required_actions(s, factors, reducers, final_score, risk_band, c_insights)
+    req = compute_required_actions(
+        s, factors, reducers, final_score, risk_band, c_insights, runtime=runtime,
+    )
 
     score_math = ScoreMath(
         factors_subtotal=factor_sum,

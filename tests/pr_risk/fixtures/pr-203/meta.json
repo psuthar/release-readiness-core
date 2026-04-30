@@ -1,0 +1,9 @@
+{
+  "pr_number": 203,
+  "merge_sha": "83bd86d986ebfd5577a46b353d876d108fae9985",
+  "parent_sha": "b41d4f31c12f7fdb712f38515902b8c81bb2a213",
+  "base_ref": "main",
+  "pr_title": "SCRUM-202: add decision_maker role to invitation/membership model",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 210,
+  "merge_sha": "551b8fed5b4ad09b5ac64796f7b3d711c3885781",
+  "parent_sha": "f9814d423cd835e9211a48cf01173b7261abd8ec",
+  "base_ref": "main",
+  "pr_title": "SCRUM-213: PATCH membership role + accepted-row menu",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

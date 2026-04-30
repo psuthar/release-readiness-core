@@ -1,0 +1,9 @@
+{
+  "pr_number": 162,
+  "merge_sha": "3a945dd245a81ef330c83b7c9eca3196567e576c",
+  "parent_sha": "d315d05e4b451b1293e1dda136c80e6d2466878f",
+  "base_ref": "main",
+  "pr_title": "SCRUM-137: Q&A eval harness docs + FULL_AUTO gate polling policy",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 141,
+  "merge_sha": "d7a20c1067e74a84da0afd6594b8179c3f24845d",
+  "parent_sha": "816dbcb56a2a7ebc4d927658b13e89af3aae6c30",
+  "base_ref": "main",
+  "pr_title": "SCRUM-116: Change \"Show All Sessions\" button color from red to primary blue",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

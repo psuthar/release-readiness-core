@@ -1,0 +1,269 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:33.370506Z",
+  "base_ref": "a2e1cfc96f1f57d8989262c6b5fce6633ecdf60b",
+  "signals": {
+    "base_ref": "a2e1cfc96f1f57d8989262c6b5fce6633ecdf60b",
+    "head_ref": "HEAD",
+    "file_count": 8,
+    "total_added": 773,
+    "total_deleted": 0,
+    "total_loc": 773,
+    "files": [
+      {
+        "path": ".github/workflows/release-readiness.yml",
+        "added": 5,
+        "deleted": 0
+      },
+      {
+        "path": "eval/qa/eval_cases_v1.json",
+        "added": 236,
+        "deleted": 0
+      },
+      {
+        "path": "eval/qa/expected_scores_v1.json",
+        "added": 121,
+        "deleted": 0
+      },
+      {
+        "path": "eval/qa/schemas/eval_cases_v1.schema.json",
+        "added": 67,
+        "deleted": 0
+      },
+      {
+        "path": "eval/qa/schemas/expected_scores_v1.schema.json",
+        "added": 45,
+        "deleted": 0
+      },
+      {
+        "path": "ops/release-readiness/requirements.txt",
+        "added": 1,
+        "deleted": 0
+      },
+      {
+        "path": "scripts/qa_eval_datasets.py",
+        "added": 220,
+        "deleted": 0
+      },
+      {
+        "path": "scripts/test_qa_eval_datasets.py",
+        "added": 78,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "other": 5,
+      "scripts": 2,
+      "workflows": 1
+    },
+    "test_files": 0,
+    "config_files": 1,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 24,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 24,
+    "reducers_subtotal": 0,
+    "net_before_floor": 24,
+    "floor_min_score": 20,
+    "floor_applied": false,
+    "floor_reasons": [
+      "CI workflow changes cannot score in the low band (floor applies)",
+      "Large diff cannot score in the low band (floor applies)"
+    ],
+    "final_score": 24,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 24). Some risk factors are present but are manageable. Review the factors below before merging.",
+  "factors": [
+    {
+      "id": "diff_large",
+      "label": "Large diff",
+      "points": 12,
+      "detail": "total LOC churn=773 (threshold 400)"
+    },
+    {
+      "id": "ci_workflows",
+      "label": "CI/GitHub Actions workflows changed",
+      "points": 12,
+      "detail": "1 workflow file(s)"
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 12,
+      "factors": [
+        "diff_large"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 12,
+      "factors": [
+        "ci_workflows"
+      ]
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 45,
+      "confidence": 55,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "No sensitive domains changed",
+            "delta": 35
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "No changed files have nearby tests in diff",
+            "delta": -10
+          }
+        ],
+        "final_score": 55
+      }
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "workflow_config_validation",
+      "title": "Validate workflow / deploy config changes",
+      "priority": "medium",
+      "fix_type": "config",
+      "checklist": [
+        "Confirm required checks and env parity before merge.",
+        "If CI fails, identify whether it is test flakiness vs behavior change and update evidence accordingly."
+      ]
+    },
+    {
+      "id": "pr_review_summary",
+      "title": "Make PR review scoped and evidence-backed",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Add a PR description summary: what changed and why.",
+        "Group changes by subsystem so reviewers can validate quickly."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "diff_large",
+      "actions": [
+        "Review commit-by-commit; consider feature flags for risky paths."
+      ]
+    },
+    {
+      "factor_id": "ci_workflows",
+      "actions": [
+        "Validate workflow YAML in a fork or `act` where possible.",
+        "Confirm secrets and required checks still match branch protection."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 24.0/100 (medium) · base `a2e1cfc96f1f57d8989262c6b5fce6633ecdf60b`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 24/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 0 missing · 0 fail · 3 not evaluated\n\n**Top risk drivers:**\n- Large diff (12 pts): total LOC churn=773 (threshold 400)\n- CI/GitHub Actions workflows changed (12 pts): 1 workflow file(s)\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Validate workflow, deploy, or go.mod changes against required checks\n_…and 1 more in `pr_risk.md`_\n\n**Review routing:**\n- Include CI/infra review for workflow or deploy config changes.\n\n**Score math:** factors 24.0 − reducers 0.0 → 24.0 · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 8,
+      "with_nearby_test_in_diff": 0,
+      "ratio": 0,
+      "detail": "No test files in diff; proximity of tests to changed code cannot be established from this diff alone."
+    },
+    "concentration": {
+      "mode": "balanced",
+      "top_prefix": "eval/qa",
+      "top_share": 0.6067270375161707,
+      "hhi": 0.459343395885388,
+      "unique_prefixes": 5,
+      "detail": "Churn is spread across several areas in a typical way."
+    },
+    "intent": {
+      "title": "SCRUM-135: Versioned Q\u0026A eval_cases + expected_scores datasets",
+      "intent_strength": "unknown",
+      "domains_in_diff": [
+        "other",
+        "scripts",
+        "workflows"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "No strong intent keywords matched; alignment not scored."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 24/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Include CI/infra review for workflow or deploy config changes."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "config: workflow / deploy / go.mod changes validated against required checks",
+      "process: PR description with scoped, evidence-backed review plan"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "workflow_config_validation",
+        "label": "Validate workflow / deploy config changes",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "No validation note in commit; CI result not confirmable from repo-local signals — requires human review."
+      },
+      {
+        "id": "pr_review_summary",
+        "label": "Make PR review scoped and evidence-backed",
+        "status": "not_evaluated",
+        "source": "intent",
+        "rationale": "PR description quality could not be confirmed from available signals — requires human review."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 3,
+      "fail_count": 0
+    }
+  }
+}

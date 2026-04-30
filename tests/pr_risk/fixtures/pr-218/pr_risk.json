@@ -1,0 +1,284 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:04.657318Z",
+  "base_ref": "89bad3783c950933492ecdc28a150542c79c78dc",
+  "signals": {
+    "base_ref": "89bad3783c950933492ecdc28a150542c79c78dc",
+    "head_ref": "HEAD",
+    "file_count": 4,
+    "total_added": 215,
+    "total_deleted": 36,
+    "total_loc": 251,
+    "test_loc_ratio": 0.8127490039840638,
+    "files": [
+      {
+        "path": "internal/database/session_memberships.go",
+        "added": 5,
+        "deleted": 17
+      },
+      {
+        "path": "internal/handlers/invitations_handlers.go",
+        "added": 24,
+        "deleted": 1
+      },
+      {
+        "path": "internal/handlers/invitations_handlers_test.go",
+        "added": 110,
+        "deleted": 18
+      },
+      {
+        "path": "web/tests/e2e/member-role-change.e2e.ts",
+        "added": 76,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "auth": 1,
+      "database": 1,
+      "tests": 2
+    },
+    "test_domain_hits": {
+      "auth": 1,
+      "web": 1
+    },
+    "test_unit_domain_hits": {
+      "auth": 1
+    },
+    "test_e2e_domain_hits": {
+      "web": 1
+    },
+    "test_files": 2,
+    "unit_test_files": 1,
+    "e2e_test_files": 1,
+    "config_files": 0,
+    "migration_files": 0,
+    "validation_note_found": true,
+    "validation_note_snippet": "Validation:",
+    "repo_root": "."
+  },
+  "risk_score": 9,
+  "risk_band": "low",
+  "score_math": {
+    "factors_subtotal": 18,
+    "reducers_subtotal": 9,
+    "net_before_floor": 9,
+    "floor_min_score": 0,
+    "floor_applied": false,
+    "final_score": 9,
+    "final_band": "low"
+  },
+  "interpretation": "Low risk. The diff is small and does not touch sensitive areas. Standard review is sufficient.",
+  "factors": [
+    {
+      "id": "domain_auth",
+      "label": "Auth/session/invite area changed",
+      "points": 14,
+      "detail": "1 file(s) in auth-related paths"
+    },
+    {
+      "id": "context_hotspot_overlap",
+      "label": "Diff overlaps a path prefix touched in multiple recent commits",
+      "points": 4,
+      "detail": "Prefix touched in 25 of the last 50 sampled commits — sustained activity; extra regression care."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 18,
+      "factors": [
+        "domain_auth",
+        "context_hotspot_overlap"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 40,
+      "confidence": 60,
+      "reducers": [
+        "domain_auth_unit_evidence",
+        "test_heavy_diff"
+      ],
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "Sensitive domains changed",
+            "delta": -10
+          },
+          {
+            "reason": "E2E tests present in diff",
+            "delta": 40
+          },
+          {
+            "reason": "Tests only partially aligned with changed code",
+            "delta": -8
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "Behavioral coverage depth unknown for sensitive domain changes",
+            "delta": -5
+          },
+          {
+            "reason": "Some changed files lack nearby tests",
+            "delta": -2
+          }
+        ],
+        "final_score": 60
+      }
+    }
+  ],
+  "reducers": [
+    {
+      "id": "domain_auth_unit_evidence",
+      "label": "Unit test evidence present",
+      "points": 5,
+      "evidence": "Found unit tests targeting the domain in the diff",
+      "category_key": "test_confidence"
+    },
+    {
+      "id": "test_heavy_diff",
+      "label": "Test-heavy diff",
+      "points": 4,
+      "evidence": "81% of LOC churn is in test files",
+      "category_key": "test_confidence"
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_hotspot_regression_focus",
+      "title": "Extra regression focus on active path (recent commits)",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Prefix `web/tests` is active in recent history; run targeted smoke for behavior touching this area.",
+        "Watch for unintended side effects in adjacent modules."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "domain_auth",
+      "actions": [
+        "Run auth/session flows manually or via E2E (login, invite, participant).",
+        "Verify cookie/session settings in staging (SameSite, HTTPS)."
+      ]
+    },
+    {
+      "factor_id": "context_hotspot_overlap",
+      "actions": [
+        "Run focused regression on the overlapping prefix; several recent commits touched it, so regressions are likelier.",
+        "Scan related modules for unintended behavior changes."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 9.0/100 (low) · base `89bad3783c950933492ecdc28a150542c79c78dc`\n\n**PR risk assessment:** **PASS (low risk)** — PR risk is low (score 9/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 1 pass · 0 missing · 0 fail · 1 not evaluated\n\n**Top risk drivers:**\n- Auth/session/invite area changed (14 pts): 1 file(s) in auth-related paths\n- Diff overlaps a path prefix touched in multiple recent commits (4 pts): Prefix touched in 25 of the last 50 sampled commits — sustained activity; extra regression care.\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Run targeted regression for path prefixes with sustained recent commit activity\n_…and 1 more in `pr_risk.md`_\n\n**Review routing:**\n- Include a reviewer familiar with auth, sessions, and invitations.\n- Focus primary review on `internal/handlers` (majority of churn).\n_…and 1 more in `pr_risk.md`_\n\n**Score math:** factors 18.0 − reducers 9.0 → 9.0 · low\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "partial",
+      "structural_alignment": "partial",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 2,
+      "with_nearby_test_in_diff": 1,
+      "ratio": 0.5,
+      "detail": "Some production changes lack adjacent tests in the same diff; spot-check coverage."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "internal/handlers",
+      "top_share": 0.6095617529880478,
+      "hhi": 0.4709290328724941,
+      "unique_prefixes": 3,
+      "detail": "Most churn (~61%) sits under `internal/handlers`."
+    },
+    "hotspots": [
+      {
+        "prefix": "web/tests",
+        "recent_hits": 25,
+        "detail": "Prefix touched in 25 of the last 50 sampled commits — sustained activity; extra regression care."
+      },
+      {
+        "prefix": "internal/handlers",
+        "recent_hits": 7,
+        "detail": "Prefix touched in 7 of the last 50 sampled commits — sustained activity; extra regression care."
+      },
+      {
+        "prefix": "internal/database",
+        "recent_hits": 5,
+        "detail": "Prefix touched in 5 of the last 50 sampled commits — sustained activity; extra regression care."
+      }
+    ],
+    "intent": {
+      "title": "SCRUM-225: source live membership role in invitations listing; drop dual-write",
+      "intent_strength": "unknown",
+      "domains_in_diff": [
+        "auth",
+        "database"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "No strong intent keywords matched; alignment not scored."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "pass",
+    "rationale": "PR risk is low (score 9/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.",
+    "recommended_review": {
+      "strategy": "Single-pass review is enough; spot-check touched paths if helpful.",
+      "routing_hints": [
+        "Include a reviewer familiar with auth, sessions, and invitations.",
+        "Focus primary review on `internal/handlers` (majority of churn).",
+        "Extra reviewer attention on `web/tests` (several recent commits touched this area)."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "test: targeted regression for path prefixes with several recent commits overlapping this diff",
+      "process: validation note present in commit — confirm it matches what was run"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_hotspot_regression_focus",
+        "label": "Extra regression focus on active path (recent commits)",
+        "status": "pass",
+        "source": "git_signals",
+        "rationale": "Validation note present in commit: Validation:"
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 1,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 1,
+      "fail_count": 0
+    }
+  }
+}

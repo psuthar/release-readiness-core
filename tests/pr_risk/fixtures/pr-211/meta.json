@@ -1,0 +1,9 @@
+{
+  "pr_number": 211,
+  "merge_sha": "0333a4a7538a9f64b947de726e8675fd2de483ed",
+  "parent_sha": "551b8fed5b4ad09b5ac64796f7b3d711c3885781",
+  "base_ref": "main",
+  "pr_title": "SCRUM-217: dual-write invited_role on membership PATCH so the UI sees the new role",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

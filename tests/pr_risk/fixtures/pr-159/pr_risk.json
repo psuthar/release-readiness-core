@@ -1,0 +1,351 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:34.389158Z",
+  "base_ref": "8c087b8fd6a9ea6772316a015a96b83d6515bd3d",
+  "signals": {
+    "base_ref": "8c087b8fd6a9ea6772316a015a96b83d6515bd3d",
+    "head_ref": "HEAD",
+    "file_count": 15,
+    "total_added": 655,
+    "total_deleted": 46,
+    "total_loc": 701,
+    "test_loc_ratio": 0.04136947218259629,
+    "files": [
+      {
+        "path": ".github/workflows/go-test.yml",
+        "added": 1,
+        "deleted": 0
+      },
+      {
+        "path": ".github/workflows/observability-agent.yml",
+        "added": 1,
+        "deleted": 0
+      },
+      {
+        "path": ".github/workflows/release-readiness.yml",
+        "added": 1,
+        "deleted": 0
+      },
+      {
+        "path": "TESTING.md",
+        "added": 24,
+        "deleted": 14
+      },
+      {
+        "path": "eval/qa/fixture_fact_inventory.json",
+        "added": 396,
+        "deleted": 0
+      },
+      {
+        "path": "internal/database/db_test.go",
+        "added": 0,
+        "deleted": 4
+      },
+      {
+        "path": "internal/mcpserver/db_test.go",
+        "added": 0,
+        "deleted": 5
+      },
+      {
+        "path": "internal/orchestration/main_test.go",
+        "added": 0,
+        "deleted": 4
+      },
+      {
+        "path": "internal/test/testdb.go",
+        "added": 56,
+        "deleted": 8
+      },
+      {
+        "path": "internal/utils/loom_graphql_test.go",
+        "added": 7,
+        "deleted": 3
+      },
+      {
+        "path": "internal/utils/slides_converter_test.go",
+        "added": 5,
+        "deleted": 1
+      },
+      {
+        "path": "scripts/qa_fixture_inventory.py",
+        "added": 82,
+        "deleted": 0
+      },
+      {
+        "path": "scripts/test.ps1",
+        "added": 4,
+        "deleted": 7
+      },
+      {
+        "path": "scripts/test.sh",
+        "added": 21,
+        "deleted": 0
+      },
+      {
+        "path": "scripts/test_qa_fixture_inventory.py",
+        "added": 57,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "api": 1,
+      "other": 2,
+      "scripts": 4,
+      "tests": 5,
+      "workflows": 3
+    },
+    "test_domain_hits": {
+      "api": 3,
+      "database": 1,
+      "orchestration": 1
+    },
+    "test_unit_domain_hits": {
+      "api": 3,
+      "database": 1,
+      "orchestration": 1
+    },
+    "test_files": 5,
+    "unit_test_files": 5,
+    "config_files": 3,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 29,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 29,
+    "reducers_subtotal": 0,
+    "net_before_floor": 29,
+    "floor_min_score": 20,
+    "floor_applied": false,
+    "floor_reasons": [
+      "CI workflow changes cannot score in the low band (floor applies)",
+      "Large diff cannot score in the low band (floor applies)"
+    ],
+    "final_score": 29,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 29). Some risk factors are present but are manageable. Review the factors below before merging.",
+  "factors": [
+    {
+      "id": "diff_large",
+      "label": "Large diff",
+      "points": 12,
+      "detail": "total LOC churn=701 (threshold 400)"
+    },
+    {
+      "id": "ci_workflows",
+      "label": "CI/GitHub Actions workflows changed",
+      "points": 12,
+      "detail": "3 workflow file(s)"
+    },
+    {
+      "id": "context_test_proximity_distant",
+      "label": "Tests not co-located with changed code in this diff",
+      "points": 5,
+      "detail": "Many changed production files have no test file in the same directory or an obvious sibling path in this diff."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 17,
+      "factors": [
+        "diff_large",
+        "context_test_proximity_distant"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 12,
+      "factors": [
+        "ci_workflows"
+      ]
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 45,
+      "confidence": 55,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "No sensitive domains changed",
+            "delta": 35
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "No changed files have nearby tests in diff",
+            "delta": -10
+          }
+        ],
+        "final_score": 55
+      }
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "workflow_config_validation",
+      "title": "Validate workflow / deploy config changes",
+      "priority": "medium",
+      "fix_type": "config",
+      "checklist": [
+        "Confirm required checks and env parity before merge.",
+        "If CI fails, identify whether it is test flakiness vs behavior change and update evidence accordingly."
+      ]
+    },
+    {
+      "id": "context_improve_test_proximity",
+      "title": "Improve test proximity for changed code",
+      "priority": "supporting",
+      "fix_type": "test",
+      "checklist": [
+        "Add or reference tests in the same package or directory as changed production files.",
+        "If tests live elsewhere, link them in the PR description."
+      ]
+    },
+    {
+      "id": "pr_review_summary",
+      "title": "Make PR review scoped and evidence-backed",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Add a PR description summary: what changed and why.",
+        "Group changes by subsystem so reviewers can validate quickly."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "diff_large",
+      "actions": [
+        "Review commit-by-commit; consider feature flags for risky paths."
+      ]
+    },
+    {
+      "factor_id": "ci_workflows",
+      "actions": [
+        "Validate workflow YAML in a fork or `act` where possible.",
+        "Confirm secrets and required checks still match branch protection."
+      ]
+    },
+    {
+      "factor_id": "context_test_proximity_distant",
+      "actions": [
+        "Add tests next to changed packages or link existing tests in the PR description.",
+        "Prefer package-local *_test.go over only end-to-end coverage for the same change."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 29.0/100 (medium) · base `8c087b8fd6a9ea6772316a015a96b83d6515bd3d`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 29/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 1 missing · 0 fail · 3 not evaluated\n\n**Top risk drivers:**\n- Large diff (12 pts): total LOC churn=701 (threshold 400)\n- CI/GitHub Actions workflows changed (12 pts): 3 workflow file(s)\n_…and 1 more in `pr_risk.md`_\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Validate workflow, deploy, or go.mod changes against required checks\n_…and 2 more in `pr_risk.md`_\n\n**Review routing:**\n- Include CI/infra review for workflow or deploy config changes.\n\n**Score math:** factors 29.0 − reducers 0.0 → 29.0 · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 10,
+      "with_nearby_test_in_diff": 0,
+      "ratio": 0,
+      "detail": "Many changed production files have no test file in the same directory or an obvious sibling path in this diff."
+    },
+    "concentration": {
+      "mode": "balanced",
+      "top_prefix": "eval/qa",
+      "top_share": 0.5649072753209701,
+      "hhi": 0.35248809017482663,
+      "unique_prefixes": 12,
+      "detail": "Churn is spread across several areas in a typical way."
+    },
+    "intent": {
+      "title": "SCRUM-139: Q\u0026A fixture-fact inventory and validation tests",
+      "intent_strength": "unknown",
+      "domains_in_diff": [
+        "api",
+        "other",
+        "scripts",
+        "workflows"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "No strong intent keywords matched; alignment not scored."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 29/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Include CI/infra review for workflow or deploy config changes."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "config: workflow / deploy / go.mod changes validated against required checks",
+      "test: tests co-located or explicitly linked for changed code",
+      "process: PR description with scoped, evidence-backed review plan"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "workflow_config_validation",
+        "label": "Validate workflow / deploy config changes",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "No validation note in commit; CI result not confirmable from repo-local signals — requires human review."
+      },
+      {
+        "id": "context_improve_test_proximity",
+        "label": "Improve test proximity for changed code",
+        "status": "missing",
+        "source": "proximity",
+        "rationale": "Structural alignment is \"distant\" with no test coverage evidence for this diff."
+      },
+      {
+        "id": "pr_review_summary",
+        "label": "Make PR review scoped and evidence-backed",
+        "status": "not_evaluated",
+        "source": "intent",
+        "rationale": "PR description quality could not be confirmed from available signals — requires human review."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 1,
+      "unknown_count": 0,
+      "not_evaluated_count": 3,
+      "fail_count": 0
+    }
+  }
+}

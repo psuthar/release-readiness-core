@@ -1,0 +1,9 @@
+{
+  "pr_number": 156,
+  "merge_sha": "fa9516ee46a5be9101f052475a338a19db4bfaf7",
+  "parent_sha": "1870dea8e33357cd9733bcb38846587c702b81ad",
+  "base_ref": "main",
+  "pr_title": "SCRUM-130: add skeleton loading state for session view",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 197,
+  "merge_sha": "1c921dc3e34260d6ce8b1e206bb851853a258e92",
+  "parent_sha": "c3849f2d6e53d731a4884d9c3f53c9011058f847",
+  "base_ref": "main",
+  "pr_title": "SCRUM-196: collapse card body to summary; expand on click to reveal details",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

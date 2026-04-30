@@ -1,0 +1,9 @@
+{
+  "pr_number": 179,
+  "merge_sha": "4ce3429df51d098d0b72f9a3118563f2f6dd663a",
+  "parent_sha": "4885e362eb724cd9f0b69beb116e3216fa81223c",
+  "base_ref": "main",
+  "pr_title": "SCRUM-157: ParticipantSessionMenu consolidates session/account actions",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

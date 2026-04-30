@@ -1,0 +1,9 @@
+{
+  "pr_number": 185,
+  "merge_sha": "d7e3a10163ca9e01b9279227e8d4390e1b307d90",
+  "parent_sha": "8dcbeec128ec82f1eedbcb7172b1ef4718360396",
+  "base_ref": "main",
+  "pr_title": "SCRUM-163: align rationale textbox and preserve multiline editing",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

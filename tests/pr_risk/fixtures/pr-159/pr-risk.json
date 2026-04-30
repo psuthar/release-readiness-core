@@ -1,0 +1,18 @@
+{
+  "report_version": "v2.8",
+  "score": 29,
+  "band": "medium",
+  "merge_recommendation": "WARN",
+  "required_validations": [
+    "ci: required status checks must pass before merge",
+    "config: workflow / deploy / go.mod changes validated against required checks",
+    "test: tests co-located or explicitly linked for changed code",
+    "process: PR description with scoped, evidence-backed review plan"
+  ],
+  "top_risk_factors": [
+    "CI/GitHub Actions workflows changed",
+    "Large diff",
+    "Tests not co-located with changed code in this diff"
+  ],
+  "test_confidence": 55
+}

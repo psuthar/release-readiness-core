@@ -1,0 +1,14 @@
+{
+  "report_version": "v2.8",
+  "score": 0,
+  "band": "low",
+  "merge_recommendation": "PASS",
+  "required_validations": [
+    "ci: required status checks must pass before merge",
+    "test: targeted regression for path prefixes with several recent commits overlapping this diff"
+  ],
+  "top_risk_factors": [
+    "Diff overlaps a path prefix touched in multiple recent commits"
+  ],
+  "test_confidence": 85
+}

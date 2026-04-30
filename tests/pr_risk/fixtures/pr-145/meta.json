@@ -1,0 +1,9 @@
+{
+  "pr_number": 145,
+  "merge_sha": "021ccb51f06d8f7a109423ce239697bf12a7c0fd",
+  "parent_sha": "5f528a388968cbfc016cb324aaec25d13406d59e",
+  "base_ref": "main",
+  "pr_title": "SCRUM-120: promote decisions panel to top-level layout in participant view",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

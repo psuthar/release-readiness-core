@@ -1,0 +1,9 @@
+{
+  "pr_number": 142,
+  "merge_sha": "ffb8736883befb750ce7b6c817e4e28073ca396f",
+  "parent_sha": "d7a20c1067e74a84da0afd6594b8179c3f24845d",
+  "base_ref": "main",
+  "pr_title": "SCRUM-117: Define CSS design tokens and replace inline color literals",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

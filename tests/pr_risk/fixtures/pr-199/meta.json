@@ -1,0 +1,9 @@
+{
+  "pr_number": 199,
+  "merge_sha": "5bf80dc479355ff5941daafce5944d6e88eb3a66",
+  "parent_sha": "350678cd5710c76e90cbf3d816acf2566e249338",
+  "base_ref": "main",
+  "pr_title": "SCRUM-198: simplify creator-mode header controls",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

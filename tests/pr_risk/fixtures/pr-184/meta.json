@@ -1,0 +1,9 @@
+{
+  "pr_number": 184,
+  "merge_sha": "8dcbeec128ec82f1eedbcb7172b1ef4718360396",
+  "parent_sha": "1b650730450b0014883233b26506a0ef53a72009",
+  "base_ref": "main",
+  "pr_title": "SCRUM-162: enforce speech-only polish and selector contract",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

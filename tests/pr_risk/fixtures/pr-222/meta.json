@@ -1,0 +1,9 @@
+{
+  "pr_number": 222,
+  "merge_sha": "725bccf8cc7ed4b2293dc1fa81fff386a9582d96",
+  "parent_sha": "6fd391e03edd808eb401d00e324537d414275e7a",
+  "base_ref": "main",
+  "pr_title": "SCRUM-229: anonymise sessions.created_by on user-delete; backfill orphans",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

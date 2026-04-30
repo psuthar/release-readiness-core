@@ -1,0 +1,301 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:12.983622Z",
+  "base_ref": "b41d4f31c12f7fdb712f38515902b8c81bb2a213",
+  "signals": {
+    "base_ref": "b41d4f31c12f7fdb712f38515902b8c81bb2a213",
+    "head_ref": "HEAD",
+    "file_count": 8,
+    "total_added": 206,
+    "total_deleted": 6,
+    "total_loc": 212,
+    "test_loc_ratio": 0.7405660377358491,
+    "files": [
+      {
+        "path": "internal/handlers/invitations_handlers.go",
+        "added": 2,
+        "deleted": 2
+      },
+      {
+        "path": "internal/handlers/invitations_handlers_test.go",
+        "added": 138,
+        "deleted": 0
+      },
+      {
+        "path": "internal/invitations/errors.go",
+        "added": 1,
+        "deleted": 1
+      },
+      {
+        "path": "internal/invitations/model.go",
+        "added": 12,
+        "deleted": 2
+      },
+      {
+        "path": "internal/invitations/service.go",
+        "added": 1,
+        "deleted": 1
+      },
+      {
+        "path": "internal/invitations/service_test.go",
+        "added": 19,
+        "deleted": 0
+      },
+      {
+        "path": "internal/migrations/migrations/000041_add_decision_maker_role.down.sql",
+        "added": 17,
+        "deleted": 0
+      },
+      {
+        "path": "internal/migrations/migrations/000041_add_decision_maker_role.up.sql",
+        "added": 16,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "auth": 4,
+      "migrations": 2,
+      "tests": 2
+    },
+    "test_domain_hits": {
+      "auth": 2
+    },
+    "test_unit_domain_hits": {
+      "auth": 2
+    },
+    "test_files": 2,
+    "unit_test_files": 2,
+    "config_files": 0,
+    "migration_files": 2,
+    "repo_root": "."
+  },
+  "risk_score": 33,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 42,
+    "reducers_subtotal": 9,
+    "net_before_floor": 33,
+    "floor_min_score": 0,
+    "floor_applied": false,
+    "final_score": 33,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 33). Some risk factors are present but are manageable. Review the factors below before merging.",
+  "factors": [
+    {
+      "id": "domain_auth",
+      "label": "Auth/session/invite area changed",
+      "points": 14,
+      "detail": "4 file(s) in auth-related paths"
+    },
+    {
+      "id": "domain_migrations",
+      "label": "Database migrations present",
+      "points": 22,
+      "detail": "2 migration file(s)"
+    },
+    {
+      "id": "context_intent_mismatch",
+      "label": "PR title/body keywords do not align with paths in the diff",
+      "points": 6,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 42,
+      "factors": [
+        "domain_auth",
+        "domain_migrations",
+        "context_intent_mismatch"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 58,
+      "confidence": 42,
+      "reducers": [
+        "domain_auth_unit_evidence",
+        "test_heavy_diff"
+      ],
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "Sensitive domains changed",
+            "delta": -10
+          },
+          {
+            "reason": "Unit tests present in diff",
+            "delta": 20
+          },
+          {
+            "reason": "Tests only partially aligned with changed code",
+            "delta": -8
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "Behavioral coverage depth unknown for sensitive domain changes",
+            "delta": -5
+          }
+        ],
+        "final_score": 42
+      }
+    }
+  ],
+  "reducers": [
+    {
+      "id": "domain_auth_unit_evidence",
+      "label": "Unit test evidence present",
+      "points": 5,
+      "evidence": "Found unit tests targeting the domain in the diff",
+      "category_key": "test_confidence"
+    },
+    {
+      "id": "test_heavy_diff",
+      "label": "Test-heavy diff",
+      "points": 4,
+      "evidence": "74% of LOC churn is in test files",
+      "category_key": "test_confidence"
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_align_pr_description",
+      "title": "Align PR title/description with the diff",
+      "priority": "medium",
+      "fix_type": "process",
+      "checklist": [
+        "Update the PR title or body so keywords match the areas actually changed, or narrow the diff to match the stated intent.",
+        "If the scope is intentional, explain why expected domains are not touched."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "domain_auth",
+      "actions": [
+        "Run auth/session flows manually or via E2E (login, invite, participant).",
+        "Verify cookie/session settings in staging (SameSite, HTTPS)."
+      ]
+    },
+    {
+      "factor_id": "domain_migrations",
+      "actions": [
+        "Run migrations against a copy of prod-like data; verify rollback plan.",
+        "Coordinate deploy order (API before/after migration as required)."
+      ]
+    },
+    {
+      "factor_id": "context_intent_mismatch",
+      "actions": [
+        "Update the PR title/body to match the diff, or adjust the diff to match the stated intent.",
+        "If intentional, explain the scope change explicitly for reviewers."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 33.0/100 (medium) · base `b41d4f31c12f7fdb712f38515902b8c81bb2a213`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 33/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 0 missing · 1 fail · 1 not evaluated\n\n**Top risk drivers:**\n- Auth/session/invite area changed (14 pts): 4 file(s) in auth-related paths\n- Database migrations present (22 pts): 2 migration file(s)\n_…and 1 more in `pr_risk.md`_\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Align PR title and body with the actual diff (intent match)\n\n**Review routing:**\n- Include a reviewer familiar with auth, sessions, and invitations.\n- Include database/migrations review before merge.\n_…and 2 more in `pr_risk.md`_\n\n**Score math:** factors 42.0 − reducers 9.0 → 33.0 · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "partial",
+      "structural_alignment": "partial",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 6,
+      "with_nearby_test_in_diff": 4,
+      "ratio": 0.6666666666666666,
+      "detail": "Some production changes lack adjacent tests in the same diff; spot-check coverage."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "internal/handlers",
+      "top_share": 0.6698113207547169,
+      "hhi": 0.5033374866500533,
+      "unique_prefixes": 3,
+      "detail": "Most churn (~67%) sits under `internal/handlers`."
+    },
+    "intent": {
+      "title": "SCRUM-202: add decision_maker role to invitation/membership model",
+      "intent_strength": "strong",
+      "keywords_matched": [
+        "ci"
+      ],
+      "domains_expected": [
+        "workflows"
+      ],
+      "domains_in_diff": [
+        "auth",
+        "migrations"
+      ],
+      "aligned": false,
+      "mismatch": true,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 33/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Include a reviewer familiar with auth, sessions, and invitations.",
+        "Include database/migrations review before merge.",
+        "Focus primary review on `internal/handlers` (majority of churn).",
+        "Confirm scope with author: PR text implies domains workflows but diff may differ."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "process: PR title/body aligned with actual diff (intent match)"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge.",
+      "Evidence FAIL [context_align_pr_description]: PR title/body keywords imply domains not present in diff: Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_align_pr_description",
+        "label": "Align PR title/description with the diff",
+        "status": "fail",
+        "source": "intent",
+        "rationale": "PR title/body keywords imply domains not present in diff: Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 1,
+      "fail_count": 1
+    }
+  }
+}

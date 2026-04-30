@@ -1,0 +1,9 @@
+{
+  "pr_number": 174,
+  "merge_sha": "7e0961fd48ba27563e2156856a1c3efd0a0851f9",
+  "parent_sha": "5d0a0f79666b44deb882227e1b954d461b8f01d2",
+  "base_ref": "main",
+  "pr_title": "SCRUM-151: participant decision brief and stance bar layout",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

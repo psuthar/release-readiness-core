@@ -1,0 +1,9 @@
+{
+  "pr_number": 215,
+  "merge_sha": "f65f8d88a5d5eac962958a8f0d020ae10dae62e5",
+  "parent_sha": "e6b0de324a4d73c27f0827266a4727dde31898be",
+  "base_ref": "main",
+  "pr_title": "SCRUM-222: show member count and creator on Session Selection cards",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

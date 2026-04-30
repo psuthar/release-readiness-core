@@ -1,0 +1,9 @@
+{
+  "pr_number": 177,
+  "merge_sha": "649cf6c9a8708e75622d694d4a76c0535b5cacac",
+  "parent_sha": "30382fd5fec6045aff15cc09a73bb013d1685b7e",
+  "base_ref": "main",
+  "pr_title": "SCRUM-155: click-only Others stance popovers",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

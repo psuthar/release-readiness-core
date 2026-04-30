@@ -1,0 +1,9 @@
+{
+  "pr_number": 172,
+  "merge_sha": "6703df8ba19a89ccba007e402311dede361efce7",
+  "parent_sha": "2882e87fa15f8338bb89244dec2e0c6c32ff74e0",
+  "base_ref": "main",
+  "pr_title": "SCRUM-147: open materials pane by default and label collapsed rail",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 175,
+  "merge_sha": "51a0c3173a5ce1f1f15b2f7d2cd050c7cb46348a",
+  "parent_sha": "7e0961fd48ba27563e2156856a1c3efd0a0851f9",
+  "base_ref": "main",
+  "pr_title": "SCRUM-150: participant first-join onboarding dialog",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 148,
+  "merge_sha": "47f0e19408968a6aa3f6e6aaa2791f7dc3eb6bb4",
+  "parent_sha": "206c55b68c117347a659e65c5f4265c19a1867a6",
+  "base_ref": "main",
+  "pr_title": "SCRUM-122: hide empty sections in materials tree panel",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

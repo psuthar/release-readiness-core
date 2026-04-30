@@ -1,0 +1,9 @@
+{
+  "pr_number": 214,
+  "merge_sha": "e6b0de324a4d73c27f0827266a4727dde31898be",
+  "parent_sha": "469664ea0806dfc6f03b0517835fe24f0e382d49",
+  "base_ref": "main",
+  "pr_title": "SCRUM-221: extend GET /api/sessions with member_count and created_by_display_name",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

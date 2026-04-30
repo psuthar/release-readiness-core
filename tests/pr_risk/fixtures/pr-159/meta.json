@@ -1,0 +1,9 @@
+{
+  "pr_number": 159,
+  "merge_sha": "e1ed5c481a047e1c5b7c830966c187e91bfd12c0",
+  "parent_sha": "8c087b8fd6a9ea6772316a015a96b83d6515bd3d",
+  "base_ref": "main",
+  "pr_title": "SCRUM-139: Q&A fixture-fact inventory and validation tests",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

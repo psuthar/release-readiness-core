@@ -1,0 +1,9 @@
+{
+  "pr_number": 218,
+  "merge_sha": "929720f790ae705b5154b81e0ee5579135bb23bb",
+  "parent_sha": "89bad3783c950933492ecdc28a150542c79c78dc",
+  "base_ref": "main",
+  "pr_title": "SCRUM-225: source live membership role in invitations listing; drop dual-write",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

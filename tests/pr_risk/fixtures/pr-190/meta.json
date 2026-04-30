@@ -1,0 +1,9 @@
+{
+  "pr_number": 190,
+  "merge_sha": "60ba115469285994dff185a7e1286ca56aa45666",
+  "parent_sha": "56458481329e8361903f6081b572b12a82a40a23",
+  "base_ref": "main",
+  "pr_title": "SCRUM-188: use shared DecisionBar in creator view; remove sidebar Decisions panel",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

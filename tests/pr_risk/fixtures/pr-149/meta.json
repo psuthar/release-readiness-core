@@ -1,0 +1,9 @@
+{
+  "pr_number": 149,
+  "merge_sha": "89a26cf0ca2c69efb906c9275f06d8ab3e30c1e3",
+  "parent_sha": "47f0e19408968a6aa3f6e6aaa2791f7dc3eb6bb4",
+  "base_ref": "main",
+  "pr_title": "SCRUM-123: smooth voice confirm transition — single textarea inline layout",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

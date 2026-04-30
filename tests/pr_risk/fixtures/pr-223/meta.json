@@ -1,0 +1,9 @@
+{
+  "pr_number": 223,
+  "merge_sha": "a5cee4e1e5d0675959404b0a1a6e145bf82c812a",
+  "parent_sha": "725bccf8cc7ed4b2293dc1fa81fff386a9582d96",
+  "base_ref": "main",
+  "pr_title": "SCRUM-228: drop email-match fallback from UserCanAccessSession",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

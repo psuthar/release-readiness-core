@@ -1,0 +1,9 @@
+{
+  "pr_number": 160,
+  "merge_sha": "a2e1cfc96f1f57d8989262c6b5fce6633ecdf60b",
+  "parent_sha": "e1ed5c481a047e1c5b7c830966c187e91bfd12c0",
+  "base_ref": "main",
+  "pr_title": "SCRUM-134: Q&A eval runner (SessionAsk) + artifact logging",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

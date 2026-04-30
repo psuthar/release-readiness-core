@@ -1,0 +1,9 @@
+{
+  "pr_number": 165,
+  "merge_sha": "c9b7dd6a4733f3b493cae9a835de1e9e012d2309",
+  "parent_sha": "2c8513caf72875d47eaad1f32fba30bcd25905bf",
+  "base_ref": "main",
+  "pr_title": "SCRUM-138: Add aggregate correctness/hallucination reporting",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

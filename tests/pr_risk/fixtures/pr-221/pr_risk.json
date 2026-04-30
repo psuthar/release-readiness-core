@@ -1,0 +1,330 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:03.574666Z",
+  "base_ref": "c3d705a1f252268508105cd2b2bd6f2b623e4986",
+  "signals": {
+    "base_ref": "c3d705a1f252268508105cd2b2bd6f2b623e4986",
+    "head_ref": "HEAD",
+    "file_count": 9,
+    "total_added": 291,
+    "total_deleted": 37,
+    "total_loc": 328,
+    "test_loc_ratio": 0.5060975609756098,
+    "files": [
+      {
+        "path": "internal/handlers/session_authz.go",
+        "added": 46,
+        "deleted": 0
+      },
+      {
+        "path": "internal/handlers/session_links.go",
+        "added": 14,
+        "deleted": 6
+      },
+      {
+        "path": "internal/handlers/session_memberships_handlers.go",
+        "added": 10,
+        "deleted": 7
+      },
+      {
+        "path": "internal/handlers/session_orchestration.go",
+        "added": 8,
+        "deleted": 3
+      },
+      {
+        "path": "internal/handlers/session_orchestration_draft.go",
+        "added": 14,
+        "deleted": 6
+      },
+      {
+        "path": "internal/handlers/session_questions.go",
+        "added": 21,
+        "deleted": 9
+      },
+      {
+        "path": "internal/handlers/sessions.go",
+        "added": 12,
+        "deleted": 6
+      },
+      {
+        "path": "internal/handlers/sessions_test.go",
+        "added": 103,
+        "deleted": 0
+      },
+      {
+        "path": "web/tests/e2e/member-role-change.e2e.ts",
+        "added": 63,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "api": 3,
+      "auth": 1,
+      "orchestration": 2,
+      "rag": 1,
+      "tests": 2
+    },
+    "test_domain_hits": {
+      "api": 1,
+      "web": 1
+    },
+    "test_unit_domain_hits": {
+      "api": 1
+    },
+    "test_e2e_domain_hits": {
+      "web": 1
+    },
+    "test_files": 2,
+    "unit_test_files": 1,
+    "e2e_test_files": 1,
+    "config_files": 0,
+    "migration_files": 0,
+    "validation_note_found": true,
+    "validation_note_snippet": "Validation:",
+    "repo_root": "."
+  },
+  "risk_score": 34,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 38,
+    "reducers_subtotal": 4,
+    "net_before_floor": 34,
+    "floor_min_score": 0,
+    "floor_applied": false,
+    "final_score": 34,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 34). Some risk factors are present but are manageable. Review the factors below before merging.",
+  "factors": [
+    {
+      "id": "domain_auth",
+      "label": "Auth/session/invite area changed",
+      "points": 14,
+      "detail": "1 file(s) in auth-related paths"
+    },
+    {
+      "id": "domain_rag",
+      "label": "RAG pipeline changed",
+      "points": 10,
+      "detail": "1 file(s)"
+    },
+    {
+      "id": "domain_orchestration",
+      "label": "Creator orchestration/recommendation flow changed",
+      "points": 10,
+      "detail": "2 file(s)"
+    },
+    {
+      "id": "context_hotspot_overlap",
+      "label": "Diff overlaps a path prefix touched in multiple recent commits",
+      "points": 4,
+      "detail": "Prefix touched in 27 of the last 50 sampled commits — sustained activity; extra regression care."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 38,
+      "factors": [
+        "domain_auth",
+        "domain_rag",
+        "domain_orchestration",
+        "context_hotspot_overlap"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 23,
+      "confidence": 77,
+      "reducers": [
+        "test_heavy_diff"
+      ],
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "Sensitive domains changed",
+            "delta": -10
+          },
+          {
+            "reason": "E2E tests present in diff",
+            "delta": 40
+          },
+          {
+            "reason": "Behavioral coverage depth is shallow",
+            "delta": -3
+          }
+        ],
+        "final_score": 77
+      }
+    }
+  ],
+  "reducers": [
+    {
+      "id": "test_heavy_diff",
+      "label": "Test-heavy diff",
+      "points": 4,
+      "evidence": "51% of LOC churn is in test files",
+      "category_key": "test_confidence"
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_hotspot_regression_focus",
+      "title": "Extra regression focus on active path (recent commits)",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Prefix `web/tests` is active in recent history; run targeted smoke for behavior touching this area.",
+        "Watch for unintended side effects in adjacent modules."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "domain_auth",
+      "actions": [
+        "Run auth/session flows manually or via E2E (login, invite, participant).",
+        "Verify cookie/session settings in staging (SameSite, HTTPS)."
+      ]
+    },
+    {
+      "factor_id": "domain_rag",
+      "actions": [
+        "Smoke-test Q\u0026A with citations on a session with materials.",
+        "Watch embedding/index job logs after deploy."
+      ]
+    },
+    {
+      "factor_id": "domain_orchestration",
+      "actions": [
+        "Validate creator orchestration flows (recommendation list/sync, draft approve/reject).",
+        "Verify orchestration remains human-in-the-loop (no autonomous send/post actions)."
+      ]
+    },
+    {
+      "factor_id": "context_hotspot_overlap",
+      "actions": [
+        "Run focused regression on the overlapping prefix; several recent commits touched it, so regressions are likelier.",
+        "Scan related modules for unintended behavior changes."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 34.0/100 (medium) · base `c3d705a1f252268508105cd2b2bd6f2b623e4986`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 34/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 1 pass · 0 missing · 0 fail · 1 not evaluated\n\n**Top risk drivers:**\n- Auth/session/invite area changed (14 pts): 1 file(s) in auth-related paths\n- RAG pipeline changed (10 pts): 1 file(s)\n_…and 2 more in `pr_risk.md`_\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Run targeted regression for path prefixes with sustained recent commit activity\n_…and 1 more in `pr_risk.md`_\n\n**Review routing:**\n- Include a reviewer familiar with auth, sessions, and invitations.\n- Route processing/RAG changes to someone who owns ingestion, jobs, and Q\u0026A quality.\n_…and 3 more in `pr_risk.md`_\n\n**Score math:** factors 38.0 − reducers 4.0 → 34.0 · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "co_located",
+      "structural_alignment": "co_located",
+      "behavioral_coverage": "shallow",
+      "non_test_files": 7,
+      "with_nearby_test_in_diff": 7,
+      "ratio": 1,
+      "detail": "Tests in this diff are mostly next to or under the same directories as changed production files. Behavioral depth: unit-level overlap with sensitive domains but no matching E2E evidence in this diff — consider deeper tests where applicable."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "internal/handlers",
+      "top_share": 0.8079268292682927,
+      "hhi": 0.6896378643664487,
+      "unique_prefixes": 2,
+      "detail": "Most churn (~81%) sits under `internal/handlers`."
+    },
+    "hotspots": [
+      {
+        "prefix": "web/tests",
+        "recent_hits": 27,
+        "detail": "Prefix touched in 27 of the last 50 sampled commits — sustained activity; extra regression care."
+      },
+      {
+        "prefix": "internal/handlers",
+        "recent_hits": 9,
+        "detail": "Prefix touched in 9 of the last 50 sampled commits — sustained activity; extra regression care."
+      }
+    ],
+    "intent": {
+      "title": "SCRUM-227: route editor authz through session_memberships role, not email match",
+      "intent_strength": "strong",
+      "keywords_matched": [
+        "auth",
+        "session"
+      ],
+      "domains_expected": [
+        "auth",
+        "api"
+      ],
+      "domains_in_diff": [
+        "api",
+        "auth",
+        "orchestration",
+        "rag"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "Keywords in the title/body align with domains touched in the diff."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 34/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Include a reviewer familiar with auth, sessions, and invitations.",
+        "Route processing/RAG changes to someone who owns ingestion, jobs, and Q\u0026A quality.",
+        "Include reviewer familiar with creator orchestration recommendations and draft-approval flows.",
+        "Focus primary review on `internal/handlers` (majority of churn).",
+        "Extra reviewer attention on `web/tests` (several recent commits touched this area)."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "test: targeted regression for path prefixes with several recent commits overlapping this diff",
+      "process: validation note present in commit — confirm it matches what was run"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_hotspot_regression_focus",
+        "label": "Extra regression focus on active path (recent commits)",
+        "status": "pass",
+        "source": "git_signals",
+        "rationale": "Validation note present in commit: Validation:"
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 1,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 1,
+      "fail_count": 0
+    }
+  }
+}

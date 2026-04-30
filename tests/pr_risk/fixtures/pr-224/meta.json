@@ -1,0 +1,9 @@
+{
+  "pr_number": 224,
+  "merge_sha": "7e950a14229e14762271a4f9a723830c1304f8fe",
+  "parent_sha": "a5cee4e1e5d0675959404b0a1a6e145bf82c812a",
+  "base_ref": "main",
+  "pr_title": "SCRUM-230: stop participant Members toggle from going solid blue on hover",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

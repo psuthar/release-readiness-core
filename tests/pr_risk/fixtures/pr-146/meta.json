@@ -1,0 +1,9 @@
+{
+  "pr_number": 146,
+  "merge_sha": "b7c4661e8f98e705a0047fd504514bae810158ac",
+  "parent_sha": "021ccb51f06d8f7a109423ce239697bf12a7c0fd",
+  "base_ref": "main",
+  "pr_title": "SCRUM-132: fix decisions panel toggle hover turning solid blue",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

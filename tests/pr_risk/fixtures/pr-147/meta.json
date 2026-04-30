@@ -1,0 +1,9 @@
+{
+  "pr_number": 147,
+  "merge_sha": "206c55b68c117347a659e65c5f4265c19a1867a6",
+  "parent_sha": "b7c4661e8f98e705a0047fd504514bae810158ac",
+  "base_ref": "main",
+  "pr_title": "SCRUM-121: show unread badge on collapsed materials panel",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

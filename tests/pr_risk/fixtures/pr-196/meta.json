@@ -1,0 +1,9 @@
+{
+  "pr_number": 196,
+  "merge_sha": "c3849f2d6e53d731a4884d9c3f53c9011058f847",
+  "parent_sha": "7a3b0b6004de8d184a27fa9003ba7b1a98005f4c",
+  "base_ref": "main",
+  "pr_title": "SCRUM-195: restyle Suggested Next Actions panel header",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

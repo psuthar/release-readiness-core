@@ -1,0 +1,9 @@
+{
+  "pr_number": 173,
+  "merge_sha": "5d0a0f79666b44deb882227e1b954d461b8f01d2",
+  "parent_sha": "6703df8ba19a89ccba007e402311dede361efce7",
+  "base_ref": "main",
+  "pr_title": "SCRUM-148: add persistent Decision Bar with member-level vote tooltips",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

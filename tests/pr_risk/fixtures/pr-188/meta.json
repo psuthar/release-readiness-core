@@ -1,0 +1,9 @@
+{
+  "pr_number": 188,
+  "merge_sha": "892db7db92d40d8194e3f96ba8ff32955647b5c7",
+  "parent_sha": "253cc9f3962a4dc1d5143f3b2090ccca823ef6a1",
+  "base_ref": "main",
+  "pr_title": "SCRUM-186: align creator topbar with participant topbar (role badge + session menu)",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 178,
+  "merge_sha": "4885e362eb724cd9f0b69beb116e3216fa81223c",
+  "parent_sha": "649cf6c9a8708e75622d694d4a76c0535b5cacac",
+  "base_ref": "main",
+  "pr_title": "SCRUM-156: polish typed Q&amp;A questions",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

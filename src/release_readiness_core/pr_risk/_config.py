@@ -392,8 +392,8 @@ def _validate_gate_predicate(pred: Any, loc: str) -> Dict[str, Any]:
                 )
         if "domains" in pred:
             doms = pred["domains"]
-            if not isinstance(doms, list) or not doms:
-                raise PRRiskConfigError(f"{loc}::domains: must be a non-empty list of strings")
+            if not isinstance(doms, list):
+                raise PRRiskConfigError(f"{loc}::domains: must be a list of strings")
             for k, d in enumerate(doms):
                 if not isinstance(d, str) or not d:
                     raise PRRiskConfigError(f"{loc}::domains[{k}]: must be a non-empty string")

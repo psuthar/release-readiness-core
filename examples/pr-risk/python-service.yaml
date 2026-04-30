@@ -1,0 +1,124 @@
+# PR Risk config example — Python service.
+#
+# Drop this at ops/release-readiness/pr-risk-config.yaml in your repo and
+# customize the domains, sensitive domains, and gates to match your codebase.
+# Schema: docs/contracts/pr-risk-config-v1.schema.json.
+# Walkthrough: docs/how-to/7-configure-pr-risk.md.
+
+version: 1
+
+# Domains group changed paths into product areas. The first domain whose
+# patterns match a path "wins" — order is significant. Pattern types:
+#   - { prefix: "src/" }           # path startswith
+#   - { contains: "/handlers/" }   # substring anywhere
+#   - { exact: "Dockerfile" }      # equals (lowercased path)
+#   - { endswith: "/conftest.py" } # tail match
+#   - { any_contains: ["a", "b"] } # any substring matches
+#   - { and: [<pattern>, ...] }    # all subpatterns must match
+domains:
+  - id: api
+    label: api
+    patterns:
+      - { prefix: "src/myproject/api/" }
+      - { contains: "/views/" }
+
+  - id: db
+    label: db
+    patterns:
+      - { prefix: "src/myproject/db/" }
+      - { prefix: "alembic/versions/" }
+      - { contains: "/models/" }
+
+  - id: workers
+    label: workers
+    patterns:
+      - { prefix: "src/myproject/workers/" }
+      - { contains: "_celery_task" }
+
+  - id: web
+    label: web
+    patterns:
+      - { prefix: "frontend/" }
+      - { prefix: "src/myproject/templates/" }
+
+# Domains whose changes — without test files in the same diff — fire the
+# `tests_missing` factor. The base score subtracts a fixed penalty when the
+# factor fires, so this list shapes the score for "code without tests."
+sensitive_domains:
+  - api
+  - db
+  - workers
+
+# Gate registry. Each gate fires when its applies_when predicates match
+# (implicit AND across the list); deduplicated by id at emit time. Predicate
+# vocabulary (closed set):
+#   - factor_id: <str> | [<str>, ...]   # factor present (any-of for list)
+#   - not_factor_id: <str> | [<str>, ...]
+#   - risk_band: [low|medium|high|critical, ...]
+#   - not_risk_band: [...]
+#   - domain_factor: <domain>           # alias for factor_id: domain_<domain>
+#   - intent_mismatch: true
+#   - concentration_mode: <mode>        # plus optional min_file_count
+#   - hotspots_present: true
+#   - proximity_distant_with_sensitive: true  # plus optional min_non_test_files, domains
+#
+# Evidence detector templates (closed set, see docs/reference/pr-risk-config.md):
+#   test_domain | signal_check | migrations | add_tests | validation_note |
+#   intent_alignment | intent_strength | intent_aligned_or_weak | proximity | hotspot
+gates:
+  - id: db_migration_gate
+    title: "Validate database migrations before merge"
+    priority: high
+    fix_type: db
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_db }
+    applies_when_extra: "DB schema or migration changed"
+    validation_line: "db: migrations validated with rollback/reversal plan documented"
+    checklist:
+      - text: "Run migrations against a copy of production schema and confirm shape."
+        by_evidence_level:
+          unit: "Confirm unit-test coverage; run migration validation smoke against staging."
+          e2e: "Migration validated against staging — confirm CI's migration job is green."
+      - "Document rollback plan (or migration reversal strategy) in the PR description."
+    evidence:
+      template: migrations
+
+  - id: api_e2e_gate
+    title: "Exercise API endpoints touched by this change"
+    priority: high
+    fix_type: test
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_api }
+    applies_when_extra: "API endpoints changed"
+    validation_line: "test: API endpoints exercised (E2E or contract test)"
+    checklist:
+      - text: "Run API E2E suite covering changed endpoints."
+        by_evidence_level:
+          none: "Add or run API E2E covering this endpoint before merge."
+          unit: "Confirm unit tests pass; run API E2E for affected endpoints before merge."
+      - "Verify request/response shapes match the API contract (Pydantic / OpenAPI)."
+    evidence:
+      template: test_domain
+      args:
+        domain: api
+
+  - id: workers_smoke_gate
+    title: "Smoke test affected Celery / background workers"
+    priority: medium
+    fix_type: process
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_workers }
+    applies_when_extra: "Worker / Celery code changed"
+    validation_line: "test: worker smoke (representative payload)"
+    checklist:
+      - text: "Run worker smoke against a representative payload."
+        by_evidence_level:
+          none: "Run worker smoke against a representative payload before merge."
+      - "Confirm worker logs look healthy (no silent failures, no infinite retries)."
+    evidence:
+      template: test_domain
+      args:
+        domain: workers

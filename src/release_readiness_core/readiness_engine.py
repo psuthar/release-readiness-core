@@ -49,14 +49,14 @@ def match_patterns(rel_path: str, patterns: list[str]) -> bool:
 
     Supports:
     - normal fnmatch patterns
-    - directory-prefix patterns like "internal/processing/**" (treated as prefix match)
+    - directory-prefix patterns like "src/api/**" (treated as prefix match)
     """
     normalized = _normalize(rel_path)
     base = os.path.basename(normalized)
     for p in patterns:
         if fnmatch.fnmatch(normalized, p) or fnmatch.fnmatch(base, p):
             return True
-        # Directory prefix style, e.g. internal/processing/**
+        # Directory prefix style, e.g. src/api/**
         pref = p.rstrip("*").rstrip("/")
         if pref:
             if normalized == pref or normalized.startswith(pref + "/"):

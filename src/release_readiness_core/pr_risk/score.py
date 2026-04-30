@@ -272,7 +272,7 @@ def score(
         context_insights=c_insights,
     )
     res.interpretation = build_interpretation(res)
-    res.enforcement = compute_enforcement(res)
+    res.enforcement = compute_enforcement(res, runtime=runtime)
     res.integrations = build_integrations(
         factors, final_score, s.base_ref, jira_key, req, score_math, res.enforcement
     )

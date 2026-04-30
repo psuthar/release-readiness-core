@@ -181,12 +181,17 @@ def dedupe_strings(ss: List[str]) -> List[str]:
     return out
 
 
-def compute_enforcement(r: Result) -> Enforcement:
-    """Full evidence-aware enforcement (Phase 4 — mirrors Go ComputeEnforcement)."""
-    validations = compute_required_validations(r.signals, r.required_actions)
+def compute_enforcement(r: Result, *, runtime=None) -> Enforcement:
+    """Full evidence-aware enforcement (Phase 4 — mirrors Go ComputeEnforcement).
+
+    ``runtime`` is threaded into ``compute_required_validations`` and
+    ``compute_evidence_status`` so the validation lines and evidence detectors
+    come from the adopter's config.
+    """
+    validations = compute_required_validations(r.signals, r.required_actions, runtime=runtime)
     hints = compute_routing_hints(r.signals, r.factors, r.context_insights)
 
-    evidence_status, evidence_summary = compute_evidence_status(r)
+    evidence_status, evidence_summary = compute_evidence_status(r, runtime=runtime)
 
     rec = merge_recommendation(r)
     rec = evidence_aware_upgrade(rec, evidence_status, r.required_actions)

@@ -86,21 +86,21 @@ def test_workflow_config_not_evaluated_without_note() -> None:
     assert ev.status == EVIDENCE_NOT_EVALUATED
 
 
-def test_test_domain_pass_for_e2e_hits() -> None:
+def test_test_domain_pass_for_e2e_hits(corpus_runtime) -> None:
     r = _result(signals=Signals(test_e2e_domain_hits={"auth": 1}))
-    ev = evidence_for_action_id("auth_e2e_gate", "x", r)
+    ev = evidence_for_action_id("auth_e2e_gate", "x", r, runtime=corpus_runtime)
     assert ev.status == EVIDENCE_PASS
 
 
-def test_test_domain_not_evaluated_for_unit_only() -> None:
+def test_test_domain_not_evaluated_for_unit_only(corpus_runtime) -> None:
     r = _result(signals=Signals(test_unit_domain_hits={"auth": 1}))
-    ev = evidence_for_action_id("auth_e2e_gate", "x", r)
+    ev = evidence_for_action_id("auth_e2e_gate", "x", r, runtime=corpus_runtime)
     assert ev.status == EVIDENCE_NOT_EVALUATED
 
 
-def test_test_domain_missing_when_no_hits() -> None:
+def test_test_domain_missing_when_no_hits(corpus_runtime) -> None:
     r = _result()
-    ev = evidence_for_action_id("auth_e2e_gate", "x", r)
+    ev = evidence_for_action_id("auth_e2e_gate", "x", r, runtime=corpus_runtime)
     assert ev.status == EVIDENCE_MISSING
 
 
@@ -117,9 +117,9 @@ def test_evidence_aware_upgrade_block_on_high_priority_fail() -> None:
     assert rec == "block"
 
 
-def test_evidence_aware_upgrade_warn_on_high_priority_missing() -> None:
+def test_evidence_aware_upgrade_warn_on_high_priority_missing(corpus_runtime) -> None:
     actions = [RequiredAction(id="auth_e2e_gate", title="x", priority="high")]
-    out, _ = compute_evidence_status(_result(actions=actions))
+    out, _ = compute_evidence_status(_result(actions=actions), runtime=corpus_runtime)
     rec = evidence_aware_upgrade("pass", out, actions)
     assert rec == "warn"
 

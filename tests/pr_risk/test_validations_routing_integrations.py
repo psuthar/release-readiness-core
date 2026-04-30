@@ -40,12 +40,12 @@ def test_required_validations_baseline_when_git_error() -> None:
     assert any("restore reliable git diff" in v for v in out)
 
 
-def test_required_validations_dedupes() -> None:
+def test_required_validations_dedupes(corpus_runtime) -> None:
     actions = [
         RequiredAction(id="auth_e2e_gate", title="x"),
         RequiredAction(id="auth_e2e_gate", title="y"),
     ]
-    out = compute_required_validations(Signals(), actions)
+    out = compute_required_validations(Signals(), actions, runtime=corpus_runtime)
     auth_lines = [v for v in out if "auth/session/invite" in v]
     assert len(auth_lines) == 1
 

@@ -114,12 +114,39 @@ class PRRiskRuntime:
     # ------------------------------------------------------------------
     # Phase 4 (evidence detectors).
 
-    def detector_for(self, action_id: str) -> Callable[..., Any]:  # noqa: ARG002
+    def detector_for(self, action_id: str) -> Callable[..., Any]:
         """Return the compiled evidence detector callable for a gate id.
-        Stub until Phase 4 (SCRUM-242)."""
-        raise NotImplementedError(
-            "PRRiskRuntime.detector_for is not wired in yet (Phase 4 / SCRUM-242)"
-        )
+
+        Resolves ``gate.evidence.template`` against the closed-set built-in
+        templates first, then the runtime's user-registered overrides
+        (``register_detector``). Returns a callable of shape
+        ``(label: str, r: Result) -> ValidationEvidence``.
+        Raises ``KeyError`` for unknown gate ids and ``ValueError`` for
+        gate evidence templates that aren't registered.
+        """
+        from release_readiness_core.pr_risk._evidence_templates import BUILTIN_TEMPLATES
+
+        for gate in self.config.gates:
+            if gate.id != action_id:
+                continue
+            if gate.evidence is None:
+                raise ValueError(
+                    f"Gate {action_id!r} has no evidence block; cannot resolve detector"
+                )
+            template_name = gate.evidence.template
+            args = dict(gate.evidence.args or {})
+            fn = self._custom_detectors.get(template_name) or BUILTIN_TEMPLATES.get(template_name)
+            if fn is None:
+                raise ValueError(
+                    f"Unknown evidence template {template_name!r} for gate {action_id!r}"
+                )
+            # Bind action_id and args; the returned callable matches the
+            # legacy detector signature (label, r).
+            def _bound(label, r, _fn=fn, _id=action_id, _args=args):
+                return _fn(_id, label, _args, r)
+
+            return _bound
+        raise KeyError(f"No gate with id {action_id!r}")
 
     def register_detector(self, template_name: str, fn: Callable[..., Any]) -> None:
         """Programmatic escape hatch for adopters who need a custom detector

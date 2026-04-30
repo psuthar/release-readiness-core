@@ -2,9 +2,9 @@
 Go-emitted goldens and diffs each expected output file.
 
 This file is the framework only; the Python pipeline that satisfies parity
-is built incrementally across SCRUM-233..236. Until then every fixture is
-SKIPPED with a clear reason. Once a phase lands, the relevant assertions
-become live (see ``ParityScope``).
+is built incrementally across the pr_risk port phases. Until then every
+fixture is SKIPPED with a clear reason. Once a phase lands, the relevant
+assertions become live (see ``ParityScope``).
 """
 
 from __future__ import annotations
@@ -87,9 +87,9 @@ def test_corpus_loads(fixture_path: Path) -> None:
 
 @pytest.mark.parametrize("fixture_path", _DISCOVERED, ids=fixture_id)
 def test_semantic_pr_risk_parity(fixture_path: Path) -> None:
-    """Byte-identical pr-risk.json (the "semantic" file). Closes in Phase 4 (SCRUM-236)."""
+    """Byte-identical pr-risk.json (the "semantic" file). Closes in Phase 4."""
     if PARITY_SCOPE != "full":
-        _skip_until_implemented("semantic pr-risk.json parity is gated until Phase 4 (SCRUM-236)")
+        _skip_until_implemented("semantic pr-risk.json parity is gated until Phase 4")
     # When Phase 4 lands, this branch will:
     #   1. invoke release-readiness-pr-risk against a checked-out fixture
     #   2. compare its pr-risk.json to fx.semantic_pr_risk via canonical jq -S
@@ -98,25 +98,25 @@ def test_semantic_pr_risk_parity(fixture_path: Path) -> None:
 
 @pytest.mark.parametrize("fixture_path", _DISCOVERED, ids=fixture_id)
 def test_pr_risk_full_parity(fixture_path: Path) -> None:
-    """Deep-equal pr_risk.json. Closes in Phase 4 (SCRUM-236)."""
+    """Deep-equal pr_risk.json. Closes in Phase 4."""
     if PARITY_SCOPE != "full":
-        _skip_until_implemented("pr_risk.json parity is gated until Phase 4 (SCRUM-236)")
+        _skip_until_implemented("pr_risk.json parity is gated until Phase 4")
     raise AssertionError("unreachable until Phase 4 wiring lands")
 
 
 @pytest.mark.parametrize("fixture_path", _DISCOVERED, ids=fixture_id)
 def test_score_level_parity(fixture_path: Path) -> None:
-    """Score, band, score_math, categories, merge_recommendation. Closes in Phase 3 (SCRUM-235)."""
+    """Score, band, score_math, categories, merge_recommendation. Closes in Phase 3."""
     if PARITY_SCOPE not in {"score", "full"}:
-        _skip_until_implemented("score-level parity is gated until Phase 3 (SCRUM-235)")
+        _skip_until_implemented("score-level parity is gated until Phase 3")
     raise AssertionError("unreachable until Phase 3 wiring lands")
 
 
 @pytest.mark.parametrize("fixture_path", _DISCOVERED, ids=fixture_id)
 def test_context_insights_parity(fixture_path: Path) -> None:
-    """ContextInsights subtree of pr_risk.json. Closes in Phase 2 (SCRUM-234)."""
+    """ContextInsights subtree of pr_risk.json. Closes in Phase 2."""
     if PARITY_SCOPE not in {"context", "score", "full"}:
-        _skip_until_implemented("context parity is gated until Phase 2 (SCRUM-234)")
+        _skip_until_implemented("context parity is gated until Phase 2")
     raise AssertionError("unreachable until Phase 2 wiring lands")
 
 

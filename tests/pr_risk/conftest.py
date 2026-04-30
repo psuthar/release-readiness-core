@@ -1,4 +1,4 @@
-"""Shared test fixtures for tests/pr_risk/ (SCRUM-243).
+"""Shared test fixtures for tests/pr_risk/.
 
 Phase 5 stripped the bundled-default ``PRRiskConfig`` of project-specific
 domain mappings and gate definitions. Tests that exercise those project

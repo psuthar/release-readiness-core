@@ -1,4 +1,4 @@
-"""Required actions — config-driven gate registry (SCRUM-241 / Phase 3 of SCRUM-238).
+"""Required actions — config-driven gate registry.
 
 Loops over ``runtime.gates`` evaluating each gate's ``applies_when`` predicates
 against the current factor set, risk band, signals, and context insights. The

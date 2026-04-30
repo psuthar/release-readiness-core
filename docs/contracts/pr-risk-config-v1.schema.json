@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/psuthar/release-readiness-core/schemas/pr-risk-config-v1.schema.json",
-  "title": "PR Risk config v1 (SCRUM-238)",
-  "description": "Config-driven domains, sensitive-domain set, and gate registry for release_readiness_core.pr_risk. Phase 1 (SCRUM-239) introduces the schema and a loader; Phases 2-4 wire the classifier, gate registry, and evidence detectors to read from this config.",
+  "title": "PR Risk config v1",
+  "description": "Config-driven domains, sensitive-domain set, and gate registry for release_readiness_core.pr_risk. Phase 1 introduces the schema and a loader; Phases 2-4 wire the classifier, gate registry, and evidence detectors to read from this config.",
   "type": "object",
   "additionalProperties": false,
   "required": ["version"],

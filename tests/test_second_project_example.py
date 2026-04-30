@@ -1,4 +1,4 @@
-"""Regression test for the SCRUM-178 second-project example.
+"""Regression test for the second-project example.
 
 This test runs the ``release-readiness-evaluate`` CLI end-to-end against the
 fixture at ``examples/second-project/``. It exists so changes to the engine,

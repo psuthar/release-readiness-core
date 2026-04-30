@@ -1,4 +1,4 @@
-"""Phase 5 (SCRUM-243): every YAML under examples/pr-risk/ parses and validates."""
+"""Phase 5: every YAML under examples/pr-risk/ parses and validates."""
 
 from __future__ import annotations
 

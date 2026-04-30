@@ -3,7 +3,7 @@
 Field names use snake_case. JSON keys preserve the Go camel/snake choices via
 ``to_dict`` / ``from_dict`` helpers (added in later phases). For Phase 1 the
 dataclasses are declarative only; serialization arrives with the report writer
-in Phase 4 (SCRUM-236).
+in Phase 4.
 """
 
 from __future__ import annotations
@@ -204,7 +204,7 @@ class ScoreMath:
 # ---------------------------------------------------------------------------
 # Result.
 # context_insights uses Any here because the context subpackage lands in
-# Phase 2 (SCRUM-234). The placeholder allows Phase 1 to land standalone.
+# Phase 2. The placeholder allows Phase 1 to land standalone.
 
 @dataclass
 class Result:

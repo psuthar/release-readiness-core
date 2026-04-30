@@ -1,4 +1,4 @@
-"""Tests for the LCOV coverage adapter (SCRUM-209)."""
+"""Tests for the LCOV coverage adapter."""
 
 from __future__ import annotations
 

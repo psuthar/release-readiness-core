@@ -45,7 +45,7 @@ def _discover() -> List[Path]:
     return sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir() and (p / "pr-risk.json").is_file())
 
 
-# corpus_runtime fixture is defined in tests/pr_risk/conftest.py (Phase 5 / SCRUM-243).
+# corpus_runtime fixture is defined in tests/pr_risk/conftest.py (Phase 5).
 
 
 # Reuse helpers from test_parity_score (duplicated minimally to keep this file

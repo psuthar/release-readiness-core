@@ -1,5 +1,5 @@
 """End-to-end: every config under examples/pr-risk/ runs through the CLI on a small
-synthetic git repo (SCRUM-244 / Phase 6).
+synthetic git repo (Phase 6).
 """
 
 from __future__ import annotations

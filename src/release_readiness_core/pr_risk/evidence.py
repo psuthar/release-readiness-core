@@ -1,10 +1,10 @@
-"""Evidence resolution (config-driven detectors as of SCRUM-242 / Phase 4).
+"""Evidence resolution (config-driven detectors).
 
 Each required action has a deterministic evidence detector that classifies the
 state as pass / missing / fail / not_evaluated / unknown using only repo-local
 signals. No LLM, no live API.
 
-Phase 4 (SCRUM-242) replaced the hand-written ``_DETECTORS`` dict with a
+Phase 4 replaced the hand-written ``_DETECTORS`` dict with a
 closed-set template registry in ``_evidence_templates.py``. Each gate's
 ``evidence: { template, args }`` block compiles to a callable via
 ``runtime.detector_for(action_id)``. The CI-baseline detector

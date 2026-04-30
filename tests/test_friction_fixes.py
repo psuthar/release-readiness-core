@@ -1,4 +1,4 @@
-"""SCRUM-209 friction fixes (originally surfaced in SCRUM-178 spike).
+"""friction fixes (originally surfaced in the second-project validation spike).
 
 Covers:
 - Markdown renderer no longer emits empty validations table (gap #4).
@@ -87,12 +87,12 @@ def test_markdown_renders_validation_note_row_when_present():
 
 
 def test_default_evidence_boolean_keys_is_empty():
-    """SCRUM-209 (gap #6): the engine ships an empty default; projects opt in via config."""
+    """(gap #6): the engine ships an empty default; projects opt in via config."""
     assert DEFAULT_EVIDENCE_BOOLEAN_KEYS == ()
 
 
 def test_pr_risk_block_message_does_not_reference_pr_risk_md():
-    """SCRUM-209 (gap #20): no dead doc reference in the report."""
+    """(gap #20): no dead doc reference in the report."""
     res = compute_readiness(
         config={"scoring": {"max_score": 100, "pass_threshold": 80, "warn_threshold": 60}},
         changed_files=[],
@@ -125,7 +125,7 @@ def test_pr_risk_warn_message_does_not_reference_pr_risk_md():
 
 
 def test_evaluate_cli_resolves_artifact_paths_under_repo_root(tmp_path: Path):
-    """SCRUM-209 (gap #3): when artifact paths are relative, they resolve under --repo-root.
+    """(gap #3): when artifact paths are relative, they resolve under --repo-root.
 
     Drives the CLI from a working directory unrelated to the project root and
     confirms the run succeeds. Before the fix this produced

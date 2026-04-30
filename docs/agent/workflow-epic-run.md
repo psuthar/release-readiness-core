@@ -6,9 +6,9 @@ Source of truth: This file owns epic automation contract, strict gate rules, and
 
 Use `epic-run` skill (`.claude/skills/epic-run/SKILL.md`):
 
-- `run epic SCRUM-XX`
-- `continue epic SCRUM-XX`
-- `continue epic run for SCRUM-XX`
+- `run epic <EPIC-KEY>`
+- `continue epic <EPIC-KEY>`
+- `continue epic run for <EPIC-KEY>`
 
 ## Contract
 
@@ -53,5 +53,5 @@ On resume (`continue epic ...`), agent must re-read Jira children (`statusCatego
 
 Git hygiene before next ticket: fetch/checkout/pull `main` so branch starts from current main.
 
-Stale state file rule: if `.epic-run/SCRUM-XX.json` exists and not complete, use `continue epic` instead of `run epic`.
+Stale state file rule: if `.epic-run/<EPIC-KEY>.json` exists and not complete, use `continue epic` instead of `run epic`.
 

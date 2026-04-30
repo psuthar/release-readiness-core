@@ -3,7 +3,7 @@
 write_json emits the full Result; write_markdown emits the human-readable
 report. JSON parity is byte-stable except for the ``generated_at`` timestamp
 (differs between runs by definition); markdown parity is whitespace-tolerant
-per the SCRUM-231 decisions doc.
+per the pr-risk port decisions doc.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def _display_rec(rec: str) -> str:
 def write_markdown(path: str, r: Result) -> None:
     """Write the human-readable markdown report.
 
-    Whitespace-tolerant per the SCRUM-231 decisions doc; the PR comment in
+    Whitespace-tolerant per the pr-risk port decisions doc; the PR comment in
     integrations.py is the byte-stable surface that reviewers/CI consume.
     """
     sb = StringIO()

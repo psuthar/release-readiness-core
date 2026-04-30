@@ -1,4 +1,4 @@
-"""Phase 5 (SCRUM-243): release-readiness-init writes a starter pr-risk-config.yaml."""
+"""Phase 5: release-readiness-init writes a starter pr-risk-config.yaml."""
 
 from __future__ import annotations
 

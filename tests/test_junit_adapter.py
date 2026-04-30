@@ -1,4 +1,4 @@
-"""Tests for the JUnit XML adapter (SCRUM-209)."""
+"""Tests for the JUnit XML adapter."""
 
 from __future__ import annotations
 

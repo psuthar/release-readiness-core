@@ -1,10 +1,10 @@
-# SCRUM-167 prep — validation-key handling (config-driven)
+# prep — validation-key handling (config-driven)
 
-This document captures everything needed to implement **SCRUM-167** (“Make engine validation-key handling config-driven”) without re-reading TalkBack line-by-line.
+This document captures everything needed to make engine validation-key handling config-driven without re-reading TalkBack line-by-line.
 
-## Goal of SCRUM-167
+## Goal
 
-Move **hardcoded validation-key lists** in the readiness merge logic into **configuration**, while preserving deterministic behavior and parity with TalkBack until golden fixtures land (**SCRUM-172**).
+Move **hardcoded validation-key lists** in the readiness merge logic into **configuration**, while preserving deterministic behavior and parity with TalkBack until golden fixtures land.
 
 Primary upstream reference (TalkBack, today):
 
@@ -26,7 +26,7 @@ Downstream home for extracted logic:
 | **Required keys** | Derived from **risk categories** for changed files + migration rule (see below) |
 | **Statuses** | Per-key output: `satisfied` \| `missing` \| `not_required` \| `not_evaluated` |
 
-## Config already driven by YAML (no change in SCRUM-167)
+## Config already driven by YAML
 
 These are **already** read from `config` today:
 
@@ -36,7 +36,7 @@ These are **already** read from `config` today:
 
 See `ops/release-readiness/config.yaml` in TalkBack.
 
-## Hardcoded today (SCRUM-167 targets)
+## Hardcoded today (targets)
 
 ### 1. Evidence top-level boolean shortcuts (`merge_validations`)
 
@@ -48,14 +48,14 @@ auth_session, upload_extraction, nav_assets, viewer_materials, qa_rag, migration
 
 If `evid.get(k) is True`, `val_map[k] = True`.
 
-**SCRUM-167 direction:** Move this list into config, e.g. `evidence_boolean_keys` or nest under `validations.<key>.evidence_aliases`.
+**Direction:** Move this list into config, e.g. `evidence_boolean_keys` or nest under `validations.<key>.evidence_aliases`.
 
 ### 2. Risk category → required validation (partially implicit)
 
 - For each risk category `r` from `risk_from_paths`, **`r` becomes a required validation key** (must appear in `val_map` as `True` when risks exist).
 - Special case: category **`migrations`** maps to required key **`migrations_validated`** (not `migrations`).
 
-**SCRUM-167 direction:** Optionally make the `migrations` → `migrations_validated` mapping explicit in config (e.g. `risk_category_to_validation_key`) so other repos can remap without code forks.
+**Direction:** Optionally make the `migrations` → `migrations_validated` mapping explicit in config (e.g. `risk_category_to_validation_key`) so other repos can remap without code forks.
 
 ### 3. Registry vs runtime keys
 
@@ -87,20 +87,20 @@ When E2E passes, infer keys:
 
 Explicit `False` in evidence JSON overrides inference.
 
-## Contract artifact for SCRUM-167
+## Contract artifact
 
 Draft schema (checked into this repo):
 
 - [`docs/contracts/validation-config-v1.schema.json`](../contracts/validation-config-v1.schema.json)
 
-Align loader/parser with TalkBack `config.yaml` structure first; extend only where SCRUM-167 introduces new keys (`evidence_boolean_keys`, etc.).
+Align loader/parser with TalkBack `config.yaml` structure first; extend only where new keys are introduced (`evidence_boolean_keys`, etc.).
 
-## Suggested implementation order (SCRUM-167)
+## Suggested implementation order
 
 1. Add config fields + defaults matching TalkBack behavior (backward compatible).
 2. Replace hardcoded tuple in `merge_validations` with config-driven list (same default values).
 3. Add unit tests in **release-readiness-core** mirroring `scripts/test_release_readiness_engine.py` cases that touch validations.
-4. Run TalkBack golden parity (**SCRUM-172**) before/after to prevent drift.
+4. Run TalkBack golden parity before/after to prevent drift.
 
 ## References
 
@@ -109,4 +109,4 @@ Align loader/parser with TalkBack `config.yaml` structure first; extend only whe
 | TalkBack engine | `talkback/scripts/release_readiness_engine.py` |
 | TalkBack engine tests | `talkback/scripts/test_release_readiness_engine.py` |
 | TalkBack readiness config | `talkback/ops/release-readiness/config.yaml` |
-| PR-risk / readiness spike | [`docs/spikes/SCRUM-166-package-boundary-api-contract.md`](../spikes/SCRUM-166-package-boundary-api-contract.md) |
+| PR-risk / readiness spike | [`docs/spikes/package-boundary-api-contract.md`](../spikes/package-boundary-api-contract.md) |

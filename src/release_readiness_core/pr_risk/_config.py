@@ -1,4 +1,4 @@
-"""PR Risk config dataclass and YAML loader (SCRUM-239 / Phase 1 of SCRUM-238).
+"""PR Risk config dataclass and YAML loader.
 
 Phase 1 ships the schema, dataclass, and loader. No behavior change yet — the
 classifier, gate registry, and evidence detectors continue to drive from

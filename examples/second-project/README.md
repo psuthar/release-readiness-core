@@ -1,6 +1,6 @@
 # Second-project example: `todo-api`
 
-A fictional small Flask REST API used as the **second consumer** for SCRUM-178 (generalization spike). Nothing in this directory is wired into the package — it exists so a) anyone can see what an unrelated `config.yaml` looks like, and b) the regression test in `tests/test_second_project_example.py` keeps the package working against it as the API evolves.
+A fictional small Flask REST API used as the **second consumer** in the package generalization spike. Nothing in this directory is wired into the package — it exists so a) anyone can see what an unrelated `config.yaml` looks like, and b) the regression test in `tests/test_second_project_example.py` keeps the package working against it as the API evolves.
 
 ## Running
 

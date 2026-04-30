@@ -1,4 +1,4 @@
-"""Unit tests for the closed-set evidence templates (SCRUM-242 / Phase 4).
+"""Unit tests for the closed-set evidence templates (Phase 4).
 
 One parametrized class per template, exercising the pass / missing / fail /
 not_evaluated / unknown branches each template can return.

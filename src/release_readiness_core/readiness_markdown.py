@@ -63,7 +63,7 @@ def render_readiness_result_markdown(r: ReadinessResult, config_version: Any, ti
     ]
     if r.outcome_overrides:
         lines.append(f"| Outcome override | {r.outcome_overrides[0]} |")
-    # SCRUM-209 (gap #5): only show the row when a note is present, since
+    # (gap #5): only show the row when a note is present, since
     # adopters who don't use the validation-note convention have no idea what
     # it is and "no" produces a visible-but-meaningless row.
     note_present = r.evidence.get("validation_note_present", False)
@@ -93,7 +93,7 @@ def render_readiness_result_markdown(r: ReadinessResult, config_version: Any, ti
             lines.append(f"- `{x}`")
     else:
         lines.append("- (none)")
-    # SCRUM-209 (gap #4): omit the section entirely when there are no
+    # (gap #4): omit the section entirely when there are no
     # validations to show, instead of rendering an empty markdown table.
     if r.validations:
         lines.extend(["", "### Validations", ""])

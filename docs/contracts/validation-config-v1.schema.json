@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/psuthar/release-readiness-core/schemas/validation-config-v1.schema.json",
-  "title": "Release readiness validation config v1 (SCRUM-167 target)",
+  "title": "Release readiness validation config v1",
   "description": "Shape aligned with TalkBack ops/release-readiness/config.yaml, extended for config-driven evidence keys. Defaults should preserve TalkBack parity.",
   "type": "object",
   "additionalProperties": true,

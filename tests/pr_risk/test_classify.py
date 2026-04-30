@@ -73,7 +73,7 @@ from release_readiness_core.pr_risk.types import (
     ],
 )
 def test_classify_domain_matches_go_table(path: str, want: str, corpus_runtime) -> None:
-    """The bundled-default config is now language-agnostic (Phase 5 / SCRUM-243)
+    """The bundled-default config is now language-agnostic (Phase 5)
     — the project-specific domain mappings live in
     tests/pr_risk/fixtures/pr-risk-corpus-config.yaml. Tests that exercise those
     mappings load it via the ``corpus_runtime`` fixture (in conftest.py)."""

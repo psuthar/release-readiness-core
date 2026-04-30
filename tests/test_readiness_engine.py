@@ -138,7 +138,7 @@ def test_migrations_without_validation_blocks():
 
 
 def test_risk_category_mapping_uses_config_when_present():
-    """SCRUM-207: a config-supplied mapping replaces identity for that category."""
+    """a config-supplied mapping replaces identity for that category."""
     cfg = {
         **BASE_CONFIG,
         "risk_category_to_required_validation": {"migrations": "migrations_validated"},
@@ -177,7 +177,7 @@ def test_risk_category_mapping_satisfied_via_cli_flag():
 
 
 def test_risk_category_non_identity_mapping():
-    """SCRUM-207: an unrelated project can map auth_endpoints risk → auth_login validation."""
+    """an unrelated project can map auth_endpoints risk → auth_login validation."""
     cfg = {
         **BASE_CONFIG,
         "validations": {**BASE_CONFIG["validations"], "auth_login": {"description": "auth"}},
@@ -252,7 +252,7 @@ def test_optional_prod_health_not_declared_warns():
 
 
 def test_optional_prod_health_declared_no_warning_no_penalty():
-    """SCRUM-208: when prod_health is opted-in via optional_artifacts, missing it is silent."""
+    """when prod_health is opted-in via optional_artifacts, missing it is silent."""
     cfg = {**BASE_CONFIG, "optional_artifacts": ["prod_health"]}
     res = compute_readiness(
         config=cfg,
@@ -269,7 +269,7 @@ def test_optional_prod_health_declared_no_warning_no_penalty():
 
 
 def test_optional_coverage_declared_no_warning_no_penalty():
-    """SCRUM-208: same opt-in path covers coverage."""
+    """same opt-in path covers coverage."""
     cfg = {**BASE_CONFIG, "optional_artifacts": ["coverage", "prod_health"]}
     res = compute_readiness(
         config=cfg,

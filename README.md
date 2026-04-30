@@ -72,6 +72,17 @@ uv run pytest
 uv build
 ```
 
+### Configuring PR Risk for your project
+
+`release-readiness-pr-risk` ships a generic, language-agnostic baseline by default — domains classify everything to `other`, only generic gates (CI fetch depth, PR review summary, workflow / config validation, add tests / evidence, intent alignment, scattered review plan, test proximity, hotspot regression) fire. To make it project-specific (auth E2E gate when `src/auth/` changes, migration validation when SQL files change, etc.), author a `pr-risk-config.yaml`:
+
+- Walkthrough: [`docs/how-to/7-configure-pr-risk.md`](docs/how-to/7-configure-pr-risk.md)
+- Predicate vocabulary + detector template reference: [`docs/reference/pr-risk-config.md`](docs/reference/pr-risk-config.md)
+- Examples: [`examples/pr-risk/python-service.yaml`](examples/pr-risk/python-service.yaml), [`examples/pr-risk/node-service.yaml`](examples/pr-risk/node-service.yaml)
+- Schema: [`docs/contracts/pr-risk-config-v1.schema.json`](docs/contracts/pr-risk-config-v1.schema.json)
+
+`release-readiness-init` writes a commented starter at `ops/release-readiness/pr-risk-config.yaml`; `release-readiness-doctor --pr-risk-config <path>` validates it (typos, malformed predicates, references to undeclared domains, unknown evidence templates).
+
 ### How-to guides
 
 - Quickstart — adopt the package in a new project: `docs/how-to/0-quickstart.md`
@@ -81,6 +92,7 @@ uv build
 - Multi-job CI — split smoke / e2e / coverage across jobs: `docs/how-to/4-multi-job-ci.md`
 - Branch protection — make the readiness check required: `docs/how-to/5-branch-protection.md`
 - Migrating from an existing gate: `docs/how-to/6-migrate-from-existing-gate.md`
+- Configure PR Risk for your project: `docs/how-to/7-configure-pr-risk.md`
 
 ### Reference
 

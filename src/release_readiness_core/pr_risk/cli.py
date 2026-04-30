@@ -49,6 +49,16 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional Jira issue key embedded in integrations output.",
     )
+    parser.add_argument(
+        "--config",
+        default=None,
+        help=(
+            "Optional path to pr-risk-config.yaml (the adopter-authored "
+            "config of domains, sensitive_domains, and gates). Without this "
+            "flag the runtime uses the bundled language-agnostic default; "
+            "see docs/how-to/7-configure-pr-risk.md."
+        ),
+    )
     return parser
 
 
@@ -60,8 +70,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if not jira_key:
         jira_key = os.environ.get(ENV_JIRA_ISSUE_KEY, "").strip()
 
-    signals = extract_signals(args.repo_root, args.base_ref)
-    res = score(signals, default_weights(), jira_key)
+    runtime = None
+    if args.config:
+        from release_readiness_core.pr_risk._runtime import PRRiskRuntime
+
+        runtime = PRRiskRuntime.from_config(args.config)
+
+    signals = extract_signals(args.repo_root, args.base_ref, runtime=runtime)
+    res = score(signals, default_weights(), jira_key, runtime=runtime)
 
     out = os.path.normpath(args.output_dir)
     os.makedirs(out, exist_ok=True)

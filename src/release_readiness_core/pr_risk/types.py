@@ -33,6 +33,12 @@ DOMAIN_SCRIPTS = "scripts"
 DOMAIN_OTHER = "other"
 
 
+# Category lane keys (mirror Go categories.go).
+CATEGORY_CODE = "code"
+CATEGORY_WORKFLOW = "workflow"
+CATEGORY_TEST_CONFIDENCE = "test_confidence"
+
+
 # ValidationStatus values (Go: type ValidationStatus = string with named consts).
 EVIDENCE_PASS = "pass"
 EVIDENCE_MISSING = "missing"
@@ -218,7 +224,7 @@ class Result:
     required_actions: List[RequiredAction] = field(default_factory=list)
     mitigations: List[Mitigation] = field(default_factory=list)
     integrations: Integrations = field(default_factory=Integrations)
-    context_insights: Optional[Any] = None  # tightened in Phase 2 to ContextInsights
+    context_insights: Optional["ContextInsights"] = None  # type: ignore[name-defined]
     enforcement: Enforcement = field(default_factory=Enforcement)
 
 

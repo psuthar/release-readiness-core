@@ -94,10 +94,18 @@ def test_runtime_classify_smoke():
     assert runtime.classify("README.md") == "other"
 
 
-def test_runtime_detector_for_is_phase4_stub():
+def test_runtime_detector_for_returns_callable():
+    """Phase 4 (SCRUM-242) implemented runtime.detector_for. Smoke-check that
+    it returns a callable for a known gate; per-template unit tests live in
+    test_evidence_templates.py."""
     runtime = PRRiskRuntime.from_default()
-    with pytest.raises(NotImplementedError, match="Phase 4"):
-        runtime.detector_for("ci_fetch_depth_zero")
+    fn = runtime.detector_for("ci_fetch_depth_zero")
+    assert callable(fn)
+    fn = runtime.detector_for("auth_e2e_gate")
+    assert callable(fn)
+    # Unknown gate id raises.
+    with pytest.raises(KeyError):
+        runtime.detector_for("nonexistent_gate")
 
 
 def test_register_detector_validates_args():

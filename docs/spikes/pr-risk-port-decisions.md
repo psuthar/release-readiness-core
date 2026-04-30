@@ -180,3 +180,40 @@ The capture script never mutates the source repo. Encoded:
 - Forbidden command set: `stash`, `reset --hard`, `clean`, `commit`,
   `push`, `branch -D`, `config`, `gc --prune`. The script does not
   invoke any of these.
+
+## 11. Post-decoupling architecture (SCRUM-238 / Phases 1-6)
+
+Before SCRUM-238, `pr_risk` shipped project-specific path patterns, sensitive-domain set, and gate definitions hardcoded across `classify.py`, `actions.py`, `validations.py`, `actions_priority.py`, and `evidence.py`. Adopters had to fork to retarget the engine.
+
+After SCRUM-238 the package is fully config-driven via a single `ops/release-readiness/pr-risk-config.yaml`. The runtime carries:
+
+- `PRRiskConfig` (frozen dataclass) — schema-validated YAML with three sections: `domains`, `sensitive_domains`, `gates`.
+- `PRRiskRuntime` — wraps a `PRRiskConfig` and exposes a compiled `Classifier` (Phase 2), a gate registry consumer (Phase 3), and a detector resolver (Phase 4). `from_default()` returns a minimal language-agnostic runtime; `from_config(path)` loads from YAML.
+- Closed-set vocabulary — the schema enumerates the path-pattern predicates (`prefix`, `contains`, `exact`, `endswith`, `any_contains`, `and`), the `applies_when` predicates (`factor_id`, `not_factor_id`, `risk_band`, `not_risk_band`, `domain_factor`, `intent_mismatch`, `concentration_mode`, `hotspots_present`, `proximity_distant_with_sensitive`), and the evidence detector template names (10 templates). The loader rejects anything outside these sets.
+- Adopter escape hatch — `PRRiskRuntime.register_detector(template_name, fn)` lets adopters plug in a custom detector callable. Programmatic-only because the schema's `evidence.template` enum rejects unknown names at load time.
+
+### Why closed-set templates instead of a DSL
+
+A general declarative DSL for evidence detection (e.g. boolean expressions over signals + insights + a path-domain map) was on the table. We chose closed-set templates instead because:
+
+- The 10 templates we shipped cover every detector behavior the previous hardcoded `_DETECTORS` dict implemented, with byte-for-byte parity. We have evidence the templates are sufficient for today's needs.
+- A DSL that's expressive enough to produce the same wording as the existing detectors (with all their domain-specific phrasing and edge cases) would be substantially larger than the templates registry.
+- The `register_detector` escape hatch covers the 1% of adopters who genuinely need a behavior outside the closed set, without dragging the rest of the package into a DSL design.
+- The closed set is a public contract: adding new templates is a minor-version change; removing or changing them is breaking. That's tractable; a DSL's surface area is much harder to evolve.
+
+A DSL is a separate, larger project that we may revisit if adopter demand justifies it.
+
+### What stays in code (and why)
+
+- Generic path heuristics in `classify.py`: `is_test_path`, `is_e2e_path`, `is_untestable_path`, `is_config_path`, `is_migration_path`. These are language / framework heuristics, not project policy — every adopter wants the same answer.
+- Score math, threshold logic, and band computation in `score.py`. Adopters tune thresholds via the existing `ScoreWeights`; the math itself is stable and shared.
+- The `_ev_ci_baseline` detector in `evidence.py`. The CI-baseline check applies regardless of which gates fire.
+
+### Phase summary
+
+- **Phase 1 (SCRUM-239)** — schema + loader + runtime skeleton + parity-fixture YAML. No behavior change; loader and runtime are dead code.
+- **Phase 2 (SCRUM-240)** — `Classifier(config)` replaces the hardcoded path-pattern chain in `classify_area`. Threading: `runtime` kwarg added to `score`, `extract_signals`, `classify_*`, `touches_sensitive_code_without_tests`. Parity tests load corpus YAML explicitly.
+- **Phase 3 (SCRUM-241)** — gate registry from config. `compute_required_actions` becomes a closed-set predicate evaluator over `runtime.gates`. `compute_required_validations` reads `gate.validation_line`. `priority_for_action_id` reads `runtime.priority_for(id)`.
+- **Phase 4 (SCRUM-242)** — closed-set evidence detector templates; `evidence_for_action_id` delegates to `runtime.detector_for(id)`. `_DETECTORS` dict and the 10 hand-written `_ev_*` private helpers deleted; templates module owns the wording.
+- **Phase 5 (SCRUM-243)** — strip the bundled-default project-specific data. `_default_config.py` ships only the eight generic gates; corpus YAML stays as the parity-test fixture. Examples added under `examples/pr-risk/`. Init scaffold writes a starter `pr-risk-config.yaml`.
+- **Phase 6 (SCRUM-244)** — docs (`docs/how-to/7-configure-pr-risk.md`, `docs/reference/pr-risk-config.md`), README "Configuring PR Risk" section, doctor validation of `pr-risk-config.yaml`.

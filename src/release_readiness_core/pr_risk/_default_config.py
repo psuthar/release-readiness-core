@@ -1,4 +1,4 @@
-"""Bundled-default ``PRRiskConfig`` (SCRUM-243 / Phase 5 of SCRUM-238).
+"""Bundled-default ``PRRiskConfig``.
 
 Phase 5 strips the project-specific defaults out of core. The bundled default
 here ships only what is genuinely language-agnostic:

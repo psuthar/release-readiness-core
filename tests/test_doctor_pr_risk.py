@@ -1,4 +1,4 @@
-"""Doctor validation of pr-risk-config.yaml (SCRUM-244 / Phase 6)."""
+"""Doctor validation of pr-risk-config.yaml (Phase 6)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Synthetic-config tests for the Phase 2 config-driven classifier (SCRUM-240).
+"""Synthetic-config tests for the Phase 2 config-driven classifier.
 
 These tests prove the classifier wiring works by loading a hand-rolled config
 that has nothing in common with the bundled default. If the runtime threads
@@ -133,7 +133,7 @@ def test_touches_sensitive_code_without_tests_uses_config(runtime: PRRiskRuntime
 
 
 def test_default_runtime_classifies_everything_as_other():
-    """Phase 5 (SCRUM-243) stripped the bundled default of project-specific
+    """Phase 5 stripped the bundled default of project-specific
     domain mappings: with no adopter-authored pr-risk-config.yaml, every
     non-test path classifies to ``"other"``. Test paths still classify to
     ``"tests"`` because that's a language heuristic, not project policy."""

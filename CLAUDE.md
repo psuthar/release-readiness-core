@@ -47,7 +47,7 @@ When asked to implement a Jira ticket:
 
 ## Planning Mode Reminder
 
-If the user asks to plan (for example, `Plan SCRUM-13`), do not implement. Produce scope, risks, impacted systems, and test strategy first.
+If the user asks to plan (for example, `Plan <TICKET-KEY>`), do not implement. Produce scope, risks, impacted systems, and test strategy first.
 
 ## Maintenance Convention
 

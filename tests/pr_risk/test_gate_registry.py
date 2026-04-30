@@ -1,4 +1,4 @@
-"""Synthetic-config tests for the Phase 3 gate registry (SCRUM-241).
+"""Synthetic-config tests for the Phase 3 gate registry.
 
 Each test loads a hand-rolled config with one or two gates whose
 ``applies_when`` exercises a specific predicate; assertions then check that

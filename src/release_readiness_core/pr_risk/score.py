@@ -1,8 +1,8 @@
 """Scoring engine (port of internal/prrisk/score.go).
 
 The deterministic core: builds factors from signals, applies context, subtracts
-reducers, applies floor, returns Result. Phase 3 (SCRUM-235) lands the score
-math and categories; Phase 4 (SCRUM-236) lands required-actions, full
+reducers, applies floor, returns Result. Phase 3 lands the score
+math and categories; Phase 4 lands required-actions, full
 enforcement, integrations. Until Phase 4 is in, those downstream fields are
 populated by stub helpers in this module that return empty results.
 """

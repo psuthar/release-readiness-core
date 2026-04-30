@@ -5,7 +5,7 @@ This skill contains execution tactics and run-state handling, not policy ownersh
 
 ## Purpose
 
-Execute all child tickets of a Jira Epic sequentially. **Every** ticket uses **`implement SCRUM-XX FULL_AUTO`** (see **FULL_AUTO mandatory** below)—not plain `implement SCRUM-XX`. That includes **mergeable_state** polling, squash merge when gates pass, and post-merge steps per **CLAUDE.md §8**, using the same PR Gate + mergeability rules as standalone FULL_AUTO.
+Execute all child tickets of a Jira Epic sequentially. **Every** ticket uses **`implement <TICKET-KEY> FULL_AUTO`** (see **FULL_AUTO mandatory** below)—not plain `implement <TICKET-KEY>`. That includes **mergeable_state** polling, squash merge when gates pass, and post-merge steps per **CLAUDE.md §8**, using the same PR Gate + mergeability rules as standalone FULL_AUTO.
 
 Stop immediately if any ticket's merge gate does not reach `clean` within the polling
 budget, or if PR Gate check is non-`success`, or if mergeability cannot be resolved.
@@ -37,13 +37,13 @@ For each child: **PR merged to `main`**, Jira issue **Done**, **`mergeable_state
 Natural-language examples (all equivalent for **behavior**; the user does **not** need to type **`FULL_AUTO`**):
 
 ```
-run epic SCRUM-XX
-continue epic SCRUM-XX
-continue epic run for SCRUM-XX
+run epic <EPIC-KEY>
+continue epic <EPIC-KEY>
+continue epic run for <EPIC-KEY>
 ```
 
-- `run epic SCRUM-XX` — start a fresh run (errors if a non-complete state file already exists)
-- `continue epic SCRUM-XX` / **`continue epic run for SCRUM-XX`** — continue the epic using the **default epic mode** below (**FULL_AUTO** + **drain remaining work**).
+- `run epic <EPIC-KEY>` — start a fresh run (errors if a non-complete state file already exists)
+- `continue epic <EPIC-KEY>` / **`continue epic run for <EPIC-KEY>`** — continue the epic using the **default epic mode** below (**FULL_AUTO** + **drain remaining work**).
 
 ### Default epic mode (no `FULL_AUTO` keyword required)
 
@@ -53,7 +53,7 @@ Internally, each child ticket is still executed as **`implement <KEY> FULL_AUTO`
 
 ### Drain remaining work on every `continue`
 
-When the user says **`continue epic SCRUM-XX`** (or **`continue epic run for SCRUM-XX`**, etc.), **keep going** until one of these is true:
+When the user says **`continue epic <EPIC-KEY>`** (or **`continue epic run for <EPIC-KEY>`**, etc.), **keep going** until one of these is true:
 
 1. **Jira** has **no** child issues of that epic with **`statusCategory != Done`** (all children **Done** — epic work list for open children is empty), or  
 2. The run **HALT**s (merge gate / PR gate non-success / timeout / unrecoverable error).
@@ -66,7 +66,7 @@ Do **not** stop after a single merged ticket if **more non-Done children** remai
 
 While **`run epic`** / **`continue epic`** is active, **each** child ticket MUST be executed with **`FULL_AUTO` in the command and in behavior**:
 
-- Use the invocation **`implement <TICKET-KEY> FULL_AUTO`** (e.g. `implement SCRUM-72 FULL_AUTO`).
+- Use the invocation **`implement <TICKET-KEY> FULL_AUTO`** (e.g. `implement <TICKET-KEY> FULL_AUTO`).
 - **Do not** run **`implement <TICKET-KEY>`** without **`FULL_AUTO`** during an epic—no “standard mode” stop at “PR opened.” Polling **`mergeable_state`**, merge when **`clean`** + PR Gate **`success`**, Jira **Done**, and local cleanup follow **CLAUDE.md §8** FULL_AUTO and merge rules below.
 
 The only exception is if the **user explicitly** cancels epic mode or directs a one-off non–FULL_AUTO run; default for epic is always **FULL_AUTO** (whether or not the user typed the word **`FULL_AUTO`**).
@@ -75,19 +75,19 @@ The only exception is if the **user explicitly** cancels epic mode or directs a 
 
 ## Algorithm
 
-### Start (`run epic SCRUM-XX`)
+### Start (`run epic <EPIC-KEY>`)
 
-1. Check for `.epic-run/SCRUM-XX.json`. If it exists and `status != "complete"`, refuse to
-   start and instruct the user to use `continue epic SCRUM-XX` or delete the file manually.
+1. Check for `.epic-run/<EPIC-KEY>.json`. If it exists and `status != "complete"`, refuse to
+   start and instruct the user to use `continue epic <EPIC-KEY>` or delete the file manually.
 
-2. Query Jira for remaining work: `parent = SCRUM-XX AND statusCategory != Done ORDER BY created ASC` (use **`statusCategory`** so “Done” is consistent across workflows).
+2. Query Jira for remaining work: `parent = <EPIC-KEY> AND statusCategory != Done ORDER BY created ASC` (use **`statusCategory`** so “Done” is consistent across workflows).
 
 3. Check each ticket for the parallel marker (see **Sequencing** below) and group into an
    ordered work list of items, where each item is either a single ticket or a parallel batch.
 
 4. Write initial state file (see **State file**).
 
-5. **Jira — epic In Progress** — Transition the **epic issue itself** (e.g. SCRUM-XX) to **In Progress** using `jira_get_transitions` + `jira_transition_issue`. Do this once, immediately before the first child ticket begins executing. If the epic is already **In Progress** (e.g. resumed run), skip this step (idempotent).
+5. **Jira — epic In Progress** — Transition the **epic issue itself** (e.g. <EPIC-KEY>) to **In Progress** using `jira_get_transitions` + `jira_transition_issue`. Do this once, immediately before the first child ticket begins executing. If the epic is already **In Progress** (e.g. resumed run), skip this step (idempotent).
 
 6. Execute work list items in order (see **Execution loop**).
 
@@ -96,7 +96,7 @@ The only exception is if the **user explicitly** cancels epic mode or directs a 
 **Sequential ticket:**
 
 1. **Jira — In Progress** — Transition this ticket to **In Progress** before any code changes (see **In Progress before code** above). Then create/checkout **`feat/<ticket-key>`** from **`main`** so implementation commits land only on that branch.
-2. **Test analysis + implementation** — Follow the **Testing** section of CLAUDE.md §8 in full: perform the pre-implementation test analysis, write the identified tests in the same PR, and run affected packages locally before pushing. This applies to every product-code ticket; docs/config-only tickets are exempt. Run `implement SCRUM-XX FULL_AUTO` for the ticket **with epic constraints** (see **Merge gate**): do **not** call `merge_pull_request` until **`mergeable_state: clean`** and PR Gate check is **`success`**. If either fails or times out → **HALT**.
+2. **Test analysis + implementation** — Follow the **Testing** section of CLAUDE.md §8 in full: perform the pre-implementation test analysis, write the identified tests in the same PR, and run affected packages locally before pushing. This applies to every product-code ticket; docs/config-only tickets are exempt. Run `implement <TICKET-KEY> FULL_AUTO` for the ticket **with epic constraints** (see **Merge gate**): do **not** call `merge_pull_request` until **`mergeable_state: clean`** and PR Gate check is **`success`**. If either fails or times out → **HALT**.
 
 3. Observe terminal outcome:
    - `PASS` — PR merged, `mergeable_state` was `clean`, and PR Gate check was **`success`** at merge time → record in state file, transition the Jira ticket to **Done**, then **only after** **Sequential close-out** is satisfied → continue to the next item (new branch for the next ticket).
@@ -106,7 +106,7 @@ The only exception is if the **user explicitly** cancels epic mode or directs a 
 
 1. For each ticket in the batch: transition to **In Progress** and use a dedicated **`feat/<ticket-key>`** branch **before** code changes (**In Progress before code**).
 2. For each ticket in the batch: follow the **Testing** section of CLAUDE.md §8 (test analysis, write tests, run locally) before implementation — same rule as sequential tickets.
-3. Run `implement SCRUM-XX FULL_AUTO` concurrently for each ticket in the batch (**with epic constraints** per **Merge gate**).
+3. Run `implement <TICKET-KEY> FULL_AUTO` concurrently for each ticket in the batch (**with epic constraints** per **Merge gate**).
 4. Wait for all to terminate.
 5. If all PASS (merged with PR Gate `success`) → record all in state file, continue.
 6. If any HALT → **HALT** the entire epic run, recording which tickets passed and which halted.
@@ -193,9 +193,9 @@ Use **`pull_request_read` `get_check_runs`** on the PR head and locate the repos
 
 ## Relation to standalone FULL_AUTO
 
-**Outside an epic**, the user may invoke **`implement SCRUM-XX`** (standard) or **`implement SCRUM-XX FULL_AUTO`**; CLAUDE.md §8 applies.
+**Outside an epic**, the user may invoke **`implement <TICKET-KEY>`** (standard) or **`implement <TICKET-KEY> FULL_AUTO`**; CLAUDE.md §8 applies.
 
-**Inside an epic**, every ticket is **`implement SCRUM-XX FULL_AUTO`** (mandatory; see **FULL_AUTO mandatory**). Merge policy is aligned with standalone FULL_AUTO (PR Gate success + `mergeable_state: clean`).
+**Inside an epic**, every ticket is **`implement <TICKET-KEY> FULL_AUTO`** (mandatory; see **FULL_AUTO mandatory**). Merge policy is aligned with standalone FULL_AUTO (PR Gate success + `mergeable_state: clean`).
 
 ---
 
@@ -203,20 +203,20 @@ Use **`pull_request_read` `get_check_runs`** on the PR head and locate the repos
 
 On any halt condition:
 
-1. Write halt state to `.epic-run/SCRUM-XX.json` (set `status: "halted"`, populate
+1. Write halt state to `.epic-run/<EPIC-KEY>.json` (set `status: "halted"`, populate
    `halted_at`, `halt_reason`, `awaiting_human: true`).
 2. Post a Jira comment on the **epic** with:
    - Tickets completed so far (key, PR URL, merge SHA)
    - Halted ticket + reason (PR gate non-success / mergeability timeout or terminal state / parse error)
    - Remaining tickets not yet started
-   - Instruction: "Resume with `continue epic SCRUM-XX` once the blocker is resolved."
+   - Instruction: "Resume with `continue epic <EPIC-KEY>` once the blocker is resolved."
 3. **Stop completely.** Do not proceed to the next ticket, do not poll, do not self-resume.
 
 ---
 
 ## User override: manual squash merge (e.g. after WARN)
 
-When the user **overrides** epic policy and **squash-merges** a PR themselves (typically after a **WARN** halted automation), they will run **`continue epic SCRUM-XX`** and expect **full close-out** for that ticket **without** asking them to click through Jira or clean up git by hand.
+When the user **overrides** epic policy and **squash-merges** a PR themselves (typically after a **WARN** halted automation), they will run **`continue epic <EPIC-KEY>`** and expect **full close-out** for that ticket **without** asking them to click through Jira or clean up git by hand.
 
 On **`continue epic`**, for each **non-Done** child, **first determine whether its PR is already merged** (GitHub MCP: `pull_request_read` / list PRs for the branch or link from Jira/comment).
 
@@ -234,14 +234,14 @@ On **`continue epic`**, for each **non-Done** child, **first determine whether i
 
 ---
 
-## Resume (`continue epic SCRUM-XX`)
+## Resume (`continue epic <EPIC-KEY>`)
 
 **Treat `continue epic` as a full automation pass**, not a single-ticket retry—same as **Drain remaining work**.
 
 1. **Git:** `git fetch origin && git checkout main && git pull --ff-only origin main` (or equivalent) before creating the next **`feat/<ticket>`** branch so work is based on latest **`main`**.
-2. Read `.epic-run/SCRUM-XX.json` if present (if missing, still proceed using Jira as truth).
+2. Read `.epic-run/<EPIC-KEY>.json` if present (if missing, still proceed using Jira as truth).
 3. **Jira — epic In Progress guard:** Ensure the epic issue itself is **In Progress** before processing any child ticket. Use `jira_get_transitions` + `jira_transition_issue` if it is still **To Do**. If it is already **In Progress** (or **Done** — which would be unexpected here), skip (idempotent).
-4. Re-query Jira: `parent = SCRUM-XX AND statusCategory != Done ORDER BY created ASC` — **source of truth** for remaining work (covers manual merges, manual **Done**, or user-fixed CI).
+4. Re-query Jira: `parent = <EPIC-KEY> AND statusCategory != Done ORDER BY created ASC` — **source of truth** for remaining work (covers manual merges, manual **Done**, or user-fixed CI).
 5. For **each** child in order:
    - If **Done** in Jira → skip (idempotent).
    - If **not Done** but **PR is already merged** (including user **squash merge after WARN**) → run **User override: manual squash merge** close-out (**Jira Done**, branch cleanup, local **`main`**, state file)—**do not** merge again.
@@ -260,7 +260,7 @@ Location: `.epic-run/<EPIC-KEY>.json` (gitignored).
 
 ```json
 {
-  "epic": "SCRUM-29",
+  "epic": "PROJ-29",
   "run_id": "<ISO-8601 timestamp of run start>",
   "status": "running | halted | complete",
   "awaiting_human": false,
@@ -268,21 +268,21 @@ Location: `.epic-run/<EPIC-KEY>.json` (gitignored).
   "halt_reason": null,
   "tickets": [
     {
-      "key": "SCRUM-43",
+      "key": "PROJ-43",
       "status": "done",
       "pr": 72,
       "merged_sha": "abc123",
       "gate": "PASS"
     },
     {
-      "key": "SCRUM-46",
+      "key": "PROJ-46",
       "status": "halted",
       "pr": 79,
       "merged_sha": null,
       "halt_reason": "pr_gate_non_pass"
     }
   ],
-  "next_pending": ["SCRUM-47", "SCRUM-48"]
+  "next_pending": ["PROJ-47", "PROJ-48"]
 }
 ```
 
@@ -290,8 +290,8 @@ Location: `.epic-run/<EPIC-KEY>.json` (gitignored).
 
 ## Constraints
 
-- **FULL_AUTO every ticket (default):** During epic execution, always use **`implement SCRUM-XX FULL_AUTO`** per child ticket (see **FULL_AUTO mandatory**). Do not substitute standard **`implement SCRUM-XX`**. The user does **not** need to repeat **`FULL_AUTO`** in chat—**`continue epic`** already implies it.
-- **Continue = drain:** On **`continue epic SCRUM-XX`** (or **`continue epic run for SCRUM-XX`**), process **all** remaining non-Done children in order until done or **HALT** (see **Drain remaining work**).
+- **FULL_AUTO every ticket (default):** During epic execution, always use **`implement <TICKET-KEY> FULL_AUTO`** per child ticket (see **FULL_AUTO mandatory**). Do not substitute standard **`implement <TICKET-KEY>`**. The user does **not** need to repeat **`FULL_AUTO`** in chat—**`continue epic`** already implies it.
+- **Continue = drain:** On **`continue epic <EPIC-KEY>`** (or **`continue epic run for <EPIC-KEY>`**), process **all** remaining non-Done children in order until done or **HALT** (see **Drain remaining work**).
 - **Epic In Progress at run start:** Transition the **epic issue itself** to **In Progress** (via `jira_get_transitions` + `jira_transition_issue`) before the first child ticket begins executing. On `continue epic`, re-apply if the epic is still **To Do** (idempotent if already **In Progress**).
 - **Epic Done at finish:** Transition the **epic issue itself** to **Done** as part of the **Finish** step, after all child tickets are Done and before posting the summary comment. This is mandatory — do not skip even if children are already Done.
 - **In Progress first (child tickets):** Transition each child Jira ticket to **In Progress** before product code edits or implementation commits (see **In Progress before code**).

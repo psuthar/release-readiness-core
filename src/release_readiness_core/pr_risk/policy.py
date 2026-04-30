@@ -4,9 +4,9 @@ The Go ComputeEnforcement aggregates required validations, routing hints,
 and evidence status — all of which depend on Phase 4 functions
 (ComputeRequiredValidations, ComputeRoutingHints, ComputeEvidenceStatus).
 
-Phase 3 (SCRUM-235) ports the parts that don't need Phase 4: the merge
+Phase 3 ports the parts that don't need Phase 4: the merge
 recommendation, rationale, review strategy / requirements, blocking-reason
-helpers, policy-trace reasons. Phase 4 (SCRUM-236) will replace
+helpers, policy-trace reasons. Phase 4 will replace
 ``compute_enforcement`` with the full evidence-aware version.
 """
 

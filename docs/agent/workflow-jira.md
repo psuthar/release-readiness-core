@@ -4,8 +4,8 @@ Source of truth: This file owns the standard Jira ticket implementation lifecycl
 
 ## Invocation Modes
 
-- `implement SCRUM-XX`: standard mode (through PR creation + Jira In Review; stop there).
-- `implement SCRUM-XX FULL_AUTO`: run standard mode first, then follow FULL_AUTO merge automation rules in `docs/agent/workflow-full-auto.md`.
+- `implement <TICKET-KEY>`: standard mode (through PR creation + Jira In Review; stop there).
+- `implement <TICKET-KEY> FULL_AUTO`: run standard mode first, then follow FULL_AUTO merge automation rules in `docs/agent/workflow-full-auto.md`.
 
 ## Status Management
 
@@ -31,7 +31,7 @@ Hard stops:
 
 ## Branching
 
-- Branch naming: `feat/<ticket-number>` (for example, `feat/SCRUM-12`)
+- Branch naming: `feat/<ticket-number>` (for example, `feat/PROJ-12`)
 - Order after In Progress: `git fetch origin`, `git checkout main`, `git pull`, `git checkout -b feat/<ticket-number>`
 
 ## Scope and Change Style
@@ -95,7 +95,7 @@ Hard stop before FULL_AUTO merge handoff:
 
 ## Commit and PR Requirements
 
-- Commit message prefix: ticket key (for example, `SCRUM-12: ...`).
+- Commit message prefix: ticket key (for example, `PROJ-12: ...`).
 - Style-only or docs-only commits that do not change executable behavior should include `Style-only: <brief description>` when relevant.
 - Push branch and create PR targeting `main`.
 

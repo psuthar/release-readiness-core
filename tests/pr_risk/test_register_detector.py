@@ -1,4 +1,4 @@
-"""Custom-detector escape hatch tests (SCRUM-242 / Phase 4).
+"""Custom-detector escape hatch tests (Phase 4).
 
 Adopters with detector logic that doesn't fit the closed-set templates use
 ``PRRiskRuntime.register_detector(template_name, fn)``. The runtime resolves

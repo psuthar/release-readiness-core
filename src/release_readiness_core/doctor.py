@@ -7,7 +7,7 @@ release-readiness into a CI gate that fails for the wrong reasons.
 A typical first-time adoption hits one of these mistakes:
 
 - A typo in ``config.yaml`` that the engine silently ignores
-  (mostly addressed by SCRUM-209 schema validation, but doctor surfaces
+  (mostly addressed by the schema validator, but doctor surfaces
   it explicitly with line-style output).
 - An evidence JSON whose shape doesn't match what the engine expects.
 - ``failed_count > 0`` but ``failures: []`` — engine treats that as a

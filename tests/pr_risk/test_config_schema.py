@@ -1,4 +1,4 @@
-"""Schema validation tests for the pr-risk config (SCRUM-239)."""
+"""Schema validation tests for the pr-risk config."""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ from the captured factors[]. That way every fixture's score / categories /
 merge_recommendation is computed by Python's score, categories, and policy
 modules using the exact same context inputs Go used.
 
-Phase 4 (SCRUM-236) will replace this scaffold with a true end-to-end
+Phase 4 will replace this scaffold with a true end-to-end
 parity test that runs the full CLI against a real repo checkout.
 """
 
@@ -43,7 +43,7 @@ def _discover() -> List[Path]:
     return sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir() and (p / "pr_risk.json").is_file())
 
 
-# corpus_runtime fixture is defined in tests/pr_risk/conftest.py (Phase 5 / SCRUM-243).
+# corpus_runtime fixture is defined in tests/pr_risk/conftest.py (Phase 5).
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-"""Required validation lines — config-driven (SCRUM-241 / Phase 3 of SCRUM-238).
+"""Required validation lines — config-driven.
 
 The hardcoded ``_VALIDATION_FOR_ACTION`` map is gone; validation lines come
 from ``runtime.gates[i].validation_line`` now. This module shrinks to just the

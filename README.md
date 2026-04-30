@@ -121,11 +121,11 @@ Doctor catches config typos, evidence-shape mismatches, and common inconsistenci
 
 ### Contracts and Spike Notes
 
-- SCRUM-166 spike notes: `docs/spikes/SCRUM-166-package-boundary-api-contract.md`
-- SCRUM-167 prep (validation keys → config): `docs/prep/SCRUM-167-validation-key-handling.md`
+- Package boundary API contract spike notes: `docs/spikes/package-boundary-api-contract.md`
+- Validation-key handling prep (validation keys → config): `docs/prep/validation-key-handling.md`
 - PR risk input schema: `docs/contracts/pr-risk-input-v1.schema.json`
 - Readiness output schema: `docs/contracts/release-readiness-output-v1.schema.json`
-- Validation config draft schema (SCRUM-167): `docs/contracts/validation-config-v1.schema.json`
+- Validation config draft schema: `docs/contracts/validation-config-v1.schema.json`
 - Contract reference guide: `docs/contracts/README.md`
 
 ### MCP Setup (Cursor + Claude)
@@ -162,9 +162,9 @@ Both files are gitignored.
 
 This repository supports the same Jira automation command patterns as TalkBack.
 
-- `implement SCRUM-xxx` Standard ticket workflow: code + tests + PR + Jira transition to In Review.
-- `implement SCRUM-xxx FULL_AUTO` Includes standard workflow plus post-PR gate polling, merge, and Jira Done transition.
-- `run epic SCRUM-xxx` / `continue epic SCRUM-xxx` Epic automation mode that runs each child ticket as FULL_AUTO and drains remaining work.
+- `implement <TICKET-KEY>` Standard ticket workflow: code + tests + PR + Jira transition to In Review.
+- `implement <TICKET-KEY> FULL_AUTO` Includes standard workflow plus post-PR gate polling, merge, and Jira Done transition.
+- `run epic <TICKET-KEY>` / `continue epic <TICKET-KEY>` Epic automation mode that runs each child ticket as FULL_AUTO and drains remaining work.
 
 Policy ownership:
 - Entry point: `CLAUDE.md`

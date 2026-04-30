@@ -1,4 +1,4 @@
-"""Phase 5 (SCRUM-243): the bundled-default config is language-agnostic.
+"""Phase 5: the bundled-default config is language-agnostic.
 
 Asserts the bundled default emits no project-specific gates and no
 project-specific domain hits when running without an adopter-authored

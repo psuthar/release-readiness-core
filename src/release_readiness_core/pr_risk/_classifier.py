@@ -1,4 +1,4 @@
-"""Config-driven path classifier (SCRUM-240 / Phase 2 of SCRUM-238).
+"""Config-driven path classifier.
 
 Compiles a ``PRRiskConfig`` into a path-to-domain lookup. Replaces the hardcoded
 switch in the previous ``classify.classify_area`` implementation. The first

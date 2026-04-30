@@ -1,4 +1,4 @@
-"""Tests for the ``release-readiness-init`` scaffold (SCRUM-209)."""
+"""Tests for the ``release-readiness-init`` scaffold."""
 
 from __future__ import annotations
 
@@ -84,7 +84,7 @@ def test_workflow_template_references_pinned_sha_placeholder():
 
 
 def test_config_template_references_optional_artifacts_pattern():
-    """SCRUM-209: scaffolded config demonstrates the optional_artifacts
-    opt-out (avoids the SCRUM-178 gap #2 surprise on first run)."""
+    """scaffolded config demonstrates the optional_artifacts
+    opt-out (avoids the second-project gap #2 surprise on first run)."""
     assert "optional_artifacts:" in CONFIG_TEMPLATE
     assert "prod_health" in CONFIG_TEMPLATE

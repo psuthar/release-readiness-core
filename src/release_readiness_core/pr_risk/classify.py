@@ -1,4 +1,4 @@
-"""Path classification (config-driven as of SCRUM-240 / Phase 2 of SCRUM-238).
+"""Path classification (config-driven).
 
 Determines the primary domain a changed file belongs to via the
 ``PRRiskRuntime`` classifier and identifies test, config, and migration paths.

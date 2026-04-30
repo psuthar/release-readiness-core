@@ -1,4 +1,4 @@
-"""Action priority lookups + sort (SCRUM-241 / Phase 3 of SCRUM-238).
+"""Action priority lookups + sort.
 
 Priority for a gate id comes from ``runtime.config.gates[i].priority`` now,
 not the hardcoded ``_HIGH/_MEDIUM/_SUPPORTING`` sets that previously lived

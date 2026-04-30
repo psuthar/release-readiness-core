@@ -1,6 +1,6 @@
 # PR Risk Port — Locked Decisions
 
-Status: Ratified at start of SCRUM-231 (Phase 0, SCRUM-232).
+Status: Ratified at the start of the pr_risk port (Phase 0).
 Scope: Decisions that constrain the entire Go→Python port. Anything not
 covered here is open and should be raised before introducing variance.
 
@@ -87,10 +87,10 @@ src/release_readiness_core/pr_risk/
   _round.py         Half-away-from-zero helper.
   cli.py            Phase 0: stub. Phase 4: full CLI body.
   version.py        VERSION=2, VERSION_MINOR=8.
-  # SCRUM-233 lands: types.py, classify.py, gitdiff.py, floors.py, interpret.py, mitigate.py
-  # SCRUM-234 lands: reducers.py, _context_bridge.py, context/ subpackage
-  # SCRUM-235 lands: score.py, categories.py, policy.py
-  # SCRUM-236 lands: actions.py, evidence.py, validations.py, routing.py,
+  # lands: types.py, classify.py, gitdiff.py, floors.py, interpret.py, mitigate.py
+  # lands: reducers.py, _context_bridge.py, context/ subpackage
+  # lands: score.py, categories.py, policy.py
+  # lands: actions.py, evidence.py, validations.py, routing.py,
   #                  integrations.py, report.py, semantic_json.py
 ```
 
@@ -135,7 +135,7 @@ the caller's job in CI.
 `VERSION = 2`, `VERSION_MINOR = 8` are frozen for the duration of the port.
 The Python port's emitted `report_version` field reads `"v2.8"`. Bumping
 to `v2.9` is reserved for the post-port cleanup (Go retirement) and is out
-of scope for SCRUM-231.
+of scope for the port itself.
 
 Adding new fields to `pr_risk.json` or `pr-risk.json` during the port is
 **not allowed** even if motivated. Parity is the contract. New fields land
@@ -181,11 +181,11 @@ The capture script never mutates the source repo. Encoded:
   `push`, `branch -D`, `config`, `gc --prune`. The script does not
   invoke any of these.
 
-## 11. Post-decoupling architecture (SCRUM-238 / Phases 1-6)
+## 11. Post-decoupling architecture (Phases 1-6)
 
-Before SCRUM-238, `pr_risk` shipped project-specific path patterns, sensitive-domain set, and gate definitions hardcoded across `classify.py`, `actions.py`, `validations.py`, `actions_priority.py`, and `evidence.py`. Adopters had to fork to retarget the engine.
+Before the decoupling, `pr_risk` shipped project-specific path patterns, sensitive-domain set, and gate definitions hardcoded across `classify.py`, `actions.py`, `validations.py`, `actions_priority.py`, and `evidence.py`. Adopters had to fork to retarget the engine.
 
-After SCRUM-238 the package is fully config-driven via a single `ops/release-readiness/pr-risk-config.yaml`. The runtime carries:
+After the decoupling, the package is fully config-driven via a single `ops/release-readiness/pr-risk-config.yaml`. The runtime carries:
 
 - `PRRiskConfig` (frozen dataclass) — schema-validated YAML with three sections: `domains`, `sensitive_domains`, `gates`.
 - `PRRiskRuntime` — wraps a `PRRiskConfig` and exposes a compiled `Classifier` (Phase 2), a gate registry consumer (Phase 3), and a detector resolver (Phase 4). `from_default()` returns a minimal language-agnostic runtime; `from_config(path)` loads from YAML.
@@ -211,9 +211,9 @@ A DSL is a separate, larger project that we may revisit if adopter demand justif
 
 ### Phase summary
 
-- **Phase 1 (SCRUM-239)** — schema + loader + runtime skeleton + parity-fixture YAML. No behavior change; loader and runtime are dead code.
-- **Phase 2 (SCRUM-240)** — `Classifier(config)` replaces the hardcoded path-pattern chain in `classify_area`. Threading: `runtime` kwarg added to `score`, `extract_signals`, `classify_*`, `touches_sensitive_code_without_tests`. Parity tests load corpus YAML explicitly.
-- **Phase 3 (SCRUM-241)** — gate registry from config. `compute_required_actions` becomes a closed-set predicate evaluator over `runtime.gates`. `compute_required_validations` reads `gate.validation_line`. `priority_for_action_id` reads `runtime.priority_for(id)`.
-- **Phase 4 (SCRUM-242)** — closed-set evidence detector templates; `evidence_for_action_id` delegates to `runtime.detector_for(id)`. `_DETECTORS` dict and the 10 hand-written `_ev_*` private helpers deleted; templates module owns the wording.
-- **Phase 5 (SCRUM-243)** — strip the bundled-default project-specific data. `_default_config.py` ships only the eight generic gates; corpus YAML stays as the parity-test fixture. Examples added under `examples/pr-risk/`. Init scaffold writes a starter `pr-risk-config.yaml`.
-- **Phase 6 (SCRUM-244)** — docs (`docs/how-to/7-configure-pr-risk.md`, `docs/reference/pr-risk-config.md`), README "Configuring PR Risk" section, doctor validation of `pr-risk-config.yaml`.
+- **Phase 1** — schema + loader + runtime skeleton + parity-fixture YAML. No behavior change; loader and runtime are dead code.
+- **Phase 2** — `Classifier(config)` replaces the hardcoded path-pattern chain in `classify_area`. Threading: `runtime` kwarg added to `score`, `extract_signals`, `classify_*`, `touches_sensitive_code_without_tests`. Parity tests load corpus YAML explicitly.
+- **Phase 3** — gate registry from config. `compute_required_actions` becomes a closed-set predicate evaluator over `runtime.gates`. `compute_required_validations` reads `gate.validation_line`. `priority_for_action_id` reads `runtime.priority_for(id)`.
+- **Phase 4** — closed-set evidence detector templates; `evidence_for_action_id` delegates to `runtime.detector_for(id)`. `_DETECTORS` dict and the 10 hand-written `_ev_*` private helpers deleted; templates module owns the wording.
+- **Phase 5** — strip the bundled-default project-specific data. `_default_config.py` ships only the eight generic gates; corpus YAML stays as the parity-test fixture. Examples added under `examples/pr-risk/`. Init scaffold writes a starter `pr-risk-config.yaml`.
+- **Phase 6** — docs (`docs/how-to/7-configure-pr-risk.md`, `docs/reference/pr-risk-config.md`), README "Configuring PR Risk" section, doctor validation of `pr-risk-config.yaml`.

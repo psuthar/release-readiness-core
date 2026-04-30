@@ -138,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _resolve_under_repo_root(p: Optional[Path], repo_root: Path) -> Optional[Path]:
-    """SCRUM-209: relative artifact paths are interpreted under --repo-root.
+    """relative artifact paths are interpreted under --repo-root.
 
     Without this, a CLI invocation from outside the project tree (e.g. with
     ``--repo-root subdir/ --smoke-results evidence/smoke.json``) silently

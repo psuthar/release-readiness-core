@@ -21,7 +21,7 @@ def read_json(path: Path) -> Optional[dict[str, Any]]:
         return {"_parse_error": str(e)}
 
 
-# SCRUM-209: top-level keys recognized by the engine. Loading a config with
+# top-level keys recognized by the engine. Loading a config with
 # any other top-level key raises ConfigSchemaError with a typo suggestion.
 # Update this set when adding a new top-level config field.
 KNOWN_TOP_LEVEL_CONFIG_KEYS: frozenset[str] = frozenset({
@@ -63,7 +63,7 @@ class ConfigSchemaError(ValueError):
 
 
 def _validate_config(data: dict[str, Any], path: Path) -> None:
-    """SCRUM-209: catch top-level typos and obvious type errors at load time.
+    """catch top-level typos and obvious type errors at load time.
 
     The contracts schema under ``docs/contracts/`` is intentionally permissive
     (``additionalProperties: true``) so adopters can extend with their own

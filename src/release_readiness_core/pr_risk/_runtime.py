@@ -1,4 +1,4 @@
-"""PR Risk runtime skeleton (SCRUM-239 / Phase 1 of SCRUM-238).
+"""PR Risk runtime skeleton.
 
 A ``PRRiskRuntime`` carries the loaded ``PRRiskConfig`` plus lazily-compiled
 artifacts that Phases 2-4 will use:
@@ -70,7 +70,7 @@ class PRRiskRuntime:
 
     @property
     def classifier(self) -> Classifier:
-        """Lazily-compiled config-driven classifier (Phase 2 / SCRUM-240)."""
+        """Lazily-compiled config-driven classifier (Phase 2)."""
         if self._classifier is None:
             self._classifier = Classifier(self.config)
         return self._classifier
@@ -150,7 +150,7 @@ class PRRiskRuntime:
 
     def register_detector(self, template_name: str, fn: Callable[..., Any]) -> None:
         """Programmatic escape hatch for adopters who need a custom detector
-        template that isn't in the closed set. Phase 4 (SCRUM-242) consumes
+        template that isn't in the closed set. Phase 4 consumes
         the registered callable. Stored on the runtime instance only."""
         if not isinstance(template_name, str) or not template_name:
             raise ValueError("template_name must be a non-empty string")

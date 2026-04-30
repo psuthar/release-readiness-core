@@ -31,7 +31,7 @@ class ReadinessResult:
     # Explains when the final outcome differs from what score alone would produce.
     # Empty when score-only and final outcome agree (e.g. score < warn_threshold → BLOCK).
     outcome_overrides: list[str] = field(default_factory=list)
-    # SCRUM-197: failing E2E spec titles, surfaced so reviewers and the agent
+    # failing E2E spec titles, surfaced so reviewers and the agent
     # can see which specs failed without re-parsing playwright-results.json.
     # Always present; empty lists when no failures of that kind.
     critical_failed_titles: list[str] = field(default_factory=list)
@@ -104,7 +104,7 @@ def _failure_is_critical(title: str, patterns: list[str]) -> bool:
 # Engine ships an empty default. Projects must opt in to top-level boolean
 # evidence keys via `evidence_boolean_keys` in config. This avoids accidentally
 # satisfying a validation when an evidence JSON happens to contain a colliding
-# key name. (SCRUM-209.)
+# key name.
 DEFAULT_EVIDENCE_BOOLEAN_KEYS: tuple[str, ...] = ()
 
 
@@ -161,7 +161,7 @@ _MAX_INLINE_E2E_TITLES = 3
 
 
 def _format_e2e_failure_message(label: str, titles: list[str]) -> str:
-    """SCRUM-197: build a human-readable failure message that includes the
+    """build a human-readable failure message that includes the
     failing spec titles. The structured `*_failed_titles` fields on
     ReadinessResult carry the full list; this helper exists only for the
     `warnings` / `blockers` strings that show up in the report summary.
@@ -352,7 +352,7 @@ def compute_readiness(
             failed_checks.append("smoke_failed")
     smoke_failed = any(x == "smoke_failed" for x in failed_checks) or any("Smoke tests did not pass" in b for b in blockers)
 
-    # Hard rule: critical E2E blocks. SCRUM-197: surface failing spec titles in
+    # Hard rule: critical E2E blocks. Surface failing spec titles in
     # the human-readable warning/blocker text and keep the structured arrays so
     # downstream consumers (pr_gate.py, the agent) don't have to re-parse
     # playwright-results.json to learn which spec actually failed.
@@ -398,7 +398,7 @@ def compute_readiness(
     # When pr_risk.json is absent or unparseable, this block is skipped (graceful degradation).
     # Messages are intentionally brief — the PR Risk report (pr_risk.md) is the source of
     # truth for the specific signals; repeating them here would be redundant.
-    # SCRUM-209 (gap #20): messages no longer reference a pr_risk.md file,
+    # (gap #20): messages no longer reference a pr_risk.md file,
     # since release-readiness-core does not produce one. Adopters consume
     # the artifact JSON whose path they provide; the report payload itself
     # carries enough context.

@@ -1,4 +1,4 @@
-"""Tests for ``release-readiness-doctor`` (SCRUM-214)."""
+"""Tests for ``release-readiness-doctor``."""
 
 from __future__ import annotations
 

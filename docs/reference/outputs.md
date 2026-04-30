@@ -182,7 +182,7 @@ The full list of E2E failure titles, classified by whether they matched any patt
 5. **Warnings** — bulleted list, only when non-empty.
 6. **Summary** — the `reasons` array.
 7. **Risks from changed paths** — bulleted list, with `(none)` when empty.
-8. **Validations** — table, **omitted entirely when no validations are present** (post-SCRUM-209 fix).
+8. **Validations** — table, **omitted entirely when no validations are present**.
 9. **Failed checks** — bulleted list, only when non-empty.
 10. **Recommended actions** — high-level next steps.
 11. **Remediation guidance** — table from `remediation_items`.

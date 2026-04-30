@@ -62,12 +62,12 @@ Re-running on the same input is idempotent: existing `pr-N/` directories with a
 
 `PR_RISK_PARITY_SCOPE` env var gates which assertions run:
 
-| Value     | Live in story | Asserts                                   |
+| Value     | Live in phase | Asserts                                   |
 | --------- | ------------- | ----------------------------------------- |
-| `none`    | SCRUM-232     | corpus loads + CLI stub responds          |
-| `context` | SCRUM-234     | + ContextInsights subtree byte-identical  |
-| `score`   | SCRUM-235     | + score / band / score_math / categories  |
-| `full`    | SCRUM-236     | + entire pr_risk.json + pr-risk.json      |
+| `none`    | Phase 0       | corpus loads + CLI stub responds          |
+| `context` | Phase 2       | + ContextInsights subtree byte-identical  |
+| `score`   | Phase 3       | + score / band / score_math / categories  |
+| `full`    | Phase 4       | + entire pr_risk.json + pr-risk.json      |
 
 `uv run pytest tests/pr_risk` defaults to `PR_RISK_PARITY_SCOPE=none`; CI in
 later phases pins the appropriate value.

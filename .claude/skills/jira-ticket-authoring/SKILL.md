@@ -55,7 +55,7 @@ Success criteria
 - [ ] <measurable outcome 2>
 
 Child tickets
-- <SCRUM-XX> <short title>
+- <TICKET-KEY> <short title>
 ```
 
 ---
@@ -238,9 +238,9 @@ Success criteria
 - [ ] Chunk load is capped to prevent unbounded memory use
 
 Child tickets
-- SCRUM-63 Accessible session enumeration helper
-- SCRUM-64 get_decisions_by_topic MCP tool
-- SCRUM-65 search_all_sessions MCP tool
+- PROJ-63 Accessible session enumeration helper
+- PROJ-64 get_decisions_by_topic MCP tool
+- PROJ-65 search_all_sessions MCP tool
 ```
 
 ---
@@ -273,11 +273,11 @@ Success criteria
 - [ ] Expired tokens return a clear error, not a 500
 
 Child tickets
-- SCRUM-10 Invitations DB schema and migration
-- SCRUM-11 POST /sessions/:id/invitations endpoint
-- SCRUM-12 Invitation email delivery
-- SCRUM-13 Accept-invite flow (token validation + membership creation)
-- SCRUM-14 Creator invite management UI
+- PROJ-10 Invitations DB schema and migration
+- PROJ-11 POST /sessions/:id/invitations endpoint
+- PROJ-12 Invitation email delivery
+- PROJ-13 Accept-invite flow (token validation + membership creation)
+- PROJ-14 Creator invite management UI
 ```
 
 ---
@@ -304,7 +304,7 @@ Out of scope
 - Bulk resend
 
 Notes
-- Depends on SCRUM-11 (invitations endpoint) being merged first
+- Depends on PROJ-11 (invitations endpoint) being merged first
 ```
 
 ---
@@ -343,7 +343,7 @@ Title: Add materials_read table and migration
 Type: Task
 
 Why
-The "mark material as read" Story (SCRUM-XX) requires a new table to persist per-user read state. No schema exists today.
+The "mark material as read" Story (<TICKET-KEY>) requires a new table to persist per-user read state. No schema exists today.
 
 What
 - Create migration: materials_read(id, session_id, material_id, user_id, read_at)

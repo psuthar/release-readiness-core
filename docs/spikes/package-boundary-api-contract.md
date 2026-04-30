@@ -1,4 +1,4 @@
-# SCRUM-166 Spike
+# Spike
 
 ## Goal
 
@@ -56,7 +56,7 @@ Readiness result contract (output):
 
 ## Open Follow-ups
 
-- Prep for config-driven validation keys: inventory + draft schema in [`docs/prep/SCRUM-167-validation-key-handling.md`](../prep/SCRUM-167-validation-key-handling.md) and [`docs/contracts/validation-config-v1.schema.json`](../contracts/validation-config-v1.schema.json); implement in **SCRUM-167**.
-- Bind adapter ownership of `pr_risk.json` ingestion in `SCRUM-171` and `SCRUM-176`.
-- Add golden fixture parity checks in `SCRUM-172`.
-- Validate second-consumer compatibility in `SCRUM-178`.
+- Prep for config-driven validation keys: inventory + draft schema in [`docs/prep/validation-key-handling.md`](../prep/validation-key-handling.md) and [`docs/contracts/validation-config-v1.schema.json`](../contracts/validation-config-v1.schema.json).
+- Bind adapter ownership of `pr_risk.json` ingestion in the adapter owners.
+- Add golden fixture parity checks.
+- Validate second-consumer compatibility (see [`second-project-validation.md`](second-project-validation.md)).

@@ -1,4 +1,4 @@
-"""Closed-set evidence detector templates (SCRUM-242 / Phase 4 of SCRUM-238).
+"""Closed-set evidence detector templates.
 
 Each gate's ``evidence: { template, args }`` block is compiled into a callable
 of shape ``(action_id, label, result) -> ValidationEvidence`` by the template

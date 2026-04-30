@@ -6,7 +6,7 @@ but the merge-commit body wasn't recorded — so intent's `keywords_matched`
 can legitimately diverge for fixtures whose PR body contained domain keywords.
 
 This file therefore parity-tests proximity + concentration. Hotspots and full
-intent parity arrive in Phase 4 (SCRUM-236) where the CLI runs end-to-end
+intent parity arrive in Phase 4 where the CLI runs end-to-end
 against a real checkout.
 """
 

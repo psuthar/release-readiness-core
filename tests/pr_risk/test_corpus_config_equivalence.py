@@ -1,8 +1,8 @@
-"""Corpus / bundled-default relationship tests (SCRUM-239 / SCRUM-243).
+"""Corpus / bundled-default relationship tests.
 
 Phase 1 introduced the parity-fixture YAML at
 ``tests/pr_risk/fixtures/pr-risk-corpus-config.yaml`` and asserted byte-equality
-with the bundled default. Phase 5 (SCRUM-243) stripped the bundled default of
+with the bundled default. Phase 5 stripped the bundled default of
 project-specific defaults: it now ships only language-agnostic generic gates
 and an empty domains / sensitive_domains. The corpus YAML continues to encode
 the full project-specific config used by the captured-fixture corpus parity

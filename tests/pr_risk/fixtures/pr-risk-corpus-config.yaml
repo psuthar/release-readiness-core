@@ -1,0 +1,342 @@
+# Parity-fixture pr-risk config (SCRUM-239 / Phase 1 of SCRUM-238).
+#
+# Captures the path patterns, sensitive-domain set, and gate registry that are
+# currently hardcoded in src/release_readiness_core/pr_risk/{classify,actions,
+# validations,actions_priority,evidence}.py. Used by the captured-fixture
+# corpus parity tests in tests/pr_risk/test_parity_score.py and
+# test_parity_full.py to drive Phases 2-4 (SCRUM-240 through SCRUM-242)
+# without any behavior drift.
+#
+# This file is a test artifact, not a user-facing example. Phase 5 (SCRUM-243)
+# strips the equivalent project-specific defaults out of core; this file stays
+# under tests/ as the parity reference.
+
+version: 1
+
+domains:
+  - id: migrations
+    label: migrations
+    patterns:
+      - { prefix: "db/migrations/" }
+      - { prefix: "internal/migrations/" }
+
+  - id: auth
+    label: auth
+    patterns:
+      - { prefix: "internal/auth/" }
+      - { prefix: "internal/invitations/" }
+      - and:
+          - { contains: "internal/handlers/" }
+          - any_contains:
+              - login
+              - session_invite
+              - invitations
+              - session_participant
+              - zoom_auth
+              - teams_auth
+              - auth
+              - invite
+
+  - id: rag
+    label: rag
+    patterns:
+      - { prefix: "internal/rag/" }
+      - { contains: "internal/utils/qa.go" }
+      - any_contains:
+          - "internal/handlers/session_ask"
+          - "internal/handlers/session_questions"
+          - "internal/handlers/session_reindex"
+
+  - id: processing
+    label: processing
+    patterns:
+      - { prefix: "internal/processing/" }
+      - any_contains:
+          - "internal/handlers/transcript_"
+          - "internal/handlers/transcript"
+          - "internal/handlers/video_url_ingestion"
+          - "internal/handlers/video_upload"
+          - "internal/handlers/session_materials"
+          - "internal/handlers/transcript_job_status"
+          - "internal/handlers/transcript_jobs"
+
+  - id: storage
+    label: storage
+    patterns:
+      - { prefix: "internal/storage/" }
+
+  - id: orchestration
+    label: orchestration
+    patterns:
+      - { prefix: "internal/orchestration/" }
+      - { contains: "internal/handlers/session_orchestration" }
+      - { contains: "internal/database/orchestration_recommendations" }
+      - { contains: "internal/database/orchestration_recommendation_audit" }
+      - { contains: "web/src/modes/creatormode" }
+
+  - id: database
+    label: database
+    patterns:
+      - { prefix: "internal/database/" }
+
+  - id: web
+    label: web
+    patterns:
+      - { prefix: "web/" }
+
+  - id: workflows
+    label: workflows
+    patterns:
+      - { prefix: ".github/workflows/" }
+
+  - id: deploy
+    label: deploy
+    patterns:
+      - { prefix: "deploy/" }
+      - { exact: "dockerfile" }
+      - { endswith: "/dockerfile" }
+      - { endswith: "render.yaml" }
+      - { contains: "/render.yaml" }
+
+  - id: api
+    label: api
+    patterns:
+      - { prefix: "internal/handlers/" }
+      - { prefix: "cmd/" }
+      - { prefix: "internal/" }
+
+  - id: scripts
+    label: scripts
+    patterns:
+      - { prefix: "scripts/" }
+
+sensitive_domains:
+  - auth
+  - api
+  - database
+  - rag
+  - processing
+  - orchestration
+  - web
+  - migrations
+
+gates:
+  - id: ci_fetch_depth_zero
+    title: "Ensure git history is available for diff"
+    priority: high
+    fix_type: infra
+    applies_when:
+      - { factor_id: git_unavailable }
+    applies_when_extra: "git diff base...HEAD was unavailable"
+    validation_line: "ci: full git history available for diff (fetch-depth: 0 or equivalent)"
+    checklist:
+      - "Confirm CI uses `fetch-depth: 0` (or an equivalent full-history checkout)."
+      - "Re-run PR risk scoring after the checkout depth fix."
+    evidence:
+      template: signal_check
+      args:
+        signal_field: git_error
+
+  - id: pr_review_summary
+    title: "Make PR review scoped and evidence-backed"
+    priority: supporting
+    fix_type: process
+    applies_when:
+      - factor_id:
+          - diff_large
+          - diff_very_large
+          - many_files
+    validation_line: "process: PR description with scoped, evidence-backed review plan"
+    checklist:
+      - "Add a PR description summary: what changed and why."
+      - "Group changes by subsystem so reviewers can validate quickly."
+    evidence:
+      template: intent_strength
+
+  - id: workflow_config_validation
+    title: "Validate workflow / deploy config changes"
+    priority: medium
+    fix_type: config
+    applies_when:
+      - factor_id:
+          - ci_workflows
+          - deploy_config
+          - go_mod_deps
+    validation_line: "config: workflow / deploy / go.mod changes validated against required checks"
+    checklist:
+      - text: "Confirm required checks and env parity before merge."
+        by_validation_note: "Validation note is present; confirm required checks and env parity before merge."
+      - "If CI fails, identify whether it is test flakiness vs behavior change and update evidence accordingly."
+    evidence:
+      template: validation_note
+
+  - id: auth_e2e_gate
+    title: "Validate auth/session flows (login, invite, participant)"
+    priority: high
+    fix_type: test
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_auth }
+    applies_when_extra: "auth/session/invite domain changed"
+    validation_line: "test: auth/session/invite flows exercised (E2E or equivalent evidence)"
+    checklist:
+      - text: "Ensure auth E2E coverage is green for the affected flow(s)."
+        by_evidence_level:
+          none: "Run auth/session E2E flows before merge (login, invite, participant)."
+          unit: "Confirm auth unit tests pass; run auth E2E smoke for login/invite/participant before merge."
+      - "Spot-check cookie/session behavior changes in staging-like conditions (SameSite, HTTPS)."
+    evidence:
+      template: test_domain
+      args:
+        domain: auth
+
+  - id: rag_qna_citations_gate
+    title: "Validate Q&A with citations for decision-grade answers"
+    priority: high
+    fix_type: test
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_rag }
+    applies_when_extra: "RAG / Q&A pipelines changed"
+    validation_line: "test: Q&A with citations validated for RAG-affecting changes"
+    checklist:
+      - text: "Run `qa_rag`-targeted E2E smoke and confirm citations attach to answers."
+        by_evidence_level:
+          none: "Run Q&A with citations E2E before merge (session ask + citations verification)."
+          unit: "Confirm unit-level RAG changes pass; run Q&A-with-citations E2E smoke before merge."
+      - "If relevant, re-index or verify embedding job health post-deploy."
+    evidence:
+      template: test_domain
+      args:
+        domain: rag
+
+  - id: materials_processing_gate
+    title: "Validate materials upload + processing pipeline"
+    priority: medium
+    fix_type: process
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_processing }
+    applies_when_extra: "processing/transcription pipeline changed"
+    validation_line: "test: materials upload + processing smoke for pipeline changes"
+    checklist:
+      - text: "Run a materials upload + processing smoke on a representative file."
+        by_evidence_level:
+          none: "Run materials upload + processing smoke before merge (representative file)."
+          unit: "Confirm processing unit tests pass; run processing smoke before merge."
+      - "Confirm transcript/job worker logs look healthy (no silent failures)."
+    evidence:
+      template: test_domain
+      args:
+        domain: processing
+
+  - id: orchestration_creator_gate
+    title: "Validate creator orchestration recommendation flows"
+    priority: medium
+    fix_type: test
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_orchestration }
+    applies_when_extra: "orchestration recommendation/review paths changed"
+    validation_line: ""
+    checklist:
+      - text: "Run creator orchestration recommendation flow checks (list/sync + approve/reject draft paths)."
+        by_evidence_level:
+          none: "Run orchestration smoke/E2E before merge (recommendations panel + draft approve/reject)."
+          unit: "Confirm orchestration unit/integration tests pass; run creator orchestration smoke before merge."
+      - "Confirm no autonomous send/post behavior is introduced in orchestration paths."
+    evidence:
+      template: test_domain
+      args:
+        domain: orchestration
+
+  - id: migrations_validation_gate
+    title: "Validate database migrations before merge"
+    priority: high
+    fix_type: db
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_migrations }
+    applies_when_extra: "migration files changed"
+    validation_line: "db: migrations validated with rollback/reversal plan documented"
+    checklist:
+      - text: "Run migrations with validation evidence and confirm expected schema/data behavior."
+        by_evidence_level:
+          unit: "Confirm unit coverage exists for migrations; run migration validation smoke before merge."
+          e2e: "Ensure migration validation tests/evidence are part of CI and are green before merge."
+      - "Verify rollback plan (or migration reversal strategy) is documented and executable."
+    evidence:
+      template: migrations
+
+  - id: add_tests_or_evidence
+    title: "Add/update tests before merge"
+    priority: high
+    fix_type: test
+    applies_when:
+      - { factor_id: tests_missing }
+    validation_line: "test: tests or recorded evidence for sensitive paths"
+    checklist:
+      - "Add or update tests for changed code paths and confirm the project's test suite passes."
+    variants:
+      - when: { risk_band: [high, critical] }
+        title: "Add/update tests (or record evidence) before merge"
+        applies_when_extra: "sensitive code changed without any test file changes in this diff"
+        checklist:
+          - "Add or update unit/integration tests for the changed packages."
+          - "Re-run the project's test suite and ensure E2E smoke covers the sensitive area(s)."
+    evidence:
+      template: add_tests
+
+  - id: context_align_pr_description
+    title: "Align PR title/description with the diff"
+    priority: medium
+    fix_type: process
+    applies_when:
+      - { intent_mismatch: true }
+    validation_line: "process: PR title/body aligned with actual diff (intent match)"
+    checklist:
+      - "Update the PR title or body so keywords match the areas actually changed, or narrow the diff to match the stated intent."
+      - "If the scope is intentional, explain why expected domains are not touched."
+    evidence:
+      template: intent_alignment
+
+  - id: context_scattered_review_plan
+    title: "Structure review for a scattered change"
+    priority: supporting
+    fix_type: process
+    applies_when:
+      - { concentration_mode: scattered, min_file_count: 10 }
+    validation_line: "process: structured review map for scattered multi-area change"
+    checklist:
+      - "Add a short map of files grouped by subsystem (or commit) to speed review."
+      - "Call out cross-cutting concerns explicitly (auth, DB, RAG, web)."
+    evidence:
+      template: intent_aligned_or_weak
+
+  - id: context_improve_test_proximity
+    title: "Improve test proximity for changed code"
+    priority: supporting
+    fix_type: test
+    applies_when:
+      - proximity_distant_with_sensitive: true
+        min_non_test_files: 2
+        domains: [auth, rag, processing, orchestration, migrations, api, database]
+    validation_line: "test: tests co-located or explicitly linked for changed code"
+    checklist:
+      - "Add or reference tests in the same package or directory as changed production files."
+      - "If tests live elsewhere, link them in the PR description."
+    evidence:
+      template: proximity
+
+  - id: context_hotspot_regression_focus
+    title: "Extra regression focus on active path (recent commits)"
+    priority: supporting
+    fix_type: process
+    applies_when:
+      - { hotspots_present: true }
+    validation_line: "test: targeted regression for path prefixes with several recent commits overlapping this diff"
+    checklist:
+      - "Prefix `{prefix}` is active in recent history; run targeted smoke for behavior touching this area."
+      - "Watch for unintended side effects in adjacent modules."
+    evidence:
+      template: hotspot

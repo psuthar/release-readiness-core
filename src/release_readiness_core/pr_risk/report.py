@@ -74,7 +74,7 @@ def write_markdown(path: str, r: Result) -> None:
     integrations.py is the byte-stable surface that reviewers/CI consume.
     """
     sb = StringIO()
-    sb.write(f"# TalkBack PR Risk Report ({report_version_string()})\n\n")
+    sb.write(f"# PR Risk Report ({report_version_string()})\n\n")
     if r.generated_at is not None:
         sb.write(f"**Generated:** {r.generated_at.strftime('%Y-%m-%dT%H:%M:%SZ')}  \n")
     sb.write(f"**Base ref:** `{r.base_ref}`  \n\n")

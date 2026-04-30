@@ -207,7 +207,7 @@ def compute_required_actions(
                 applies_when="sensitive code changed without any test file changes in this diff",
                 checklist=[
                     "Add or update unit/integration tests for the changed packages.",
-                    "Re-run `go test ./...` and ensure E2E smoke covers the sensitive area(s).",
+                    "Re-run the project's test suite and ensure E2E smoke covers the sensitive area(s).",
                 ],
             ))
 
@@ -218,7 +218,7 @@ def compute_required_actions(
             title="Add/update tests before merge",
             fix_type="test",
             checklist=[
-                "Add or update tests for changed code paths and confirm `go test ./...` passes.",
+                "Add or update tests for changed code paths and confirm the project's test suite passes.",
             ],
         ))
 

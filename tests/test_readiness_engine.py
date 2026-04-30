@@ -1,4 +1,4 @@
-"""Tests for release_readiness_core.readiness_engine (ported from TalkBack scripts)."""
+"""Tests for release_readiness_core.readiness_engine."""
 
 from __future__ import annotations
 

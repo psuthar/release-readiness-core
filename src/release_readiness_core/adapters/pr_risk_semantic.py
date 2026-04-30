@@ -73,7 +73,7 @@ def build_semantic_record(
     if pr_risk_raw is None:
         return fail(
             f"Missing or unreadable {pr_risk_path}",
-            "Expected JSON from `go run ./cmd/prrisk`.",
+            "Expected JSON from `release-readiness-pr-risk`.",
         )
 
     rec = normalize_rec(pr_risk_raw.get("merge_recommendation"))

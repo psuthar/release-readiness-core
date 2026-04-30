@@ -87,7 +87,7 @@ def test_markdown_renders_validation_note_row_when_present():
 
 
 def test_default_evidence_boolean_keys_is_empty():
-    """SCRUM-209 (gap #6): the engine ships an empty default; TalkBack supplies its own."""
+    """SCRUM-209 (gap #6): the engine ships an empty default; projects opt in via config."""
     assert DEFAULT_EVIDENCE_BOOLEAN_KEYS == ()
 
 

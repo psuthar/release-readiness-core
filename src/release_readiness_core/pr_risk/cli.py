@@ -1,15 +1,24 @@
-"""release-readiness-pr-risk CLI entry point.
+"""release-readiness-pr-risk CLI entry point (port of cmd/prrisk/main.go)."""
 
-This is a Phase 0 stub (SCRUM-232). The full implementation lands across
-SCRUM-233..236. Until then the CLI exits 2 with an explanatory message,
-preserving the registered entry-point name for downstream wiring.
-"""
+from __future__ import annotations
 
 import argparse
+import os
+import os.path
 import sys
 from typing import Optional, Sequence
 
-from release_readiness_core.pr_risk.version import report_version_string
+from release_readiness_core.pr_risk.gitdiff import extract_signals
+from release_readiness_core.pr_risk.integrations import ENV_JIRA_ISSUE_KEY
+from release_readiness_core.pr_risk.report import write_json, write_markdown
+from release_readiness_core.pr_risk.score import score
+from release_readiness_core.pr_risk.semantic_json import write_semantic_pr_risk_json
+from release_readiness_core.pr_risk.types import default_weights
+from release_readiness_core.pr_risk.version import (
+    VERSION,
+    VERSION_MINOR,
+    report_version_string,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -45,13 +54,39 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
-    parser.parse_args(argv)
-    sys.stderr.write(
-        "release-readiness-pr-risk is not yet implemented. "
-        "Phase 0 (SCRUM-232) registered the entry-point; the scoring engine "
-        "lands incrementally across SCRUM-233..236.\n"
+    args = parser.parse_args(argv)
+
+    jira_key = (args.jira_key or "").strip()
+    if not jira_key:
+        jira_key = os.environ.get(ENV_JIRA_ISSUE_KEY, "").strip()
+
+    signals = extract_signals(args.repo_root, args.base_ref)
+    res = score(signals, default_weights(), jira_key)
+
+    out = os.path.normpath(args.output_dir)
+    os.makedirs(out, exist_ok=True)
+
+    json_out = os.path.join(out, "pr_risk.json")
+    md_out = os.path.join(out, "pr_risk.md")
+    semantic_out = os.path.normpath(os.path.join(out, "..", "pr-risk.json"))
+
+    try:
+        write_json(json_out, res)
+        write_markdown(md_out, res)
+        write_semantic_pr_risk_json(semantic_out, res)
+    except OSError as e:
+        sys.stderr.write(f"prrisk: write failed: {e}\n")
+        return 1
+
+    print(
+        f"PR risk v{VERSION}.{VERSION_MINOR}: score={res.risk_score:.1f} "
+        f"({res.risk_band}) — wrote "
+        f"{os.path.basename(json_out)}/{os.path.basename(md_out)} "
+        f"+ {os.path.basename(semantic_out)}"
     )
-    return 2
+    if signals.git_error:
+        sys.stderr.write(f"warning: git diff issue: {signals.git_error}\n")
+    return 0
 
 
 if __name__ == "__main__":

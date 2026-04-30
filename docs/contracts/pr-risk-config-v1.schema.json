@@ -83,7 +83,7 @@
         { "type": "object", "additionalProperties": false, "required": ["intent_mismatch"], "properties": { "intent_mismatch": { "type": "boolean" } } },
         { "type": "object", "additionalProperties": false, "required": ["concentration_mode"], "properties": { "concentration_mode": { "type": "string", "minLength": 1 }, "min_file_count": { "type": "integer", "minimum": 0 } } },
         { "type": "object", "additionalProperties": false, "required": ["hotspots_present"], "properties": { "hotspots_present": { "type": "boolean" } } },
-        { "type": "object", "additionalProperties": false, "required": ["proximity_distant_with_sensitive"], "properties": { "proximity_distant_with_sensitive": { "type": "boolean" }, "min_non_test_files": { "type": "integer", "minimum": 0 }, "domains": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } } }
+        { "type": "object", "additionalProperties": false, "required": ["proximity_distant_with_sensitive"], "properties": { "proximity_distant_with_sensitive": { "type": "boolean" }, "min_non_test_files": { "type": "integer", "minimum": 0 }, "domains": { "type": "array", "items": { "type": "string", "minLength": 1 } } } }
       ]
     },
     "gate_evidence": {

@@ -132,10 +132,13 @@ def test_touches_sensitive_code_without_tests_uses_config(runtime: PRRiskRuntime
     assert touches_sensitive_code_without_tests(s, runtime=runtime) is False
 
 
-def test_default_runtime_unchanged_when_no_runtime_passed():
-    """Calling classify_* without runtime= still returns bundled-default
-    behavior — adopters who don't configure pr-risk-config.yaml see the same
-    domain mappings as before Phase 2."""
-    assert classify_area("internal/auth/session.go") == "auth"
-    assert classify_area("web/src/App.tsx") == "web"
+def test_default_runtime_classifies_everything_as_other():
+    """Phase 5 (SCRUM-243) stripped the bundled default of project-specific
+    domain mappings: with no adopter-authored pr-risk-config.yaml, every
+    non-test path classifies to ``"other"``. Test paths still classify to
+    ``"tests"`` because that's a language heuristic, not project policy."""
+    assert classify_area("internal/auth/session.go") == "other"
+    assert classify_area("web/src/App.tsx") == "other"
+    assert classify_area("README.md") == "other"
+    assert classify_domain("internal/auth/session_test.go") == "tests"
     assert classify_domain("README.md") == "other"

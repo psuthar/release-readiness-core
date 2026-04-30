@@ -35,8 +35,10 @@ def _fac(id_: str) -> RiskFactor:
         ("brand_new_action", PRIORITY_MEDIUM),  # default
     ],
 )
-def test_priority_for_action_id(action_id: str, expected: str) -> None:
-    assert priority_for_action_id(action_id) == expected
+def test_priority_for_action_id(action_id: str, expected: str, corpus_runtime) -> None:
+    """Priorities are config-driven (Phase 3) and project-specific gates live
+    in the corpus YAML now (Phase 5)."""
+    assert priority_for_action_id(action_id, runtime=corpus_runtime) == expected
 
 
 def test_sort_required_actions_orders_high_first() -> None:
@@ -70,18 +72,18 @@ def test_compute_required_actions_emits_ci_fetch_depth_when_git_unavailable() ->
     assert any(a.id == "ci_fetch_depth_zero" for a in out)
 
 
-def test_compute_required_actions_emits_auth_gate_for_high_band() -> None:
+def test_compute_required_actions_emits_auth_gate_for_high_band(corpus_runtime) -> None:
     s = Signals(domain_hits={"auth": 1})
     factors = [_fac("domain_auth")]
-    out = compute_required_actions(s, factors, [], 60, "high", None)
+    out = compute_required_actions(s, factors, [], 60, "high", None, runtime=corpus_runtime)
     assert any(a.id == "auth_e2e_gate" for a in out)
 
 
-def test_compute_required_actions_no_auth_gate_for_medium_band() -> None:
+def test_compute_required_actions_no_auth_gate_for_medium_band(corpus_runtime) -> None:
     """Medium band doesn't trigger sensitive-domain gates (only critical/high)."""
     s = Signals(domain_hits={"auth": 1})
     factors = [_fac("domain_auth")]
-    out = compute_required_actions(s, factors, [], 30, "medium", None)
+    out = compute_required_actions(s, factors, [], 30, "medium", None, runtime=corpus_runtime)
     assert not any(a.id == "auth_e2e_gate" for a in out)
 
 
@@ -92,10 +94,10 @@ def test_compute_required_actions_emits_pr_review_summary_for_diff_size() -> Non
     assert any(a.id == "pr_review_summary" for a in out)
 
 
-def test_compute_required_actions_dedupes_add_tests_or_evidence() -> None:
+def test_compute_required_actions_dedupes_add_tests_or_evidence(corpus_runtime) -> None:
     """Both gate paths can add this action; dedup keeps it once."""
     s = Signals(domain_hits={"auth": 1})
     factors = [_fac("domain_auth"), _fac("tests_missing")]
-    out = compute_required_actions(s, factors, [], 60, "high", None)
+    out = compute_required_actions(s, factors, [], 60, "high", None, runtime=corpus_runtime)
     matches = [a for a in out if a.id == "add_tests_or_evidence"]
     assert len(matches) == 1

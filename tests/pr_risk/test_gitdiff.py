@@ -132,14 +132,14 @@ def test_detect_style_only_note_finds_both_variants(repo: Path) -> None:
     assert "style-only" in snippet.lower()
 
 
-def test_extract_signals_populates_domain_hits(repo: Path) -> None:
+def test_extract_signals_populates_domain_hits(repo: Path, corpus_runtime) -> None:
     base = _git(repo, "rev-parse", "HEAD").strip()
     (repo / "internal" / "auth").mkdir(parents=True)
     (repo / "internal" / "auth" / "login.go").write_text("package auth\n")
     (repo / ".github" / "workflows").mkdir(parents=True)
     (repo / ".github" / "workflows" / "ci.yml").write_text("name: CI\n")
     _commit(repo, "feat: add auth + ci")
-    s = extract_signals(str(repo), base)
+    s = extract_signals(str(repo), base, runtime=corpus_runtime)
     assert s.file_count == 2
     assert s.git_error == ""
     assert s.domain_hits.get("auth") == 1

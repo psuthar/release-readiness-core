@@ -35,7 +35,6 @@ from release_readiness_core.pr_risk.types import FileChange, Signals, default_we
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
-CORPUS_CONFIG_PATH = FIXTURES_DIR / "pr-risk-corpus-config.yaml"
 
 
 def _discover() -> List[Path]:
@@ -44,16 +43,7 @@ def _discover() -> List[Path]:
     return sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir() and (p / "pr_risk.json").is_file())
 
 
-@pytest.fixture(scope="module")
-def corpus_runtime():
-    """Phase 2 (SCRUM-240): explicitly load the corpus parity-fixture YAML
-    instead of relying on the bundled default. The two are equal by
-    construction (test_corpus_config_equivalence guards that), but threading a
-    YAML-loaded runtime through ``score(...)`` is what proves the Phase 2
-    classifier wiring actually consumes config."""
-    from release_readiness_core.pr_risk._runtime import PRRiskRuntime
-
-    return PRRiskRuntime.from_config(CORPUS_CONFIG_PATH)
+# corpus_runtime fixture is defined in tests/pr_risk/conftest.py (Phase 5 / SCRUM-243).
 
 
 # ---------------------------------------------------------------------------

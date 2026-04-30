@@ -139,7 +139,7 @@ def test_score_emits_go_mod_deps_factor() -> None:
     assert "go_mod_deps" in ids
 
 
-def test_score_emits_tests_missing_factor_for_sensitive_domain() -> None:
+def test_score_emits_tests_missing_factor_for_sensitive_domain(corpus_runtime) -> None:
     s = Signals(
         file_count=1,
         total_added=10,
@@ -147,7 +147,7 @@ def test_score_emits_tests_missing_factor_for_sensitive_domain() -> None:
         files=[FileChange(path="internal/auth/login.go", added=10, deleted=0)],
         domain_hits={"auth": 1},
     )
-    r = score(s, default_weights())
+    r = score(s, default_weights(), runtime=corpus_runtime)
     ids = {f.id for f in r.factors}
     assert "tests_missing" in ids
 

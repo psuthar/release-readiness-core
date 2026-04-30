@@ -1,0 +1,97 @@
+# PR Risk config example — Node / TypeScript service.
+#
+# Drop this at ops/release-readiness/pr-risk-config.yaml in your repo and
+# customize the domains, sensitive domains, and gates to match your codebase.
+# Schema: docs/contracts/pr-risk-config-v1.schema.json.
+# Walkthrough: docs/how-to/7-configure-pr-risk.md.
+
+version: 1
+
+# First-match-wins on the domain list; pattern types are documented in
+# python-service.yaml.
+domains:
+  - id: routes
+    label: routes
+    patterns:
+      - { prefix: "src/routes/" }
+      - { prefix: "src/api/" }
+
+  - id: db
+    label: db
+    patterns:
+      - { prefix: "prisma/migrations/" }
+      - { prefix: "src/db/" }
+      - { contains: "/models/" }
+
+  - id: jobs
+    label: jobs
+    patterns:
+      - { prefix: "src/jobs/" }
+      - { contains: "/workers/" }
+
+  - id: web
+    label: web
+    patterns:
+      - { prefix: "apps/web/" }
+      - { prefix: "src/components/" }
+
+sensitive_domains:
+  - routes
+  - db
+  - jobs
+
+gates:
+  - id: db_migration_gate
+    title: "Validate database migrations before merge"
+    priority: high
+    fix_type: db
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_db }
+    applies_when_extra: "DB schema or Prisma migration changed"
+    validation_line: "db: migrations validated with rollback/reversal plan documented"
+    checklist:
+      - text: "Run `prisma migrate deploy` against a staging-shaped database."
+        by_evidence_level:
+          unit: "Confirm unit-level coverage; run migration validation against staging."
+          e2e: "Validated against staging — confirm CI's migration job is green."
+      - "Document rollback plan in the PR description."
+    evidence:
+      template: migrations
+
+  - id: routes_e2e_gate
+    title: "Validate API routes touched by this change"
+    priority: high
+    fix_type: test
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_routes }
+    applies_when_extra: "API routes changed"
+    validation_line: "test: API routes exercised (E2E or supertest)"
+    checklist:
+      - text: "Run integration / E2E suite for changed routes."
+        by_evidence_level:
+          none: "Add E2E coverage (supertest or Playwright API mode) before merge."
+          unit: "Run integration tests for changed routes before merge."
+      - "Verify request / response shapes match the OpenAPI / TS contract."
+    evidence:
+      template: test_domain
+      args:
+        domain: routes
+
+  - id: jobs_smoke_gate
+    title: "Smoke test affected jobs / workers"
+    priority: medium
+    fix_type: process
+    applies_when:
+      - { risk_band: [high, critical] }
+      - { factor_id: domain_jobs }
+    applies_when_extra: "Job / worker code changed"
+    validation_line: "test: job smoke (representative payload)"
+    checklist:
+      - "Run job smoke against a representative payload."
+      - "Confirm worker logs look healthy (no silent failures, no infinite retries)."
+    evidence:
+      template: test_domain
+      args:
+        domain: jobs

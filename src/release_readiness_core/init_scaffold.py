@@ -113,6 +113,64 @@ remediation:
 """
 
 
+PR_RISK_CONFIG_TEMPLATE = """\
+# release-readiness-core PR-risk config — replace placeholders before shipping.
+# Schema: docs/contracts/pr-risk-config-v1.schema.json
+# Walkthrough: docs/how-to/7-configure-pr-risk.md
+# Examples: see examples/pr-risk/{python-service,node-service}.yaml
+#
+# Without this file, release-readiness-pr-risk runs with a language-agnostic
+# default: every changed path classifies to "other", and only generic gates
+# (CI fetch depth, PR review summary, workflow / config validation, add tests
+# / evidence, intent alignment, scattered-review plan, test proximity, hotspot
+# regression) fire. Add domains and gates here to drive project-specific
+# checks.
+
+version: 1
+
+# Domains group changed paths into product areas. First match wins.
+# Pattern types: prefix | contains | exact | endswith | any_contains | and.
+# domains:
+#   - id: api
+#     label: api
+#     patterns:
+#       - { prefix: "src/api/" }
+#       - { contains: "/handlers/" }
+
+# Domains whose changes — without test files in the diff — fire the
+# `tests_missing` factor (which adds penalty points to the score).
+# sensitive_domains:
+#   - api
+
+# Gate registry. Each gate fires when its applies_when predicates match.
+# Predicate vocabulary (closed set, see docs/reference/pr-risk-config.md):
+#   factor_id | not_factor_id | risk_band | not_risk_band | domain_factor |
+#   intent_mismatch | concentration_mode | hotspots_present |
+#   proximity_distant_with_sensitive
+#
+# Evidence detector templates (closed set):
+#   test_domain | signal_check | migrations | add_tests | validation_note |
+#   intent_alignment | intent_strength | intent_aligned_or_weak | proximity | hotspot
+#
+# gates:
+#   - id: my_gate
+#     title: "Validate area X before merge"
+#     priority: high              # high | medium | supporting
+#     fix_type: test              # code | test | config | process | infra | db
+#     applies_when:
+#       - { risk_band: [high, critical] }
+#       - { factor_id: domain_api }
+#     applies_when_extra: "API area changed"
+#     validation_line: "test: API endpoints exercised (E2E or contract test)"
+#     checklist:
+#       - "Run E2E for the affected endpoint(s)."
+#     evidence:
+#       template: test_domain
+#       args:
+#         domain: api
+"""
+
+
 VALIDATION_MAP_TEMPLATE = """\
 # Validation map for the JUnit / Playwright adapters.
 # Map each readiness validation key to the test classnames or stems
@@ -226,6 +284,7 @@ def scaffold(target: Path, *, workflow: str = "github", force: bool = False) -> 
     plan: list[tuple[Path, str]] = [
         (target / "ops" / "release-readiness" / "config.yaml", CONFIG_TEMPLATE),
         (target / "ops" / "release-readiness" / "validation_map.yaml", VALIDATION_MAP_TEMPLATE),
+        (target / "ops" / "release-readiness" / "pr-risk-config.yaml", PR_RISK_CONFIG_TEMPLATE),
     ]
     if workflow == "github":
         plan.append(

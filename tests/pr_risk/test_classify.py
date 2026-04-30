@@ -72,8 +72,12 @@ from release_readiness_core.pr_risk.types import (
         ("", DOMAIN_OTHER),
     ],
 )
-def test_classify_domain_matches_go_table(path: str, want: str) -> None:
-    assert classify_domain(path) == want
+def test_classify_domain_matches_go_table(path: str, want: str, corpus_runtime) -> None:
+    """The bundled-default config is now language-agnostic (Phase 5 / SCRUM-243)
+    — the project-specific domain mappings live in
+    tests/pr_risk/fixtures/pr-risk-corpus-config.yaml. Tests that exercise those
+    mappings load it via the ``corpus_runtime`` fixture (in conftest.py)."""
+    assert classify_domain(path, runtime=corpus_runtime) == want
 
 
 @pytest.mark.parametrize(
@@ -156,31 +160,35 @@ def test_is_migration_path(path: str, expected: bool) -> None:
     assert is_migration_path(path) is expected
 
 
-def test_classify_area_orders_orchestration_before_database() -> None:
-    """orchestration_recommendations is in internal/database/ but routes to orchestration."""
+def test_classify_area_orders_orchestration_before_database(corpus_runtime) -> None:
+    """orchestration_recommendations is in internal/database/ but routes to orchestration.
+    Loads the corpus YAML to exercise the project-specific overlap order."""
     assert (
-        classify_area("internal/database/orchestration_recommendations.go")
+        classify_area("internal/database/orchestration_recommendations.go", runtime=corpus_runtime)
         == DOMAIN_ORCHESTRATION
     )
-    assert classify_area("internal/database/users.go") == DOMAIN_DATABASE
+    assert (
+        classify_area("internal/database/users.go", runtime=corpus_runtime)
+        == DOMAIN_DATABASE
+    )
 
 
-def test_touches_sensitive_code_without_tests_with_test_file_returns_false() -> None:
+def test_touches_sensitive_code_without_tests_with_test_file_returns_false(corpus_runtime) -> None:
     s = Signals(test_files=1, files=[FileChange(path="internal/auth/foo.go")])
-    assert touches_sensitive_code_without_tests(s) is False
+    assert touches_sensitive_code_without_tests(s, runtime=corpus_runtime) is False
 
 
-def test_touches_sensitive_code_without_tests_with_only_other_returns_false() -> None:
+def test_touches_sensitive_code_without_tests_with_only_other_returns_false(corpus_runtime) -> None:
     s = Signals(files=[FileChange(path="README.md")])
-    assert touches_sensitive_code_without_tests(s) is False
+    assert touches_sensitive_code_without_tests(s, runtime=corpus_runtime) is False
 
 
-def test_touches_sensitive_code_without_tests_with_auth_returns_true() -> None:
+def test_touches_sensitive_code_without_tests_with_auth_returns_true(corpus_runtime) -> None:
     s = Signals(files=[FileChange(path="internal/auth/foo.go")])
-    assert touches_sensitive_code_without_tests(s) is True
+    assert touches_sensitive_code_without_tests(s, runtime=corpus_runtime) is True
 
 
-def test_touches_sensitive_code_without_tests_skips_test_paths() -> None:
+def test_touches_sensitive_code_without_tests_skips_test_paths(corpus_runtime) -> None:
     s = Signals(files=[FileChange(path="internal/auth/foo_test.go")])
     # test_files=0 here intentionally; even so, the test path itself is skipped.
-    assert touches_sensitive_code_without_tests(s) is False
+    assert touches_sensitive_code_without_tests(s, runtime=corpus_runtime) is False

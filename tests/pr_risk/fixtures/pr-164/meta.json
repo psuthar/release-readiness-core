@@ -1,0 +1,9 @@
+{
+  "pr_number": 164,
+  "merge_sha": "2c8513caf72875d47eaad1f32fba30bcd25905bf",
+  "parent_sha": "9a9cf74654bd64e7228524ab0834dc8f4ba0c4fe",
+  "base_ref": "main",
+  "pr_title": "SCRUM-136: strict JSON LLM judge for eval scoring",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

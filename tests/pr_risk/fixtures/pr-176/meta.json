@@ -1,0 +1,9 @@
+{
+  "pr_number": 176,
+  "merge_sha": "30382fd5fec6045aff15cc09a73bb013d1685b7e",
+  "parent_sha": "51a0c3173a5ce1f1f15b2f7d2cd050c7cb46348a",
+  "base_ref": "main",
+  "pr_title": "SCRUM-154: unified stance dropdown control",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

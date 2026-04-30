@@ -1,0 +1,9 @@
+{
+  "pr_number": 170,
+  "merge_sha": "7ef1f7c23c945fc0e28be5301e3ff0cbc503d11f",
+  "parent_sha": "520200111ce16c7caad161d41b419b5482e04cf8",
+  "base_ref": "main",
+  "pr_title": "SCRUM-144: add explicit eval contracts for FF-019 through FF-026",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,14 @@
+{
+  "report_version": "v2.8",
+  "score": 20,
+  "band": "medium",
+  "merge_recommendation": "WARN",
+  "required_validations": [
+    "ci: required status checks must pass before merge",
+    "config: workflow / deploy / go.mod changes validated against required checks"
+  ],
+  "top_risk_factors": [
+    "CI/GitHub Actions workflows changed"
+  ],
+  "test_confidence": 85
+}

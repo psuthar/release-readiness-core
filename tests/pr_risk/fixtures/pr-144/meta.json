@@ -1,0 +1,9 @@
+{
+  "pr_number": 144,
+  "merge_sha": "5f528a388968cbfc016cb324aaec25d13406d59e",
+  "parent_sha": "eba5fb9bc739eb5f27e1d1a8420cf3f4f5e5a2d1",
+  "base_ref": "main",
+  "pr_title": "SCRUM-119: migrate component inline styles to CSS modules",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

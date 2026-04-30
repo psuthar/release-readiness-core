@@ -1,0 +1,9 @@
+{
+  "pr_number": 152,
+  "merge_sha": "9e3289f5670c192cef3197ae26da6845ff253f6e",
+  "parent_sha": "a27a86910e2dbb00ee6c46ba64ef417127686ad5",
+  "base_ref": "main",
+  "pr_title": "SCRUM-126: extract duplicated MicIcon to shared icons component",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

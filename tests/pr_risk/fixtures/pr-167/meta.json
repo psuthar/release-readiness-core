@@ -1,0 +1,9 @@
+{
+  "pr_number": 167,
+  "merge_sha": "9c248d5b4619d0e63d445996cf42f7c1e86c797c",
+  "parent_sha": "8d4d260e5af6e8c13e2f29f6dc0431d840425eed",
+  "base_ref": "main",
+  "pr_title": "SCRUM-141: extend expected_scores coverage to FF-026",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

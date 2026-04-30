@@ -1,0 +1,9 @@
+{
+  "pr_number": 194,
+  "merge_sha": "1554608f54799eecef2d11f267b7987b85cd9dfe",
+  "parent_sha": "15eaa42cdef656edb3cbdadb5abe631aab1b7a45",
+  "base_ref": "main",
+  "pr_title": "SCRUM-193: group recommendation cards by type with collapsible headers",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

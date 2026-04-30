@@ -1,0 +1,9 @@
+{
+  "pr_number": 192,
+  "merge_sha": "e9e4319816d48e466a0ed3b4ba3f24c86eda36ba",
+  "parent_sha": "dba233a87492117563d79f8ba49a28aafc645165",
+  "base_ref": "main",
+  "pr_title": "SCRUM-191: left-border accent + selective status pill",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

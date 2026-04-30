@@ -1,0 +1,9 @@
+{
+  "pr_number": 191,
+  "merge_sha": "dba233a87492117563d79f8ba49a28aafc645165",
+  "parent_sha": "60ba115469285994dff185a7e1286ca56aa45666",
+  "base_ref": "main",
+  "pr_title": "SCRUM-190: simplify action set on Suggested Next Actions cards",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

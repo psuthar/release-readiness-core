@@ -1,0 +1,9 @@
+{
+  "pr_number": 189,
+  "merge_sha": "56458481329e8361903f6081b572b12a82a40a23",
+  "parent_sha": "892db7db92d40d8194e3f96ba8ff32955647b5c7",
+  "base_ref": "main",
+  "pr_title": "SCRUM-187: use shared DecisionBriefHeader in creator view",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

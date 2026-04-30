@@ -1,0 +1,9 @@
+{
+  "pr_number": 206,
+  "merge_sha": "9cb636352c1bdcac7af702b998dd7e3a966cdbf5",
+  "parent_sha": "eeb32660957499f2f6e168374e042792a0a4f9da",
+  "base_ref": "main",
+  "pr_title": "SCRUM-205: creator close-decision CTA + consistent post-closeout state",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

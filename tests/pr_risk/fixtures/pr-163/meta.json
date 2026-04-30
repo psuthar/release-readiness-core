@@ -1,0 +1,9 @@
+{
+  "pr_number": 163,
+  "merge_sha": "9a9cf74654bd64e7228524ab0834dc8f4ba0c4fe",
+  "parent_sha": "3a945dd245a81ef330c83b7c9eca3196567e576c",
+  "base_ref": "main",
+  "pr_title": "docs: tighten implement SCRUM workflow guardrails",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

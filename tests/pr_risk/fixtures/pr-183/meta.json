@@ -1,0 +1,9 @@
+{
+  "pr_number": 183,
+  "merge_sha": "1b650730450b0014883233b26506a0ef53a72009",
+  "parent_sha": "01c26b627d3426d461a6634fb77f60b48c8b517d",
+  "base_ref": "main",
+  "pr_title": "SCRUM-161: reduce participant stance option set",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

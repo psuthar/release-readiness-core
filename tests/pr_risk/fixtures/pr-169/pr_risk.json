@@ -1,0 +1,223 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:29.365707Z",
+  "base_ref": "dff9b5b12e34211a30ae431c16b667c91b4a8f12",
+  "signals": {
+    "base_ref": "dff9b5b12e34211a30ae431c16b667c91b4a8f12",
+    "head_ref": "HEAD",
+    "file_count": 4,
+    "total_added": 120,
+    "total_deleted": 14,
+    "total_loc": 134,
+    "files": [
+      {
+        "path": "eval/qa/README.md",
+        "added": 3,
+        "deleted": 2
+      },
+      {
+        "path": "eval/qa/pilot_baseline.json",
+        "added": 22,
+        "deleted": 11
+      },
+      {
+        "path": "scripts/run_qa_eval.py",
+        "added": 42,
+        "deleted": 1
+      },
+      {
+        "path": "scripts/test_run_qa_eval.py",
+        "added": 53,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "other": 2,
+      "scripts": 2
+    },
+    "test_files": 0,
+    "config_files": 0,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 4,
+  "risk_band": "low",
+  "score_math": {
+    "factors_subtotal": 4,
+    "reducers_subtotal": 0,
+    "net_before_floor": 4,
+    "floor_min_score": 0,
+    "floor_applied": false,
+    "final_score": 4,
+    "final_band": "low"
+  },
+  "interpretation": "Low risk. The diff is small and does not touch sensitive areas. Standard review is sufficient.",
+  "factors": [
+    {
+      "id": "context_hotspot_overlap",
+      "label": "Diff overlaps a path prefix touched in multiple recent commits",
+      "points": 4,
+      "detail": "Prefix touched in 7 of the last 50 sampled commits — sustained activity; extra regression care."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 4,
+      "factors": [
+        "context_hotspot_overlap"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 45,
+      "confidence": 55,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "No sensitive domains changed",
+            "delta": 35
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "No changed files have nearby tests in diff",
+            "delta": -10
+          }
+        ],
+        "final_score": 55
+      }
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_hotspot_regression_focus",
+      "title": "Extra regression focus on active path (recent commits)",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Prefix `eval/qa` is active in recent history; run targeted smoke for behavior touching this area.",
+        "Watch for unintended side effects in adjacent modules."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "context_hotspot_overlap",
+      "actions": [
+        "Run focused regression on the overlapping prefix; several recent commits touched it, so regressions are likelier.",
+        "Scan related modules for unintended behavior changes."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 4.0/100 (low) · base `dff9b5b12e34211a30ae431c16b667c91b4a8f12`\n\n**PR risk assessment:** **PASS (low risk)** — PR risk is low (score 4/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 0 missing · 0 fail · 2 not evaluated\n\n**Top risk drivers:**\n- Diff overlaps a path prefix touched in multiple recent commits (4 pts): Prefix touched in 7 of the last 50 sampled commits — sustained activity; extra regression care.\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Run targeted regression for path prefixes with sustained recent commit activity\n\n**Review routing:**\n- Extra reviewer attention on `eval/qa` (several recent commits touched this area).\n\n**Score math:** factors 4.0 − reducers 0.0 → 4.0 · low\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 4,
+      "with_nearby_test_in_diff": 0,
+      "ratio": 0,
+      "detail": "No test files in diff; proximity of tests to changed code cannot be established from this diff alone."
+    },
+    "concentration": {
+      "mode": "balanced",
+      "top_prefix": "scripts/test_run_qa_eval.py",
+      "top_share": 0.39552238805970147,
+      "hhi": 0.3398306972599688,
+      "unique_prefixes": 3,
+      "detail": "Churn is spread across several areas in a typical way."
+    },
+    "hotspots": [
+      {
+        "prefix": "eval/qa",
+        "recent_hits": 7,
+        "detail": "Prefix touched in 7 of the last 50 sampled commits — sustained activity; extra regression care."
+      },
+      {
+        "prefix": "scripts/run_qa_eval.py",
+        "recent_hits": 5,
+        "detail": "Prefix touched in 5 of the last 50 sampled commits — sustained activity; extra regression care."
+      },
+      {
+        "prefix": "scripts/test_run_qa_eval.py",
+        "recent_hits": 5,
+        "detail": "Prefix touched in 5 of the last 50 sampled commits — sustained activity; extra regression care."
+      }
+    ],
+    "intent": {
+      "title": "SCRUM-143: complete live pilot baseline with judge/report fixes",
+      "intent_strength": "unknown",
+      "domains_in_diff": [
+        "other",
+        "scripts"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "No strong intent keywords matched; alignment not scored."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "pass",
+    "rationale": "PR risk is low (score 4/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.",
+    "recommended_review": {
+      "strategy": "Single-pass review is enough; spot-check touched paths if helpful.",
+      "routing_hints": [
+        "Extra reviewer attention on `eval/qa` (several recent commits touched this area)."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "test: targeted regression for path prefixes with several recent commits overlapping this diff"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_hotspot_regression_focus",
+        "label": "Extra regression focus on active path (recent commits)",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "No validation note detected; targeted regression coverage cannot be confirmed from diff alone — requires human review."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 2,
+      "fail_count": 0
+    }
+  }
+}

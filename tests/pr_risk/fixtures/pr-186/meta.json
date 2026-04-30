@@ -1,0 +1,9 @@
+{
+  "pr_number": 186,
+  "merge_sha": "63c4a0bb680594038415d8415f5f7fea5ec6bb1e",
+  "parent_sha": "d7e3a10163ca9e01b9279227e8d4390e1b307d90",
+  "base_ref": "main",
+  "pr_title": "SCRUM-164: keep rationale input inline to the right of stance",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

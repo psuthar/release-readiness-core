@@ -1,0 +1,9 @@
+{
+  "pr_number": 171,
+  "merge_sha": "2882e87fa15f8338bb89244dec2e0c6c32ff74e0",
+  "parent_sha": "7ef1f7c23c945fc0e28be5301e3ff0cbc503d11f",
+  "base_ref": "main",
+  "pr_title": "SCRUM-146: replace participant decision banner with Decision Brief header",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

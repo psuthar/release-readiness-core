@@ -1,0 +1,271 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:12.42692Z",
+  "base_ref": "83bd86d986ebfd5577a46b353d876d108fae9985",
+  "signals": {
+    "base_ref": "83bd86d986ebfd5577a46b353d876d108fae9985",
+    "head_ref": "HEAD",
+    "file_count": 5,
+    "total_added": 318,
+    "total_deleted": 1,
+    "total_loc": 319,
+    "test_loc_ratio": 0.774294670846395,
+    "files": [
+      {
+        "path": "internal/database/session_memberships.go",
+        "added": 1,
+        "deleted": 1
+      },
+      {
+        "path": "internal/database/stances.go",
+        "added": 40,
+        "deleted": 0
+      },
+      {
+        "path": "internal/handlers/session_stances.go",
+        "added": 21,
+        "deleted": 0
+      },
+      {
+        "path": "internal/handlers/smoke_decision_readiness_test.go",
+        "added": 247,
+        "deleted": 0
+      },
+      {
+        "path": "internal/models/models.go",
+        "added": 9,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "api": 2,
+      "database": 2,
+      "tests": 1
+    },
+    "test_domain_hits": {
+      "api": 1
+    },
+    "test_unit_domain_hits": {
+      "api": 1
+    },
+    "test_files": 1,
+    "unit_test_files": 1,
+    "config_files": 0,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 7,
+  "risk_band": "low",
+  "score_math": {
+    "factors_subtotal": 11,
+    "reducers_subtotal": 4,
+    "net_before_floor": 7,
+    "floor_min_score": 0,
+    "floor_applied": false,
+    "final_score": 7,
+    "final_band": "low"
+  },
+  "interpretation": "Low risk. The diff is small and does not touch sensitive areas. Standard review is sufficient.",
+  "factors": [
+    {
+      "id": "context_test_proximity_distant",
+      "label": "Tests not co-located with changed code in this diff",
+      "points": 5,
+      "detail": "Many changed production files have no test file in the same directory or an obvious sibling path in this diff."
+    },
+    {
+      "id": "context_intent_mismatch",
+      "label": "PR title/body keywords do not align with paths in the diff",
+      "points": 6,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 11,
+      "factors": [
+        "context_test_proximity_distant",
+        "context_intent_mismatch"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 40,
+      "confidence": 60,
+      "reducers": [
+        "test_heavy_diff"
+      ],
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "No sensitive domains changed",
+            "delta": 35
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "Few changed files have nearby tests in diff",
+            "delta": -5
+          }
+        ],
+        "final_score": 60
+      }
+    }
+  ],
+  "reducers": [
+    {
+      "id": "test_heavy_diff",
+      "label": "Test-heavy diff",
+      "points": 4,
+      "evidence": "77% of LOC churn is in test files",
+      "category_key": "test_confidence"
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_align_pr_description",
+      "title": "Align PR title/description with the diff",
+      "priority": "medium",
+      "fix_type": "process",
+      "checklist": [
+        "Update the PR title or body so keywords match the areas actually changed, or narrow the diff to match the stated intent.",
+        "If the scope is intentional, explain why expected domains are not touched."
+      ]
+    },
+    {
+      "id": "context_improve_test_proximity",
+      "title": "Improve test proximity for changed code",
+      "priority": "supporting",
+      "fix_type": "test",
+      "checklist": [
+        "Add or reference tests in the same package or directory as changed production files.",
+        "If tests live elsewhere, link them in the PR description."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "context_test_proximity_distant",
+      "actions": [
+        "Add tests next to changed packages or link existing tests in the PR description.",
+        "Prefer package-local *_test.go over only end-to-end coverage for the same change."
+      ]
+    },
+    {
+      "factor_id": "context_intent_mismatch",
+      "actions": [
+        "Update the PR title/body to match the diff, or adjust the diff to match the stated intent.",
+        "If intentional, explain the scope change explicitly for reviewers."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 7.0/100 (low) · base `83bd86d986ebfd5577a46b353d876d108fae9985`\n\n**PR risk assessment:** **PASS (low risk)** — PR risk is low (score 7/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 1 missing · 1 fail · 1 not evaluated\n\n**Top risk drivers:**\n- Tests not co-located with changed code in this diff (5 pts): Many changed production files have no test file in the same directory or an obvious sibling path in this diff.\n- PR title/body keywords do not align with paths in the diff (6 pts): Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description.\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Align PR title and body with the actual diff (intent match)\n_…and 1 more in `pr_risk.md`_\n\n**Review routing:**\n- Focus primary review on `internal/handlers` (majority of churn).\n- Confirm scope with author: PR text implies domains workflows but diff may differ.\n\n**Score math:** factors 11.0 − reducers 4.0 → 7.0 · low\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 4,
+      "with_nearby_test_in_diff": 1,
+      "ratio": 0.25,
+      "detail": "Many changed production files have no test file in the same directory or an obvious sibling path in this diff."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "internal/handlers",
+      "top_share": 0.8401253918495298,
+      "hhi": 0.7239413920853766,
+      "unique_prefixes": 3,
+      "detail": "Most churn (~84%) sits under `internal/handlers`."
+    },
+    "intent": {
+      "title": "SCRUM-203: expose Decision Maker readiness in stance responses",
+      "intent_strength": "strong",
+      "keywords_matched": [
+        "ci"
+      ],
+      "domains_expected": [
+        "workflows"
+      ],
+      "domains_in_diff": [
+        "api",
+        "database"
+      ],
+      "aligned": false,
+      "mismatch": true,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "pass",
+    "rationale": "PR risk is low (score 7/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.",
+    "recommended_review": {
+      "strategy": "Single-pass review is enough; spot-check touched paths if helpful.",
+      "routing_hints": [
+        "Focus primary review on `internal/handlers` (majority of churn).",
+        "Confirm scope with author: PR text implies domains workflows but diff may differ."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "process: PR title/body aligned with actual diff (intent match)",
+      "test: tests co-located or explicitly linked for changed code"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_align_pr_description",
+        "label": "Align PR title/description with the diff",
+        "status": "fail",
+        "source": "intent",
+        "rationale": "PR title/body keywords imply domains not present in diff: Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+      },
+      {
+        "id": "context_improve_test_proximity",
+        "label": "Improve test proximity for changed code",
+        "status": "missing",
+        "source": "proximity",
+        "rationale": "Structural alignment is \"distant\" with no test coverage evidence for this diff."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 1,
+      "unknown_count": 0,
+      "not_evaluated_count": 1,
+      "fail_count": 1
+    }
+  }
+}

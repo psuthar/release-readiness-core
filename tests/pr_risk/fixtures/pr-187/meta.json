@@ -1,0 +1,9 @@
+{
+  "pr_number": 187,
+  "merge_sha": "253cc9f3962a4dc1d5143f3b2090ccca823ef6a1",
+  "parent_sha": "63c4a0bb680594038415d8415f5f7fea5ec6bb1e",
+  "base_ref": "main",
+  "pr_title": "SCRUM-184: ground session answers in asker identity context",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

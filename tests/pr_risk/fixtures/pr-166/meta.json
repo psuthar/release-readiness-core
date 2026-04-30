@@ -1,0 +1,9 @@
+{
+  "pr_number": 166,
+  "merge_sha": "8d4d260e5af6e8c13e2f29f6dc0431d840425eed",
+  "parent_sha": "0b0e1174e7531ce42c559e04cc68a830c984d10e",
+  "base_ref": "main",
+  "pr_title": "SCRUM-140: apply expected-score thresholds and weighted reporting",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

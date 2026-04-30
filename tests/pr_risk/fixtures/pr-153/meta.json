@@ -1,0 +1,9 @@
+{
+  "pr_number": 153,
+  "merge_sha": "40dcb45080032830de2b028938cd9e933c95cbf3",
+  "parent_sha": "9e3289f5670c192cef3197ae26da6845ff253f6e",
+  "base_ref": "main",
+  "pr_title": "SCRUM-127: replace \"System Generated\" label with \"Answered by TalkBack AI\"",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 198,
+  "merge_sha": "350678cd5710c76e90cbf3d816acf2566e249338",
+  "parent_sha": "1c921dc3e34260d6ce8b1e206bb851853a258e92",
+  "base_ref": "main",
+  "pr_title": "SCRUM-197: surface failing E2E spec names in release-readiness report",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

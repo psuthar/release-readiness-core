@@ -1,0 +1,9 @@
+{
+  "pr_number": 180,
+  "merge_sha": "9bc9de07f6454a0b7984e802e13e63343db01ebb",
+  "parent_sha": "4ce3429df51d098d0b72f9a3118563f2f6dd663a",
+  "base_ref": "main",
+  "pr_title": "SCRUM-158: shift participant grid 5pp from center to Q&amp;A column",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

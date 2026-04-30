@@ -1,0 +1,155 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:30.789608Z",
+  "base_ref": "0b0e1174e7531ce42c559e04cc68a830c984d10e",
+  "signals": {
+    "base_ref": "0b0e1174e7531ce42c559e04cc68a830c984d10e",
+    "head_ref": "HEAD",
+    "file_count": 2,
+    "total_added": 150,
+    "total_deleted": 3,
+    "total_loc": 153,
+    "files": [
+      {
+        "path": "scripts/run_qa_eval.py",
+        "added": 90,
+        "deleted": 1
+      },
+      {
+        "path": "scripts/test_run_qa_eval.py",
+        "added": 60,
+        "deleted": 2
+      }
+    ],
+    "domain_hits": {
+      "scripts": 2
+    },
+    "test_files": 0,
+    "config_files": 0,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 0,
+  "risk_band": "low",
+  "score_math": {
+    "factors_subtotal": 0,
+    "reducers_subtotal": 0,
+    "net_before_floor": 0,
+    "floor_min_score": 0,
+    "floor_applied": false,
+    "final_score": 0,
+    "final_band": "low"
+  },
+  "interpretation": "Low risk. The diff is small and does not touch sensitive areas. Standard review is sufficient.",
+  "factors": [],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 0
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 45,
+      "confidence": 55,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "No sensitive domains changed",
+            "delta": 35
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "No changed files have nearby tests in diff",
+            "delta": -10
+          }
+        ],
+        "final_score": 55
+      }
+    }
+  ],
+  "mitigations": null,
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 0.0/100 (low) · base `0b0e1174e7531ce42c559e04cc68a830c984d10e`\n\n**PR risk assessment:** **PASS (low risk)** — PR risk is low (score 0/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 0 missing · 0 fail · 1 not evaluated\n\n**Top required validations:**\n1. Required status checks must pass before merge\n\n**Review routing:**\n- Focus primary review on `scripts/run_qa_eval.py` (majority of churn).\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 2,
+      "with_nearby_test_in_diff": 0,
+      "ratio": 0,
+      "detail": "No test files in diff; proximity of tests to changed code cannot be established from this diff alone."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "scripts/run_qa_eval.py",
+      "top_share": 0.5947712418300654,
+      "hhi": 0.5179631765560254,
+      "unique_prefixes": 2,
+      "detail": "Most churn (~59%) sits under `scripts/run_qa_eval.py`."
+    },
+    "intent": {
+      "title": "SCRUM-140: apply expected-score thresholds and weighted reporting",
+      "intent_strength": "unknown",
+      "domains_in_diff": [
+        "scripts"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "No strong intent keywords matched; alignment not scored."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "pass",
+    "rationale": "PR risk is low (score 0/100). Normal prerequisites — CI checks, required reviews, and any targeted testing — still apply before merging.",
+    "recommended_review": {
+      "strategy": "Single-pass review is enough; spot-check touched paths if helpful.",
+      "routing_hints": [
+        "Focus primary review on `scripts/run_qa_eval.py` (majority of churn)."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 1,
+      "fail_count": 0
+    }
+  }
+}

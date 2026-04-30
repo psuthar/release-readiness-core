@@ -1,0 +1,9 @@
+{
+  "pr_number": 193,
+  "merge_sha": "15eaa42cdef656edb3cbdadb5abe631aab1b7a45",
+  "parent_sha": "e9e4319816d48e466a0ed3b4ba3f24c86eda36ba",
+  "base_ref": "main",
+  "pr_title": "SCRUM-192: primary-action button styling per recommendation type",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

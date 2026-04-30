@@ -1,0 +1,9 @@
+{
+  "pr_number": 221,
+  "merge_sha": "6fd391e03edd808eb401d00e324537d414275e7a",
+  "parent_sha": "c3d705a1f252268508105cd2b2bd6f2b623e4986",
+  "base_ref": "main",
+  "pr_title": "SCRUM-227: route editor authz through session_memberships role, not email match",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

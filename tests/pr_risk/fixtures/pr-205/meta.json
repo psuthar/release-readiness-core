@@ -1,0 +1,9 @@
+{
+  "pr_number": 205,
+  "merge_sha": "eeb32660957499f2f6e168374e042792a0a4f9da",
+  "parent_sha": "d298cd15e5c542d527437861bdb2401aea739b8c",
+  "base_ref": "main",
+  "pr_title": "SCRUM-204: surface Decision Maker role + vote readiness in creator UI",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

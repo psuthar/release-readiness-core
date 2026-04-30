@@ -1,0 +1,9 @@
+{
+  "pr_number": 220,
+  "merge_sha": "c3d705a1f252268508105cd2b2bd6f2b623e4986",
+  "parent_sha": "929720f790ae705b5154b81e0ee5579135bb23bb",
+  "base_ref": "main",
+  "pr_title": "SCRUM-226: make session creator a first-class member (single source of truth)",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

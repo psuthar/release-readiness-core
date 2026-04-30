@@ -1,0 +1,9 @@
+{
+  "pr_number": 201,
+  "merge_sha": "b41d4f31c12f7fdb712f38515902b8c81bb2a213",
+  "parent_sha": "19ad854f78fedb5209c6c32e81560856ef7429bd",
+  "base_ref": "main",
+  "pr_title": "SCRUM-200: remove \"Open email draft\" button from invitations table",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

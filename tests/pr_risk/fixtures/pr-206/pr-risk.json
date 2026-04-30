@@ -1,0 +1,17 @@
+{
+  "report_version": "v2.8",
+  "score": 20,
+  "band": "medium",
+  "merge_recommendation": "WARN",
+  "required_validations": [
+    "ci: required status checks must pass before merge",
+    "process: PR title/body aligned with actual diff (intent match)",
+    "test: targeted regression for path prefixes with several recent commits overlapping this diff"
+  ],
+  "top_risk_factors": [
+    "Creator orchestration/recommendation flow changed",
+    "PR title/body keywords do not align with paths in the diff",
+    "Diff overlaps a path prefix touched in multiple recent commits"
+  ],
+  "test_confidence": 80
+}

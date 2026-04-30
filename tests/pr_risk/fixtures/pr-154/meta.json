@@ -1,0 +1,9 @@
+{
+  "pr_number": 154,
+  "merge_sha": "a3a778211e3afa1a45e2d684f235cc6290463331",
+  "parent_sha": "40dcb45080032830de2b028938cd9e933c95cbf3",
+  "base_ref": "main",
+  "pr_title": "SCRUM-128: improve citation badge labels — prefer human-readable over raw IDs",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,267 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:19.636601Z",
+  "base_ref": "892db7db92d40d8194e3f96ba8ff32955647b5c7",
+  "signals": {
+    "base_ref": "892db7db92d40d8194e3f96ba8ff32955647b5c7",
+    "head_ref": "HEAD",
+    "file_count": 2,
+    "total_added": 23,
+    "total_deleted": 23,
+    "total_loc": 46,
+    "test_loc_ratio": 0.32608695652173914,
+    "files": [
+      {
+        "path": "web/src/modes/CreatorMode.jsx",
+        "added": 8,
+        "deleted": 23
+      },
+      {
+        "path": "web/tests/e2e/creator-access.e2e.ts",
+        "added": 15,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "orchestration": 1,
+      "tests": 1
+    },
+    "test_domain_hits": {
+      "web": 1
+    },
+    "test_e2e_domain_hits": {
+      "web": 1
+    },
+    "test_files": 1,
+    "e2e_test_files": 1,
+    "config_files": 0,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 20,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 20,
+    "reducers_subtotal": 0,
+    "net_before_floor": 20,
+    "floor_min_score": 0,
+    "floor_applied": false,
+    "final_score": 20,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 20). Some risk factors are present but are manageable. Review the factors below before merging.",
+  "factors": [
+    {
+      "id": "domain_orchestration",
+      "label": "Creator orchestration/recommendation flow changed",
+      "points": 10,
+      "detail": "1 file(s)"
+    },
+    {
+      "id": "context_hotspot_overlap",
+      "label": "Diff overlaps a path prefix touched in multiple recent commits",
+      "points": 4,
+      "detail": "Prefix touched in 34 of the last 50 sampled commits — sustained activity; extra regression care."
+    },
+    {
+      "id": "context_intent_mismatch",
+      "label": "PR title/body keywords do not align with paths in the diff",
+      "points": 6,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 20,
+      "factors": [
+        "domain_orchestration",
+        "context_hotspot_overlap",
+        "context_intent_mismatch"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 20,
+      "confidence": 80,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "Sensitive domains changed",
+            "delta": -10
+          },
+          {
+            "reason": "E2E tests present in diff",
+            "delta": 40
+          }
+        ],
+        "final_score": 80
+      }
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_align_pr_description",
+      "title": "Align PR title/description with the diff",
+      "priority": "medium",
+      "fix_type": "process",
+      "checklist": [
+        "Update the PR title or body so keywords match the areas actually changed, or narrow the diff to match the stated intent.",
+        "If the scope is intentional, explain why expected domains are not touched."
+      ]
+    },
+    {
+      "id": "context_hotspot_regression_focus",
+      "title": "Extra regression focus on active path (recent commits)",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Prefix `web/src` is active in recent history; run targeted smoke for behavior touching this area.",
+        "Watch for unintended side effects in adjacent modules."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "domain_orchestration",
+      "actions": [
+        "Validate creator orchestration flows (recommendation list/sync, draft approve/reject).",
+        "Verify orchestration remains human-in-the-loop (no autonomous send/post actions)."
+      ]
+    },
+    {
+      "factor_id": "context_hotspot_overlap",
+      "actions": [
+        "Run focused regression on the overlapping prefix; several recent commits touched it, so regressions are likelier.",
+        "Scan related modules for unintended behavior changes."
+      ]
+    },
+    {
+      "factor_id": "context_intent_mismatch",
+      "actions": [
+        "Update the PR title/body to match the diff, or adjust the diff to match the stated intent.",
+        "If intentional, explain the scope change explicitly for reviewers."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 20.0/100 (medium) · base `892db7db92d40d8194e3f96ba8ff32955647b5c7`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 20/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 0 missing · 1 fail · 2 not evaluated\n\n**Top risk drivers:**\n- Creator orchestration/recommendation flow changed (10 pts): 1 file(s)\n- Diff overlaps a path prefix touched in multiple recent commits (4 pts): Prefix touched in 34 of the last 50 sampled commits — sustained activity; extra regression care.\n_…and 1 more in `pr_risk.md`_\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Align PR title and body with the actual diff (intent match)\n_…and 1 more in `pr_risk.md`_\n\n**Review routing:**\n- Include reviewer familiar with creator orchestration recommendations and draft-approval flows.\n- Focus primary review on `web/src` (majority of churn).\n_…and 2 more in `pr_risk.md`_\n\n**Score math:** factors 20.0 − reducers 0.0 → 20.0 · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "co_located",
+      "structural_alignment": "co_located",
+      "behavioral_coverage": "adequate",
+      "non_test_files": 1,
+      "with_nearby_test_in_diff": 1,
+      "ratio": 1,
+      "detail": "Tests in this diff are mostly next to or under the same directories as changed production files. Behavioral depth: adequate for this diff’s risk class (E2E/domain overlap with sensitive areas, or non-sensitive production changes)."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "web/src",
+      "top_share": 0.6739130434782609,
+      "hhi": 0.5604914933837429,
+      "unique_prefixes": 2,
+      "detail": "Most churn (~67%) sits under `web/src`."
+    },
+    "hotspots": [
+      {
+        "prefix": "web/src",
+        "recent_hits": 34,
+        "detail": "Prefix touched in 34 of the last 50 sampled commits — sustained activity; extra regression care."
+      },
+      {
+        "prefix": "web/tests",
+        "recent_hits": 14,
+        "detail": "Prefix touched in 14 of the last 50 sampled commits — sustained activity; extra regression care."
+      }
+    ],
+    "intent": {
+      "title": "SCRUM-187: use shared DecisionBriefHeader in creator view",
+      "intent_strength": "strong",
+      "keywords_matched": [
+        "ci"
+      ],
+      "domains_expected": [
+        "workflows"
+      ],
+      "domains_in_diff": [
+        "orchestration"
+      ],
+      "aligned": false,
+      "mismatch": true,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 20/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Include reviewer familiar with creator orchestration recommendations and draft-approval flows.",
+        "Focus primary review on `web/src` (majority of churn).",
+        "Extra reviewer attention on `web/src` (several recent commits touched this area).",
+        "Confirm scope with author: PR text implies domains workflows but diff may differ."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "process: PR title/body aligned with actual diff (intent match)",
+      "test: targeted regression for path prefixes with several recent commits overlapping this diff"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge.",
+      "Evidence FAIL [context_align_pr_description]: PR title/body keywords imply domains not present in diff: Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_align_pr_description",
+        "label": "Align PR title/description with the diff",
+        "status": "fail",
+        "source": "intent",
+        "rationale": "PR title/body keywords imply domains not present in diff: Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+      },
+      {
+        "id": "context_hotspot_regression_focus",
+        "label": "Extra regression focus on active path (recent commits)",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "No validation note detected; targeted regression coverage cannot be confirmed from diff alone — requires human review."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 2,
+      "fail_count": 1
+    }
+  }
+}

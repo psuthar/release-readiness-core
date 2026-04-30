@@ -1,0 +1,9 @@
+{
+  "pr_number": 157,
+  "merge_sha": "b3317be836894dc3bfc7d612d31e4c0fe0b6f62d",
+  "parent_sha": "fa9516ee46a5be9101f052475a338a19db4bfaf7",
+  "base_ref": "main",
+  "pr_title": "SCRUM-131: guard localhost API error message behind isDev flag",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

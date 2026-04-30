@@ -1,0 +1,256 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:33.826973Z",
+  "base_ref": "e1ed5c481a047e1c5b7c830966c187e91bfd12c0",
+  "signals": {
+    "base_ref": "e1ed5c481a047e1c5b7c830966c187e91bfd12c0",
+    "head_ref": "HEAD",
+    "file_count": 4,
+    "total_added": 746,
+    "total_deleted": 0,
+    "total_loc": 746,
+    "files": [
+      {
+        "path": ".gitignore",
+        "added": 4,
+        "deleted": 0
+      },
+      {
+        "path": "eval/qa/runs/.gitkeep",
+        "added": 0,
+        "deleted": 0
+      },
+      {
+        "path": "scripts/run_qa_eval.py",
+        "added": 548,
+        "deleted": 0
+      },
+      {
+        "path": "scripts/test_run_qa_eval.py",
+        "added": 194,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "other": 2,
+      "scripts": 2
+    },
+    "test_files": 0,
+    "config_files": 0,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 20,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 18,
+    "reducers_subtotal": 0,
+    "net_before_floor": 18,
+    "floor_min_score": 20,
+    "floor_applied": true,
+    "floor_reasons": [
+      "Large diff cannot score in the low band (floor applies)"
+    ],
+    "final_score": 20,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 20). Some risk factors are present but are manageable. Review the factors below before merging. A risk floor raised the score from 18 to 20 so trust-critical signals are not masked by reducers.",
+  "factors": [
+    {
+      "id": "diff_large",
+      "label": "Large diff",
+      "points": 12,
+      "detail": "total LOC churn=746 (threshold 400)"
+    },
+    {
+      "id": "context_intent_mismatch",
+      "label": "PR title/body keywords do not align with paths in the diff",
+      "points": 6,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 18,
+      "factors": [
+        "diff_large",
+        "context_intent_mismatch"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 45,
+      "confidence": 55,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "No sensitive domains changed",
+            "delta": 35
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "No changed files have nearby tests in diff",
+            "delta": -10
+          }
+        ],
+        "final_score": 55
+      }
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_align_pr_description",
+      "title": "Align PR title/description with the diff",
+      "priority": "medium",
+      "fix_type": "process",
+      "checklist": [
+        "Update the PR title or body so keywords match the areas actually changed, or narrow the diff to match the stated intent.",
+        "If the scope is intentional, explain why expected domains are not touched."
+      ]
+    },
+    {
+      "id": "pr_review_summary",
+      "title": "Make PR review scoped and evidence-backed",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Add a PR description summary: what changed and why.",
+        "Group changes by subsystem so reviewers can validate quickly."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "diff_large",
+      "actions": [
+        "Review commit-by-commit; consider feature flags for risky paths."
+      ]
+    },
+    {
+      "factor_id": "context_intent_mismatch",
+      "actions": [
+        "Update the PR title/body to match the diff, or adjust the diff to match the stated intent.",
+        "If intentional, explain the scope change explicitly for reviewers."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 20.0/100 (medium) · base `e1ed5c481a047e1c5b7c830966c187e91bfd12c0`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 20/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 1 pass · 0 missing · 1 fail · 1 not evaluated\n\n**Top risk drivers:**\n- Large diff (12 pts): total LOC churn=746 (threshold 400)\n- PR title/body keywords do not align with paths in the diff (6 pts): Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description.\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Align PR title and body with the actual diff (intent match)\n_…and 1 more in `pr_risk.md`_\n\n**Review routing:**\n- Focus primary review on `scripts/run_qa_eval.py` (majority of churn).\n- Confirm scope with author: PR text implies domains api, auth, rag but diff may differ.\n\n**Score math:** factors 18.0 − reducers 0.0 → 20.0 (floor 20 applied) · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 4,
+      "with_nearby_test_in_diff": 0,
+      "ratio": 0,
+      "detail": "No test files in diff; proximity of tests to changed code cannot be established from this diff alone."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "scripts/run_qa_eval.py",
+      "top_share": 0.7345844504021448,
+      "hhi": 0.6072709499816719,
+      "unique_prefixes": 4,
+      "detail": "Most churn (~73%) sits under `scripts/run_qa_eval.py`."
+    },
+    "intent": {
+      "title": "SCRUM-134: Q\u0026A eval runner (SessionAsk) + artifact logging",
+      "intent_strength": "strong",
+      "keywords_matched": [
+        "session",
+        "ask"
+      ],
+      "domains_expected": [
+        "auth",
+        "api",
+        "rag"
+      ],
+      "domains_in_diff": [
+        "other",
+        "scripts"
+      ],
+      "aligned": false,
+      "mismatch": true,
+      "detail": "Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 20/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Focus primary review on `scripts/run_qa_eval.py` (majority of churn).",
+        "Confirm scope with author: PR text implies domains api, auth, rag but diff may differ."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "process: PR title/body aligned with actual diff (intent match)",
+      "process: PR description with scoped, evidence-backed review plan"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge.",
+      "Risk floor applied so trust-critical changes are not masked by reducers.",
+      "Evidence FAIL [context_align_pr_description]: PR title/body keywords imply domains not present in diff: Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_align_pr_description",
+        "label": "Align PR title/description with the diff",
+        "status": "fail",
+        "source": "intent",
+        "rationale": "PR title/body keywords imply domains not present in diff: Title/body suggests certain areas (keywords) but corresponding paths may be missing from this diff — confirm scope or update the PR description."
+      },
+      {
+        "id": "pr_review_summary",
+        "label": "Make PR review scoped and evidence-backed",
+        "status": "pass",
+        "source": "intent",
+        "rationale": "PR title/body has strong keywords aligned with the diff."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 1,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 1,
+      "fail_count": 1
+    }
+  }
+}

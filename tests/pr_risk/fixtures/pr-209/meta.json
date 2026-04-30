@@ -1,0 +1,9 @@
+{
+  "pr_number": 209,
+  "merge_sha": "f9814d423cd835e9211a48cf01173b7261abd8ec",
+  "parent_sha": "af00644b33f3eb44e56ea709fafe25617ac0553d",
+  "base_ref": "main",
+  "pr_title": "SCRUM-212: collapse pending-row actions into one dropdown",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

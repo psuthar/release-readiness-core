@@ -1,0 +1,17 @@
+{
+  "report_version": "v2.8",
+  "score": 28,
+  "band": "medium",
+  "merge_recommendation": "WARN",
+  "required_validations": [
+    "ci: required status checks must pass before merge",
+    "test: targeted regression for path prefixes with several recent commits overlapping this diff",
+    "process: PR description with scoped, evidence-backed review plan"
+  ],
+  "top_risk_factors": [
+    "Large diff",
+    "Large frontend change",
+    "Diff overlaps a path prefix touched in multiple recent commits"
+  ],
+  "test_confidence": 85
+}

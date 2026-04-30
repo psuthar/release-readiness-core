@@ -1,0 +1,9 @@
+{
+  "pr_number": 216,
+  "merge_sha": "8b308170c7dc095f0bbe6867f074ad864c68d47a",
+  "parent_sha": "f65f8d88a5d5eac962958a8f0d020ae10dae62e5",
+  "base_ref": "main",
+  "pr_title": "SCRUM-223: scope decision-maker readiness row and add DM chip in stance tooltips",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

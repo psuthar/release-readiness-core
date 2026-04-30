@@ -1,0 +1,9 @@
+{
+  "pr_number": 182,
+  "merge_sha": "01c26b627d3426d461a6634fb77f60b48c8b517d",
+  "parent_sha": "67b9feb3f82b830ccb2839e741db6e2bc949d5c8",
+  "base_ref": "main",
+  "pr_title": "SCRUM-160: align participant topbar controls on one row",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

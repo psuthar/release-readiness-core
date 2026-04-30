@@ -1,0 +1,9 @@
+{
+  "pr_number": 204,
+  "merge_sha": "d298cd15e5c542d527437861bdb2401aea739b8c",
+  "parent_sha": "83bd86d986ebfd5577a46b353d876d108fae9985",
+  "base_ref": "main",
+  "pr_title": "SCRUM-203: expose Decision Maker readiness in stance responses",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

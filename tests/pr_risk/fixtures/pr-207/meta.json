@@ -1,0 +1,9 @@
+{
+  "pr_number": 207,
+  "merge_sha": "d1a3ed61d648db3da3126d0a7da206e5dbb4f465",
+  "parent_sha": "9cb636352c1bdcac7af702b998dd7e3a966cdbf5",
+  "base_ref": "main",
+  "pr_title": "SCRUM-206: end-to-end Decision Maker assignment + closeout coverage",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

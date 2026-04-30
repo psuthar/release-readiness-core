@@ -1,0 +1,337 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:17.182817Z",
+  "base_ref": "15eaa42cdef656edb3cbdadb5abe631aab1b7a45",
+  "signals": {
+    "base_ref": "15eaa42cdef656edb3cbdadb5abe631aab1b7a45",
+    "head_ref": "HEAD",
+    "file_count": 8,
+    "total_added": 556,
+    "total_deleted": 80,
+    "total_loc": 636,
+    "test_loc_ratio": 0.3757861635220126,
+    "files": [
+      {
+        "path": "web/src/components/OrchestrationRecCard.jsx",
+        "added": 7,
+        "deleted": 10
+      },
+      {
+        "path": "web/src/components/OrchestrationRecGroup.jsx",
+        "added": 56,
+        "deleted": 0
+      },
+      {
+        "path": "web/src/components/OrchestrationRecGroup.module.css",
+        "added": 73,
+        "deleted": 0
+      },
+      {
+        "path": "web/src/modes/CreatorMode.jsx",
+        "added": 105,
+        "deleted": 67
+      },
+      {
+        "path": "web/src/test/OrchestrationRecCard.test.jsx",
+        "added": 4,
+        "deleted": 3
+      },
+      {
+        "path": "web/src/test/OrchestrationRecGroup.test.jsx",
+        "added": 91,
+        "deleted": 0
+      },
+      {
+        "path": "web/src/test/orchestrationGrouping.test.js",
+        "added": 141,
+        "deleted": 0
+      },
+      {
+        "path": "web/src/utils/orchestrationGrouping.js",
+        "added": 79,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "orchestration": 1,
+      "tests": 3,
+      "web": 4
+    },
+    "test_domain_hits": {
+      "web": 3
+    },
+    "test_unit_domain_hits": {
+      "web": 3
+    },
+    "test_files": 3,
+    "unit_test_files": 3,
+    "config_files": 0,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 38,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 38,
+    "reducers_subtotal": 0,
+    "net_before_floor": 38,
+    "floor_min_score": 20,
+    "floor_applied": false,
+    "floor_reasons": [
+      "Large diff cannot score in the low band (floor applies)"
+    ],
+    "final_score": 38,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 38). Some risk factors are present but are manageable. Review the factors below before merging.",
+  "factors": [
+    {
+      "id": "diff_large",
+      "label": "Large diff",
+      "points": 12,
+      "detail": "total LOC churn=636 (threshold 400)"
+    },
+    {
+      "id": "domain_orchestration",
+      "label": "Creator orchestration/recommendation flow changed",
+      "points": 10,
+      "detail": "1 file(s)"
+    },
+    {
+      "id": "web_large",
+      "label": "Large frontend change",
+      "points": 12,
+      "detail": "estimated web LOC churn≈636 (threshold 400)"
+    },
+    {
+      "id": "context_hotspot_overlap",
+      "label": "Diff overlaps a path prefix touched in multiple recent commits",
+      "points": 4,
+      "detail": "Prefix touched in 34 of the last 50 sampled commits — sustained activity; extra regression care."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 38,
+      "factors": [
+        "diff_large",
+        "domain_orchestration",
+        "web_large",
+        "context_hotspot_overlap"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 0
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 75,
+      "confidence": 25,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "Sensitive domains changed",
+            "delta": -10
+          },
+          {
+            "reason": "Unit tests present in diff",
+            "delta": 20
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "Behavioral coverage depth unknown for sensitive domain changes",
+            "delta": -5
+          },
+          {
+            "reason": "No changed files have nearby tests in diff",
+            "delta": -10
+          }
+        ],
+        "final_score": 25
+      }
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "context_hotspot_regression_focus",
+      "title": "Extra regression focus on active path (recent commits)",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Prefix `web/src` is active in recent history; run targeted smoke for behavior touching this area.",
+        "Watch for unintended side effects in adjacent modules."
+      ]
+    },
+    {
+      "id": "context_improve_test_proximity",
+      "title": "Improve test proximity for changed code",
+      "priority": "supporting",
+      "fix_type": "test",
+      "checklist": [
+        "Add or reference tests in the same package or directory as changed production files.",
+        "If tests live elsewhere, link them in the PR description."
+      ]
+    },
+    {
+      "id": "pr_review_summary",
+      "title": "Make PR review scoped and evidence-backed",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Add a PR description summary: what changed and why.",
+        "Group changes by subsystem so reviewers can validate quickly."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "diff_large",
+      "actions": [
+        "Review commit-by-commit; consider feature flags for risky paths."
+      ]
+    },
+    {
+      "factor_id": "domain_orchestration",
+      "actions": [
+        "Validate creator orchestration flows (recommendation list/sync, draft approve/reject).",
+        "Verify orchestration remains human-in-the-loop (no autonomous send/post actions)."
+      ]
+    },
+    {
+      "factor_id": "web_large",
+      "actions": [
+        "Run `npm run build` and spot-check creator/participant UIs.",
+        "Cross-browser smoke if CSS/layout changed."
+      ]
+    },
+    {
+      "factor_id": "context_hotspot_overlap",
+      "actions": [
+        "Run focused regression on the overlapping prefix; several recent commits touched it, so regressions are likelier.",
+        "Scan related modules for unintended behavior changes."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 38.0/100 (medium) · base `15eaa42cdef656edb3cbdadb5abe631aab1b7a45`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 38/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 1 missing · 0 fail · 3 not evaluated\n\n**Top risk drivers:**\n- Large diff (12 pts): total LOC churn=636 (threshold 400)\n- Creator orchestration/recommendation flow changed (10 pts): 1 file(s)\n_…and 2 more in `pr_risk.md`_\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Run targeted regression for path prefixes with sustained recent commit activity\n_…and 2 more in `pr_risk.md`_\n\n**Review routing:**\n- Include reviewer familiar with creator orchestration recommendations and draft-approval flows.\n- Include frontend review for web/ UI and client behavior.\n_…and 2 more in `pr_risk.md`_\n\n**Score math:** factors 38.0 − reducers 0.0 → 38.0 · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 5,
+      "with_nearby_test_in_diff": 0,
+      "ratio": 0,
+      "detail": "Many changed production files have no test file in the same directory or an obvious sibling path in this diff."
+    },
+    "concentration": {
+      "mode": "focused",
+      "top_prefix": "web/src",
+      "top_share": 1,
+      "hhi": 1,
+      "unique_prefixes": 1,
+      "detail": "Most churn (~100%) sits under `web/src`."
+    },
+    "hotspots": [
+      {
+        "prefix": "web/src",
+        "recent_hits": 34,
+        "detail": "Prefix touched in 34 of the last 50 sampled commits — sustained activity; extra regression care."
+      }
+    ],
+    "intent": {
+      "title": "SCRUM-193: group recommendation cards by type with collapsible headers",
+      "intent_strength": "unknown",
+      "domains_in_diff": [
+        "orchestration",
+        "web"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "No strong intent keywords matched; alignment not scored."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 38/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Include reviewer familiar with creator orchestration recommendations and draft-approval flows.",
+        "Include frontend review for web/ UI and client behavior.",
+        "Focus primary review on `web/src` (majority of churn).",
+        "Extra reviewer attention on `web/src` (several recent commits touched this area)."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "test: targeted regression for path prefixes with several recent commits overlapping this diff",
+      "test: tests co-located or explicitly linked for changed code",
+      "process: PR description with scoped, evidence-backed review plan"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "context_hotspot_regression_focus",
+        "label": "Extra regression focus on active path (recent commits)",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "No validation note detected; targeted regression coverage cannot be confirmed from diff alone — requires human review."
+      },
+      {
+        "id": "context_improve_test_proximity",
+        "label": "Improve test proximity for changed code",
+        "status": "missing",
+        "source": "proximity",
+        "rationale": "Structural alignment is \"distant\" with no test coverage evidence for this diff."
+      },
+      {
+        "id": "pr_review_summary",
+        "label": "Make PR review scoped and evidence-backed",
+        "status": "not_evaluated",
+        "source": "intent",
+        "rationale": "PR description quality could not be confirmed from available signals — requires human review."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 1,
+      "unknown_count": 0,
+      "not_evaluated_count": 3,
+      "fail_count": 0
+    }
+  }
+}

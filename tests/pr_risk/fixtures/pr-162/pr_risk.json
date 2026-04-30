@@ -1,0 +1,273 @@
+{
+  "version": 2,
+  "version_minor": 8,
+  "report_version": "v2.8",
+  "generated_at": "2026-04-30T21:19:32.893815Z",
+  "base_ref": "d315d05e4b451b1293e1dda136c80e6d2466878f",
+  "signals": {
+    "base_ref": "d315d05e4b451b1293e1dda136c80e6d2466878f",
+    "head_ref": "HEAD",
+    "file_count": 7,
+    "total_added": 262,
+    "total_deleted": 22,
+    "total_loc": 284,
+    "files": [
+      {
+        "path": ".cursor/rules/full-auto-github-polling.mdc",
+        "added": 32,
+        "deleted": 16
+      },
+      {
+        "path": ".github/workflows/release-readiness.yml",
+        "added": 1,
+        "deleted": 0
+      },
+      {
+        "path": "CLAUDE.md",
+        "added": 1,
+        "deleted": 1
+      },
+      {
+        "path": "docs/agent/workflow-full-auto.md",
+        "added": 22,
+        "deleted": 5
+      },
+      {
+        "path": "eval/qa/README.md",
+        "added": 123,
+        "deleted": 0
+      },
+      {
+        "path": "eval/qa/pilot_baseline.json",
+        "added": 23,
+        "deleted": 0
+      },
+      {
+        "path": "scripts/test_qa_eval_harness_smoke.py",
+        "added": 60,
+        "deleted": 0
+      }
+    ],
+    "domain_hits": {
+      "other": 5,
+      "scripts": 1,
+      "workflows": 1
+    },
+    "test_files": 0,
+    "config_files": 1,
+    "migration_files": 0,
+    "repo_root": "."
+  },
+  "risk_score": 20,
+  "risk_band": "medium",
+  "score_math": {
+    "factors_subtotal": 16,
+    "reducers_subtotal": 0,
+    "net_before_floor": 16,
+    "floor_min_score": 20,
+    "floor_applied": true,
+    "floor_reasons": [
+      "CI workflow changes cannot score in the low band (floor applies)"
+    ],
+    "final_score": 20,
+    "final_band": "medium"
+  },
+  "interpretation": "Medium risk (score 20). Some risk factors are present but are manageable. Review the factors below before merging. A risk floor raised the score from 16 to 20 so trust-critical signals are not masked by reducers.",
+  "factors": [
+    {
+      "id": "ci_workflows",
+      "label": "CI/GitHub Actions workflows changed",
+      "points": 12,
+      "detail": "1 workflow file(s)"
+    },
+    {
+      "id": "context_hotspot_overlap",
+      "label": "Diff overlaps a path prefix touched in multiple recent commits",
+      "points": 4,
+      "detail": "Prefix touched in 5 of the last 50 sampled commits — sustained activity; extra regression care."
+    }
+  ],
+  "categories": [
+    {
+      "key": "code",
+      "label": "Code changes",
+      "risk_score": 4,
+      "factors": [
+        "context_hotspot_overlap"
+      ]
+    },
+    {
+      "key": "workflow",
+      "label": "Workflow / deployment changes",
+      "risk_score": 12,
+      "factors": [
+        "ci_workflows"
+      ]
+    },
+    {
+      "key": "test_confidence",
+      "label": "Test confidence",
+      "risk_score": 45,
+      "confidence": 55,
+      "breakdown": {
+        "base_score": 50,
+        "adjustments": [
+          {
+            "reason": "No sensitive domains changed",
+            "delta": 35
+          },
+          {
+            "reason": "Tests structurally distant from changed code",
+            "delta": -15
+          },
+          {
+            "reason": "Behavioral coverage depth unknown",
+            "delta": -5
+          },
+          {
+            "reason": "No changed files have nearby tests in diff",
+            "delta": -10
+          }
+        ],
+        "final_score": 55
+      }
+    }
+  ],
+  "required_actions": [
+    {
+      "id": "workflow_config_validation",
+      "title": "Validate workflow / deploy config changes",
+      "priority": "medium",
+      "fix_type": "config",
+      "checklist": [
+        "Confirm required checks and env parity before merge.",
+        "If CI fails, identify whether it is test flakiness vs behavior change and update evidence accordingly."
+      ]
+    },
+    {
+      "id": "context_hotspot_regression_focus",
+      "title": "Extra regression focus on active path (recent commits)",
+      "priority": "supporting",
+      "fix_type": "process",
+      "checklist": [
+        "Prefix `.github/workflows` is active in recent history; run targeted smoke for behavior touching this area.",
+        "Watch for unintended side effects in adjacent modules."
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "factor_id": "ci_workflows",
+      "actions": [
+        "Validate workflow YAML in a fork or `act` where possible.",
+        "Confirm secrets and required checks still match branch protection."
+      ]
+    },
+    {
+      "factor_id": "context_hotspot_overlap",
+      "actions": [
+        "Run focused regression on the overlapping prefix; several recent commits touched it, so regressions are likelier.",
+        "Scan related modules for unintended behavior changes."
+      ]
+    }
+  ],
+  "integrations": {
+    "pr_comment_markdown": "## PR Risk (v2.8)\n\n**Score:** 20.0/100 (medium) · base `d315d05e4b451b1293e1dda136c80e6d2466878f`\n\n**PR risk assessment:** **WARN** — Risk band is medium (score 20/100); merge only after completing checklist items and review.\n\n_This is a PR-risk score. Normal merge prerequisites (CI, code review, targeted testing) still apply regardless of this assessment._\n\n**Evidence:** 0 pass · 0 missing · 0 fail · 3 not evaluated\n\n**Top risk drivers:**\n- CI/GitHub Actions workflows changed (12 pts): 1 workflow file(s)\n- Diff overlaps a path prefix touched in multiple recent commits (4 pts): Prefix touched in 5 of the last 50 sampled commits — sustained activity; extra regression care.\n\n**Top required validations:**\n1. Required status checks must pass before merge\n2. Validate workflow, deploy, or go.mod changes against required checks\n_…and 1 more in `pr_risk.md`_\n\n**Review routing:**\n- Include CI/infra review for workflow or deploy config changes.\n- Extra reviewer attention on `.github/workflows` (several recent commits touched this area).\n\n**Score math:** factors 16.0 − reducers 0.0 → 20.0 (floor 20 applied) · medium\n\n_Full checklist and analysis in artifact `pr_risk.md`._\n"
+  },
+  "context_insights": {
+    "proximity": {
+      "mode": "distant",
+      "structural_alignment": "distant",
+      "behavioral_coverage": "unknown",
+      "non_test_files": 7,
+      "with_nearby_test_in_diff": 0,
+      "ratio": 0,
+      "detail": "No test files in diff; proximity of tests to changed code cannot be established from this diff alone."
+    },
+    "concentration": {
+      "mode": "balanced",
+      "top_prefix": "eval/qa",
+      "top_share": 0.5140845070422535,
+      "hhi": 0.3465830192422138,
+      "unique_prefixes": 6,
+      "detail": "Churn is spread across several areas in a typical way."
+    },
+    "hotspots": [
+      {
+        "prefix": ".github/workflows",
+        "recent_hits": 5,
+        "detail": "Prefix touched in 5 of the last 50 sampled commits — sustained activity; extra regression care."
+      }
+    ],
+    "intent": {
+      "title": "SCRUM-137: Q\u0026A eval harness docs + FULL_AUTO gate polling policy",
+      "intent_strength": "unknown",
+      "domains_in_diff": [
+        "other",
+        "scripts",
+        "workflows"
+      ],
+      "aligned": true,
+      "mismatch": false,
+      "detail": "No strong intent keywords matched; alignment not scored."
+    }
+  },
+  "enforcement": {
+    "merge_recommendation": "warn",
+    "rationale": "Risk band is medium (score 20/100); merge only after completing checklist items and review.",
+    "recommended_review": {
+      "strategy": "Use a checklist-driven review: walk factors and required actions, then approve when evidence matches.",
+      "routing_hints": [
+        "Include CI/infra review for workflow or deploy config changes.",
+        "Extra reviewer attention on `.github/workflows` (several recent commits touched this area)."
+      ]
+    },
+    "required_validations": [
+      "ci: required status checks must pass before merge",
+      "config: workflow / deploy / go.mod changes validated against required checks",
+      "test: targeted regression for path prefixes with several recent commits overlapping this diff"
+    ],
+    "review_requirements": [
+      "At least one approving review on the changed code."
+    ],
+    "blocking_reasons": [
+      "Elevated review: risk band \"medium\" — complete listed validations before merge.",
+      "Risk floor applied so trust-critical changes are not masked by reducers."
+    ],
+    "reasons": [
+      "Deterministic policy: merge recommendation derives from risk band, git availability, and tests_missing in low band.",
+      "Required validations are distinct from mitigations: validations are merge gates; mitigations are factor-specific guidance.",
+      "Required actions prioritized as high / medium / supporting by action ID and risk class."
+    ],
+    "evidence_status": [
+      {
+        "id": "ci_baseline",
+        "label": "CI: required status checks",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "CI pass/fail cannot be confirmed from diff signals alone; requires human/pipeline review."
+      },
+      {
+        "id": "workflow_config_validation",
+        "label": "Validate workflow / deploy config changes",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "No validation note in commit; CI result not confirmable from repo-local signals — requires human review."
+      },
+      {
+        "id": "context_hotspot_regression_focus",
+        "label": "Extra regression focus on active path (recent commits)",
+        "status": "not_evaluated",
+        "source": "git_signals",
+        "rationale": "No validation note detected; targeted regression coverage cannot be confirmed from diff alone — requires human review."
+      }
+    ],
+    "evidence_summary": {
+      "pass_count": 0,
+      "missing_count": 0,
+      "unknown_count": 0,
+      "not_evaluated_count": 3,
+      "fail_count": 0
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 217,
+  "merge_sha": "89bad3783c950933492ecdc28a150542c79c78dc",
+  "parent_sha": "8b308170c7dc095f0bbe6867f074ad864c68d47a",
+  "base_ref": "main",
+  "pr_title": "SCRUM-224: source repo-root .env in run-e2e-local.sh and improve admin pre-flight error",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

@@ -1,0 +1,9 @@
+{
+  "pr_number": 143,
+  "merge_sha": "eba5fb9bc739eb5f27e1d1a8420cf3f4f5e5a2d1",
+  "parent_sha": "ffb8736883befb750ce7b6c817e4e28073ca396f",
+  "base_ref": "main",
+  "pr_title": "SCRUM-118: Remove blur-submit from rationale field; add explicit save action",
+  "repo_slug": "psuthar/talkback",
+  "schema_version": "1.0"
+}

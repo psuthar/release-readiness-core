@@ -1,49 +1,30 @@
-"""Required actions (port of actions.go)."""
+"""Required actions — config-driven gate registry (SCRUM-241 / Phase 3 of SCRUM-238).
+
+Loops over ``runtime.gates`` evaluating each gate's ``applies_when`` predicates
+against the current factor set, risk band, signals, and context insights. The
+five hardcoded gate emit-blocks (auth, rag, processing, orchestration,
+migrations) and the generic gates (ci_fetch_depth_zero, pr_review_summary,
+workflow_config_validation, add_tests_or_evidence, context_*) all live in the
+config now. The only Python branching that remains is the gate evaluator.
+"""
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from release_readiness_core.pr_risk._internal import factor_ids, ok_bool
-from release_readiness_core.pr_risk.actions_priority import (
-    priority_for_action_id,
-    sort_required_actions,
-)
+from release_readiness_core.pr_risk._internal import factor_ids
+from release_readiness_core.pr_risk.actions_priority import sort_required_actions
 from release_readiness_core.pr_risk.context.types import ContextInsights
 from release_readiness_core.pr_risk.types import (
-    DOMAIN_API,
-    DOMAIN_AUTH,
-    DOMAIN_DATABASE,
-    DOMAIN_MIGRATIONS,
-    DOMAIN_ORCHESTRATION,
-    DOMAIN_PROCESSING,
-    DOMAIN_RAG,
     RequiredAction,
     RiskFactor,
     RiskReducer,
     Signals,
 )
 
-
-def _has_sensitive_domain_hit(s: Signals) -> bool:
-    """Sensitive domains: auth, rag, processing, orchestration, migrations, api, database."""
-    return (
-        s.domain_hits.get(DOMAIN_AUTH, 0) > 0
-        or s.domain_hits.get(DOMAIN_RAG, 0) > 0
-        or s.domain_hits.get(DOMAIN_PROCESSING, 0) > 0
-        or s.domain_hits.get(DOMAIN_ORCHESTRATION, 0) > 0
-        or s.domain_hits.get(DOMAIN_MIGRATIONS, 0) > 0
-        or s.domain_hits.get(DOMAIN_API, 0) > 0
-        or s.domain_hits.get(DOMAIN_DATABASE, 0) > 0
-    )
-
-
-def _evidence_level(s: Signals, domain: str) -> str:
-    if s.test_e2e_domain_hits.get(domain, 0) > 0:
-        return "e2e"
-    if s.test_unit_domain_hits.get(domain, 0) > 0:
-        return "unit"
-    return "none"
+if TYPE_CHECKING:
+    from release_readiness_core.pr_risk._config import ChecklistItem, Gate, GateVariant
+    from release_readiness_core.pr_risk._runtime import PRRiskRuntime
 
 
 def compute_required_actions(
@@ -54,227 +35,209 @@ def compute_required_actions(
     risk_band: str,
     insights: Optional[ContextInsights],
     *,
-    runtime=None,
+    runtime: Optional["PRRiskRuntime"] = None,
 ) -> List[RequiredAction]:
-    """Build the deterministic list of pre-merge required actions, sorted by priority.
+    """Build the deterministic list of pre-merge required actions, sorted by priority."""
+    del reducers, risk_score  # Reserved for future predicates; not used today.
 
-    ``runtime`` is accepted for forward-compat with Phase 3 (SCRUM-241), where
-    the gate registry will be config-driven. Phase 2 ignores it.
-    """
-    del runtime  # Phase 3 will use this.
+    runtime = runtime or _default_runtime()
+
     has = factor_ids(factors)
-    has_validation_note = s.validation_note_found
-    gate_critical = risk_band == "critical" or risk_score >= 70
-    gate_high = risk_band == "high" or risk_score >= 45
-
     out: List[RequiredAction] = []
     seen: set = set()
 
-    def add(a: RequiredAction) -> None:
-        if a.id in seen:
-            return
-        if a.priority == "":
-            a.priority = priority_for_action_id(a.id)
-        seen.add(a.id)
-        out.append(a)
-
-    if ok_bool(has, "git_unavailable"):
-        add(RequiredAction(
-            id="ci_fetch_depth_zero",
-            title="Ensure git history is available for diff",
-            fix_type="infra",
-            applies_when="git diff base...HEAD was unavailable",
-            checklist=[
-                "Confirm CI uses `fetch-depth: 0` (or an equivalent full-history checkout).",
-                "Re-run PR risk scoring after the checkout depth fix.",
-            ],
-        ))
-
-    if ok_bool(has, "diff_large") or ok_bool(has, "diff_very_large") or ok_bool(has, "many_files"):
-        add(RequiredAction(
-            id="pr_review_summary",
-            title="Make PR review scoped and evidence-backed",
-            fix_type="process",
-            checklist=[
-                "Add a PR description summary: what changed and why.",
-                "Group changes by subsystem so reviewers can validate quickly.",
-            ],
-        ))
-
-    if ok_bool(has, "ci_workflows") or ok_bool(has, "deploy_config") or ok_bool(has, "go_mod_deps"):
-        msg = "Confirm required checks and env parity before merge."
-        if has_validation_note:
-            msg = "Validation note is present; confirm required checks and env parity before merge."
-        add(RequiredAction(
-            id="workflow_config_validation",
-            title="Validate workflow / deploy config changes",
-            fix_type="config",
-            checklist=[
-                msg,
-                "If CI fails, identify whether it is test flakiness vs behavior change and update evidence accordingly.",
-            ],
-        ))
-
-    if gate_critical or gate_high:
-        if ok_bool(has, "domain_auth"):
-            level = _evidence_level(s, DOMAIN_AUTH)
-            check = [
-                "Ensure auth E2E coverage is green for the affected flow(s).",
-                "Spot-check cookie/session behavior changes in staging-like conditions (SameSite, HTTPS).",
-            ]
-            if level == "none":
-                check[0] = "Run auth/session E2E flows before merge (login, invite, participant)."
-            elif level == "unit":
-                check[0] = "Confirm auth unit tests pass; run auth E2E smoke for login/invite/participant before merge."
-            add(RequiredAction(
-                id="auth_e2e_gate",
-                title="Validate auth/session flows (login, invite, participant)",
-                fix_type="test",
-                applies_when="auth/session/invite domain changed",
-                checklist=check,
-            ))
-
-        if ok_bool(has, "domain_rag"):
-            level = _evidence_level(s, DOMAIN_RAG)
-            checklist = [
-                "Run `qa_rag`-targeted E2E smoke and confirm citations attach to answers.",
-                "If relevant, re-index or verify embedding job health post-deploy.",
-            ]
-            if level == "none":
-                checklist[0] = "Run Q&A with citations E2E before merge (session ask + citations verification)."
-            elif level == "unit":
-                checklist[0] = "Confirm unit-level RAG changes pass; run Q&A-with-citations E2E smoke before merge."
-            add(RequiredAction(
-                id="rag_qna_citations_gate",
-                title="Validate Q&A with citations for decision-grade answers",
-                fix_type="test",
-                applies_when="RAG / Q&A pipelines changed",
-                checklist=checklist,
-            ))
-
-        if ok_bool(has, "domain_processing"):
-            level = _evidence_level(s, DOMAIN_PROCESSING)
-            checklist = [
-                "Run a materials upload + processing smoke on a representative file.",
-                "Confirm transcript/job worker logs look healthy (no silent failures).",
-            ]
-            if level == "none":
-                checklist[0] = "Run materials upload + processing smoke before merge (representative file)."
-            elif level == "unit":
-                checklist[0] = "Confirm processing unit tests pass; run processing smoke before merge."
-            add(RequiredAction(
-                id="materials_processing_gate",
-                title="Validate materials upload + processing pipeline",
-                fix_type="process",
-                applies_when="processing/transcription pipeline changed",
-                checklist=checklist,
-            ))
-
-        if ok_bool(has, "domain_orchestration"):
-            level = _evidence_level(s, DOMAIN_ORCHESTRATION)
-            checklist = [
-                "Run creator orchestration recommendation flow checks (list/sync + approve/reject draft paths).",
-                "Confirm no autonomous send/post behavior is introduced in orchestration paths.",
-            ]
-            if level == "none":
-                checklist[0] = "Run orchestration smoke/E2E before merge (recommendations panel + draft approve/reject)."
-            elif level == "unit":
-                checklist[0] = "Confirm orchestration unit/integration tests pass; run creator orchestration smoke before merge."
-            add(RequiredAction(
-                id="orchestration_creator_gate",
-                title="Validate creator orchestration recommendation flows",
-                fix_type="test",
-                applies_when="orchestration recommendation/review paths changed",
-                checklist=checklist,
-            ))
-
-        if ok_bool(has, "domain_migrations"):
-            level = _evidence_level(s, DOMAIN_MIGRATIONS)
-            checklist = [
-                "Run migrations with validation evidence and confirm expected schema/data behavior.",
-                "Verify rollback plan (or migration reversal strategy) is documented and executable.",
-            ]
-            if level == "e2e":
-                checklist[0] = "Ensure migration validation tests/evidence are part of CI and are green before merge."
-            elif level == "unit":
-                checklist[0] = "Confirm unit coverage exists for migrations; run migration validation smoke before merge."
-            add(RequiredAction(
-                id="migrations_validation_gate",
-                title="Validate database migrations before merge",
-                fix_type="db",
-                applies_when="migration files changed",
-                checklist=checklist,
-            ))
-
-        if ok_bool(has, "tests_missing"):
-            add(RequiredAction(
-                id="add_tests_or_evidence",
-                title="Add/update tests (or record evidence) before merge",
-                fix_type="test",
-                applies_when="sensitive code changed without any test file changes in this diff",
-                checklist=[
-                    "Add or update unit/integration tests for the changed packages.",
-                    "Re-run the project's test suite and ensure E2E smoke covers the sensitive area(s).",
-                ],
-            ))
-
-    # Medium-band tests_missing reminder (only if not already gated under high).
-    if (not gate_high) and ok_bool(has, "tests_missing"):
-        add(RequiredAction(
-            id="add_tests_or_evidence",
-            title="Add/update tests before merge",
-            fix_type="test",
-            checklist=[
-                "Add or update tests for changed code paths and confirm the project's test suite passes.",
-            ],
-        ))
-
-    if insights is not None:
-        if insights.intent.mismatch:
-            add(RequiredAction(
-                id="context_align_pr_description",
-                title="Align PR title/description with the diff",
-                fix_type="process",
-                checklist=[
-                    "Update the PR title or body so keywords match the areas actually changed, "
-                    "or narrow the diff to match the stated intent.",
-                    "If the scope is intentional, explain why expected domains are not touched.",
-                ],
-            ))
-        if insights.concentration.mode == "scattered" and s.file_count >= 10:
-            add(RequiredAction(
-                id="context_scattered_review_plan",
-                title="Structure review for a scattered change",
-                fix_type="process",
-                checklist=[
-                    "Add a short map of files grouped by subsystem (or commit) to speed review.",
-                    "Call out cross-cutting concerns explicitly (auth, DB, RAG, web).",
-                ],
-            ))
-        if (
-            insights.proximity.mode == "distant"
-            and insights.proximity.non_test_files >= 2
-            and _has_sensitive_domain_hit(s)
-        ):
-            add(RequiredAction(
-                id="context_improve_test_proximity",
-                title="Improve test proximity for changed code",
-                fix_type="test",
-                checklist=[
-                    "Add or reference tests in the same package or directory as changed production files.",
-                    "If tests live elsewhere, link them in the PR description.",
-                ],
-            ))
-        if len(insights.hotspots) > 0:
-            p = insights.hotspots[0].prefix
-            add(RequiredAction(
-                id="context_hotspot_regression_focus",
-                title="Extra regression focus on active path (recent commits)",
-                fix_type="process",
-                checklist=[
-                    f"Prefix `{p}` is active in recent history; run targeted smoke for behavior touching this area.",
-                    "Watch for unintended side effects in adjacent modules.",
-                ],
-            ))
+    for gate in runtime.gates:
+        if gate.id in seen:
+            continue
+        if not _evaluate_applies_when(gate.applies_when, has, risk_band, s, insights):
+            continue
+        action = _materialize_action(gate, s, insights, risk_band)
+        seen.add(gate.id)
+        out.append(action)
 
     return sort_required_actions(out)
+
+
+# ---------------------------------------------------------------------------
+# applies_when evaluator (closed predicate set).
+
+def _evaluate_applies_when(
+    predicates: List[Dict[str, Any]],
+    has: set,
+    risk_band: str,
+    s: Signals,
+    insights: Optional[ContextInsights],
+) -> bool:
+    """Return True iff ALL predicates in ``predicates`` match (AND semantics).
+
+    Empty predicate list → True (gate always fires; only the dedup ``seen``
+    check would prevent emission). Phase 1 / 3 closed set: ``factor_id``
+    (str|list), ``not_factor_id`` (str|list), ``risk_band``, ``not_risk_band``,
+    ``domain_factor``, ``intent_mismatch``, ``concentration_mode``,
+    ``hotspots_present``, ``proximity_distant_with_sensitive``.
+    """
+    for pred in predicates:
+        if not _evaluate_one(pred, has, risk_band, s, insights):
+            return False
+    return True
+
+
+def _evaluate_one(
+    pred: Dict[str, Any],
+    has: set,
+    risk_band: str,
+    s: Signals,
+    insights: Optional[ContextInsights],
+) -> bool:
+    if "factor_id" in pred:
+        return _factor_match(has, pred["factor_id"])
+    if "not_factor_id" in pred:
+        return not _factor_match(has, pred["not_factor_id"])
+    if "risk_band" in pred:
+        return risk_band in pred["risk_band"]
+    if "not_risk_band" in pred:
+        return risk_band not in pred["not_risk_band"]
+    if "domain_factor" in pred:
+        # Alias: matches when factor `domain_<value>` is present.
+        return f"domain_{pred['domain_factor']}" in has
+    if "intent_mismatch" in pred:
+        want = bool(pred["intent_mismatch"])
+        got = bool(insights and insights.intent.mismatch)
+        return got is want
+    if "concentration_mode" in pred:
+        if insights is None:
+            return False
+        if insights.concentration.mode != pred["concentration_mode"]:
+            return False
+        min_files = int(pred.get("min_file_count", 0))
+        return s.file_count >= min_files
+    if "hotspots_present" in pred:
+        want = bool(pred["hotspots_present"])
+        got = bool(insights and len(insights.hotspots) > 0)
+        return got is want
+    if "proximity_distant_with_sensitive" in pred:
+        want = bool(pred["proximity_distant_with_sensitive"])
+        if insights is None:
+            return not want
+        if insights.proximity.mode != "distant":
+            return not want
+        min_files = int(pred.get("min_non_test_files", 0))
+        if insights.proximity.non_test_files < min_files:
+            return not want
+        domains = pred.get("domains", []) or []
+        if any(s.domain_hits.get(d, 0) > 0 for d in domains):
+            return want
+        return not want
+    # Loader-validated input should never reach here.
+    return False
+
+
+def _factor_match(has: set, val: Any) -> bool:
+    if isinstance(val, list):
+        return any(f in has for f in val)
+    return val in has
+
+
+# ---------------------------------------------------------------------------
+# Variant resolution + checklist materialization.
+
+def _materialize_action(
+    gate: "Gate",
+    s: Signals,
+    insights: Optional[ContextInsights],
+    risk_band: str,
+) -> RequiredAction:
+    variant = _select_variant(gate, risk_band)
+    title = variant.title if variant and variant.title is not None else gate.title
+    if variant and variant.applies_when_extra is not None:
+        applies_when_extra = variant.applies_when_extra
+    else:
+        applies_when_extra = gate.applies_when_extra
+    checklist_items = (
+        variant.checklist if variant and variant.checklist is not None else gate.checklist
+    )
+
+    domain = _domain_for_gate(gate)
+    evidence_level = _evidence_level(s, domain) if domain else "none"
+
+    checklist_strs = [
+        _materialize_text(item, s, evidence_level, insights)
+        for item in checklist_items
+    ]
+
+    return RequiredAction(
+        id=gate.id,
+        title=title,
+        priority=gate.priority,
+        fix_type=gate.fix_type,
+        applies_when=applies_when_extra,
+        checklist=checklist_strs,
+    )
+
+
+def _select_variant(gate: "Gate", risk_band: str) -> Optional["GateVariant"]:
+    """Return the first variant whose ``when`` matches the given risk band."""
+    for v in gate.variants:
+        when = v.when or {}
+        if "risk_band" in when and risk_band not in when["risk_band"]:
+            continue
+        if "not_risk_band" in when and risk_band in when["not_risk_band"]:
+            continue
+        return v
+    return None
+
+
+def _materialize_text(
+    item: "ChecklistItem",
+    s: Signals,
+    evidence_level: str,
+    insights: Optional[ContextInsights],
+) -> str:
+    text = item.text
+    if evidence_level in item.by_evidence_level:
+        text = item.by_evidence_level[evidence_level]
+    if s.validation_note_found and item.by_validation_note is not None:
+        text = item.by_validation_note
+    if "{prefix}" in text and insights and insights.hotspots:
+        text = text.replace("{prefix}", insights.hotspots[0].prefix)
+    return text
+
+
+def _domain_for_gate(gate: "Gate") -> Optional[str]:
+    """Infer the domain a gate is scoped to, for ``_evidence_level`` lookups.
+
+    Order: explicit ``evidence.args.domain`` wins; otherwise look for a
+    ``factor_id: domain_<X>`` predicate. Returns ``None`` when the gate isn't
+    domain-scoped (generic gates like ``ci_fetch_depth_zero``).
+    """
+    if gate.evidence and gate.evidence.args:
+        d = gate.evidence.args.get("domain")
+        if isinstance(d, str) and d:
+            return d
+    for pred in gate.applies_when:
+        fid = pred.get("factor_id")
+        if isinstance(fid, str) and fid.startswith("domain_"):
+            return fid[len("domain_"):]
+    return None
+
+
+def _evidence_level(s: Signals, domain: str) -> str:
+    if s.test_e2e_domain_hits.get(domain, 0) > 0:
+        return "e2e"
+    if s.test_unit_domain_hits.get(domain, 0) > 0:
+        return "unit"
+    return "none"
+
+
+# ---------------------------------------------------------------------------
+
+def _default_runtime():
+    """Return a memoized bundled-default ``PRRiskRuntime``.
+
+    Threaded as the default for callers that don't pass an explicit runtime.
+    Imported lazily to avoid a circular import with ``classify.py`` /
+    ``_runtime.py``.
+    """
+    from release_readiness_core.pr_risk.classify import _default_runtime as _rt
+
+    return _rt()

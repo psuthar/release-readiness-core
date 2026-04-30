@@ -1,37 +1,37 @@
-"""Required validation lines (port of validations.go)."""
+"""Required validation lines — config-driven (SCRUM-241 / Phase 3 of SCRUM-238).
+
+The hardcoded ``_VALIDATION_FOR_ACTION`` map is gone; validation lines come
+from ``runtime.gates[i].validation_line`` now. This module shrinks to just the
+deduplication + ordering logic plus the CI-baseline / validation-note pair.
+"""
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, TYPE_CHECKING
 
 from release_readiness_core.pr_risk.types import RequiredAction, Signals
 
-
-_VALIDATION_FOR_ACTION = {
-    "ci_fetch_depth_zero": "ci: full git history available for diff (fetch-depth: 0 or equivalent)",
-    "pr_review_summary": "process: PR description with scoped, evidence-backed review plan",
-    "workflow_config_validation": "config: workflow / deploy / go.mod changes validated against required checks",
-    "auth_e2e_gate": "test: auth/session/invite flows exercised (E2E or equivalent evidence)",
-    "rag_qna_citations_gate": "test: Q&A with citations validated for RAG-affecting changes",
-    "materials_processing_gate": "test: materials upload + processing smoke for pipeline changes",
-    "migrations_validation_gate": "db: migrations validated with rollback/reversal plan documented",
-    "add_tests_or_evidence": "test: tests or recorded evidence for sensitive paths",
-    "context_align_pr_description": "process: PR title/body aligned with actual diff (intent match)",
-    "context_scattered_review_plan": "process: structured review map for scattered multi-area change",
-    "context_improve_test_proximity": "test: tests co-located or explicitly linked for changed code",
-    "context_hotspot_regression_focus": (
-        "test: targeted regression for path prefixes with several recent commits "
-        "overlapping this diff"
-    ),
-}
+if TYPE_CHECKING:
+    from release_readiness_core.pr_risk._runtime import PRRiskRuntime
 
 
-def validation_for_action(action_id: str) -> Optional[str]:
-    return _VALIDATION_FOR_ACTION.get(action_id)
+def validation_for_action(action_id: str, *, runtime=None) -> Optional[str]:
+    """Return the configured ``validation_line`` for a gate id, or ``None``."""
+    runtime = runtime or _default_runtime()
+    for g in runtime.gates:
+        if g.id == action_id:
+            return g.validation_line or None
+    return None
 
 
-def compute_required_validations(s: Signals, actions: List[RequiredAction]) -> List[str]:
+def compute_required_validations(
+    s: Signals,
+    actions: List[RequiredAction],
+    *,
+    runtime: Optional["PRRiskRuntime"] = None,
+) -> List[str]:
     """Build the deterministic ordered list of validation lines."""
+    runtime = runtime or _default_runtime()
     seen: set = set()
     out: List[str] = []
 
@@ -49,12 +49,19 @@ def compute_required_validations(s: Signals, actions: List[RequiredAction]) -> L
     else:
         add("ci: restore reliable git diff before merge (see git error in report)")
 
+    val_map = {g.id: g.validation_line for g in runtime.gates if g.validation_line}
     for a in actions:
-        v = validation_for_action(a.id)
-        if v:
-            add(v)
+        line = val_map.get(a.id)
+        if line:
+            add(line)
 
     if s.validation_note_found:
         add("process: validation note present in commit — confirm it matches what was run")
 
     return out
+
+
+def _default_runtime():
+    from release_readiness_core.pr_risk.classify import _default_runtime as _rt
+
+    return _rt()

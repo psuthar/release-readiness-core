@@ -35,12 +35,25 @@ from release_readiness_core.pr_risk.types import FileChange, Signals, default_we
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+CORPUS_CONFIG_PATH = FIXTURES_DIR / "pr-risk-corpus-config.yaml"
 
 
 def _discover() -> List[Path]:
     if not FIXTURES_DIR.exists():
         return []
     return sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir() and (p / "pr_risk.json").is_file())
+
+
+@pytest.fixture(scope="module")
+def corpus_runtime():
+    """Phase 2 (SCRUM-240): explicitly load the corpus parity-fixture YAML
+    instead of relying on the bundled default. The two are equal by
+    construction (test_corpus_config_equivalence guards that), but threading a
+    YAML-loaded runtime through ``score(...)`` is what proves the Phase 2
+    classifier wiring actually consumes config."""
+    from release_readiness_core.pr_risk._runtime import PRRiskRuntime
+
+    return PRRiskRuntime.from_config(CORPUS_CONFIG_PATH)
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +188,7 @@ def _close(a: Any, b: Any, rel_tol: float = 1e-9, abs_tol: float = 1e-9) -> bool
 # Tests.
 
 @pytest.mark.parametrize("fixture_dir", _discover(), ids=lambda p: p.name)
-def test_score_band_math_parity(fixture_dir: Path) -> None:
+def test_score_band_math_parity(fixture_dir: Path, corpus_runtime) -> None:
     """final_score, final_band, score_math fields match captured Go output."""
     pr_risk = json.loads((fixture_dir / "pr_risk.json").read_text())
     insights = _insights_from_dict(pr_risk.get("context_insights") or {})
@@ -185,7 +198,7 @@ def test_score_band_math_parity(fixture_dir: Path) -> None:
     from release_readiness_core.pr_risk.score import score
 
     with _patched_context(insights, ctx_factors):
-        r = score(sig, default_weights())
+        r = score(sig, default_weights(), runtime=corpus_runtime)
 
     assert r.risk_band == pr_risk["risk_band"], fixture_dir.name
     assert _close(r.risk_score, pr_risk["risk_score"]), fixture_dir.name
@@ -201,7 +214,7 @@ def test_score_band_math_parity(fixture_dir: Path) -> None:
 
 
 @pytest.mark.parametrize("fixture_dir", _discover(), ids=lambda p: p.name)
-def test_categories_parity(fixture_dir: Path) -> None:
+def test_categories_parity(fixture_dir: Path, corpus_runtime) -> None:
     """Per-lane category risk_score and factor/reducer membership match Go."""
     pr_risk = json.loads((fixture_dir / "pr_risk.json").read_text())
     insights = _insights_from_dict(pr_risk.get("context_insights") or {})
@@ -211,7 +224,7 @@ def test_categories_parity(fixture_dir: Path) -> None:
     from release_readiness_core.pr_risk.score import score
 
     with _patched_context(insights, ctx_factors):
-        r = score(sig, default_weights())
+        r = score(sig, default_weights(), runtime=corpus_runtime)
 
     captured_cats = pr_risk.get("categories") or []
     by_key = {c["key"]: c for c in captured_cats}
@@ -229,7 +242,7 @@ def test_categories_parity(fixture_dir: Path) -> None:
 
 
 @pytest.mark.parametrize("fixture_dir", _discover(), ids=lambda p: p.name)
-def test_merge_recommendation_parity(fixture_dir: Path) -> None:
+def test_merge_recommendation_parity(fixture_dir: Path, corpus_runtime) -> None:
     pr_risk = json.loads((fixture_dir / "pr_risk.json").read_text())
     insights = _insights_from_dict(pr_risk.get("context_insights") or {})
     ctx_factors = _ctx_factors_from_captured(pr_risk.get("factors") or [])
@@ -238,7 +251,7 @@ def test_merge_recommendation_parity(fixture_dir: Path) -> None:
     from release_readiness_core.pr_risk.score import score
 
     with _patched_context(insights, ctx_factors):
-        r = score(sig, default_weights())
+        r = score(sig, default_weights(), runtime=corpus_runtime)
 
     captured_rec = (pr_risk.get("enforcement") or {}).get("merge_recommendation", "")
     # Note: Go's mergeRecommendation returns the lowercase short form (pass/warn/block).

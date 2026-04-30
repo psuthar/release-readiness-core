@@ -119,8 +119,13 @@ def _detect_commit_prefix(
     return False, ""
 
 
-def extract_signals(repo_root: str, base_ref: str) -> Signals:
-    """Build Signals from git diff. Mirrors Go ExtractSignals."""
+def extract_signals(repo_root: str, base_ref: str, *, runtime=None) -> Signals:
+    """Build Signals from git diff. Mirrors Go ExtractSignals.
+
+    ``runtime`` is optional; threaded into ``classify_domain`` / ``classify_area``
+    for adopters with a custom ``pr-risk-config.yaml``. When ``None`` the
+    bundled-default runtime is used (mirrors today's hardcoded behavior).
+    """
     repo_root = os.path.normpath(repo_root)
     files, git_err = diff_numstat(repo_root, base_ref)
 
@@ -143,11 +148,11 @@ def extract_signals(repo_root: str, base_ref: str) -> Signals:
         s.file_count += 1
         s.total_added += f.added
         s.total_deleted += f.deleted
-        d = classify_domain(f.path)
+        d = classify_domain(f.path, runtime=runtime)
         s.domain_hits[d] = s.domain_hits.get(d, 0) + 1
         if is_test_path(f.path):
             s.test_files += 1
-            td = classify_area(f.path)
+            td = classify_area(f.path, runtime=runtime)
             s.test_domain_hits[td] = s.test_domain_hits.get(td, 0) + 1
             if is_e2e_path(f.path):
                 s.e2e_test_files += 1

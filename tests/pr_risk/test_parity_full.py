@@ -37,12 +37,23 @@ from release_readiness_core.pr_risk.types import FileChange, Signals, default_we
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+CORPUS_CONFIG_PATH = FIXTURES_DIR / "pr-risk-corpus-config.yaml"
 
 
 def _discover() -> List[Path]:
     if not FIXTURES_DIR.exists():
         return []
     return sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir() and (p / "pr-risk.json").is_file())
+
+
+@pytest.fixture(scope="module")
+def corpus_runtime():
+    """Phase 2 (SCRUM-240): explicitly load the corpus parity-fixture YAML so
+    the parity assertion proves Phase 2 wired the config through, not just
+    that the bundled default still produces the captured outputs."""
+    from release_readiness_core.pr_risk._runtime import PRRiskRuntime
+
+    return PRRiskRuntime.from_config(CORPUS_CONFIG_PATH)
 
 
 # Reuse helpers from test_parity_score (duplicated minimally to keep this file
@@ -174,7 +185,7 @@ def _equal_modulo_floats(got: dict, captured: dict) -> bool:
 
 
 @pytest.mark.parametrize("fixture_dir", _discover(), ids=lambda p: p.name)
-def test_semantic_payload_parity(fixture_dir: Path) -> None:
+def test_semantic_payload_parity(fixture_dir: Path, corpus_runtime) -> None:
     """Python's semantic_payload matches captured pr-risk.json structurally."""
     pr_risk = json.loads((fixture_dir / "pr_risk.json").read_text())
     captured_semantic = json.loads((fixture_dir / "pr-risk.json").read_text())
@@ -187,7 +198,7 @@ def test_semantic_payload_parity(fixture_dir: Path) -> None:
     from release_readiness_core.pr_risk.semantic_json import semantic_payload_for_test
 
     with _patched_context(insights, ctxf):
-        r = score(sig, default_weights())
+        r = score(sig, default_weights(), runtime=corpus_runtime)
 
     payload = semantic_payload_for_test(r)
     assert _equal_modulo_floats(payload, captured_semantic), (

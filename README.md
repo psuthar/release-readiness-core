@@ -15,12 +15,14 @@ Project-agnostic deterministic release-readiness engine and adapters.
 
 ### Quickstart
 
-The fastest path:
+The fastest path (PyPI — no git access to this repo required):
 
 ```bash
-pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+pip install "release-readiness-core==0.3.3"
 release-readiness-init my-project
 ```
+
+Pin the version you want (see [PyPI](https://pypi.org/project/release-readiness-core/)). To install a specific commit instead, use a [git SHA install](#install-from-git-sha-pinned) below.
 
 Or run the engine directly against an inline JSON list:
 
@@ -59,11 +61,19 @@ uv run pr-risk-semantic --pr-risk-json artifacts/pr-risk.json --generator-outcom
 
 The N-input PR gate combiner lives in `release_readiness_core.pr_gate` (`combine_gate_inputs`).
 
+### Install from PyPI (version-pinned)
+
+```bash
+pip install "release-readiness-core==0.3.3"
+```
+
 ### Install from Git (SHA-pinned)
 
 ```bash
 pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 ```
+
+Use this when you need an unreleased commit or a fork. Release policy and versioning: [`RELEASE.md`](RELEASE.md).
 
 ### Development
 

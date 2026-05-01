@@ -224,11 +224,16 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv python install
 
-      # Pin to a specific SHA in production. Replace <sha> below.
+      # Default: install from PyPI (no git access to this repo). Bump the
+      # version when you upgrade. See https://pypi.org/project/release-readiness-core/
       - name: Install release-readiness-core
         run: |
-          uv pip install --system \\
-            "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+          uv pip install --system "release-readiness-core=={pypi_version}"
+
+      # Alternative — pip install from GitHub (pin a SHA, not a branch):
+      # - run: |
+      #     uv pip install --system \\
+      #       "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 
       # ---- collect evidence (project-specific) -------------------
 {evidence_steps}
@@ -237,7 +242,7 @@ jobs:
           release-readiness-evaluate \\
             --repo-root . \\
             --config ops/release-readiness/config.yaml \\
-            --base-ref origin/${{ github.base_ref }} \\
+            --base-ref origin/${{{{ github.base_ref }}}} \\
             --enforcement-mode block_only
 
       - name: Append summary to job page
@@ -427,6 +432,21 @@ _GO_COVERAGE_EVIDENCE_STEPS = """\
 """
 
 
+def _read_project_version() -> str:
+    """Version from repo-root ``pyproject.toml`` (for scaffolded PyPI pin)."""
+    pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
+    try:
+        text = pyproject.read_text(encoding="utf-8")
+    except OSError:
+        return "0.0.0"
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("version = "):
+            _, _, rhs = stripped.partition("=")
+            return rhs.strip().strip('"').strip("'")
+    return "0.0.0"
+
+
 _EVIDENCE_BLOCKS = {
     "playwright": _PLAYWRIGHT_EVIDENCE_STEPS,
     "cypress": _CYPRESS_EVIDENCE_STEPS,
@@ -441,11 +461,16 @@ def render_workflow_template(stack: str | None = None, pin_ref: str = "") -> str
     """Return the GitHub Actions workflow body.
 
     With ``stack``, substitute the matching evidence-collection block.
-    With ``pin_ref`` non-empty, substitute every ``<sha>`` literal so the
-    emitted workflow installs from a pinned ref instead of the placeholder.
+    With ``pin_ref`` non-empty, substitute every ``<sha>`` literal (e.g. in the
+    commented git-install alternative) so the scaffold can show a concrete ref.
+    The active install line uses the current ``version`` from ``pyproject.toml``.
     """
     block = _DEFAULT_EVIDENCE_STEPS if stack is None else _EVIDENCE_BLOCKS[stack]
-    body = GITHUB_WORKFLOW_TEMPLATE.format(evidence_steps=block)
+    pypi_version = _read_project_version()
+    body = GITHUB_WORKFLOW_TEMPLATE.format(
+        evidence_steps=block,
+        pypi_version=pypi_version,
+    )
     if pin_ref:
         body = body.replace("<sha>", pin_ref)
     return body
@@ -636,10 +661,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     print("  2. Edit ops/release-readiness/validation_map.yaml — map keys to test stems.")
     if args.workflow == "github":
         if pin_ref:
-            print(f"  3. Workflow pinned to {pin_ref} via --pin / RR_PIN_REF / DEFAULT_PIN_REF.")
+            print(f"  3. Git-install comment in the workflow can use pin {pin_ref} (--pin / RR_PIN_REF).")
         else:
-            print("  3. Replace <sha> in .github/workflows/release-readiness.yml with a pinned SHA")
-            print("     (or re-run with --pin <sha-or-tag> / set RR_PIN_REF).")
+            print(
+                "  3. The workflow installs from PyPI at "
+                f"{_read_project_version()} — bump that version when you upgrade; "
+                "optional git-install lines use <sha> (re-run with --pin / set RR_PIN_REF)."
+            )
         print("  4. Wire the evidence-collection steps to your CI's smoke / E2E / coverage jobs.")
     if args.demo:
         print()

@@ -46,6 +46,8 @@ def test_reusable_workflow_declares_required_inputs():
     inputs = on_block["workflow_call"].get("inputs", {})
     expected = {
         "package-ref",
+        "install-source",
+        "pypi-version",
         "config-path",
         "pr-risk-config",
         "smoke-results",
@@ -60,6 +62,7 @@ def test_reusable_workflow_declares_required_inputs():
         "run-doctor",
         "check-name",
         "output-dir",
+        "fail-workflow-on-gate-failure",
     }
     missing = expected - set(inputs.keys())
     assert not missing, f"missing inputs: {missing}"
@@ -84,9 +87,9 @@ def test_reusable_workflow_chains_composites_in_order():
     """The readiness job must call the pr-gate composite then the publish
     composite then the enforce step."""
     text = REUSABLE.read_text(encoding="utf-8")
-    pr_gate_idx = text.find("psuthar/release-readiness-core/.github/actions/release-readiness-pr-gate")
-    publish_idx = text.find("psuthar/release-readiness-core/.github/actions/release-readiness-publish")
-    enforce_idx = text.find("Enforce gate")
+    pr_gate_idx = text.find("./.github/actions/release-readiness-pr-gate")
+    publish_idx = text.find("./.github/actions/release-readiness-publish")
+    enforce_idx = text.find("- name: Enforce gate")
     assert pr_gate_idx > 0
     assert publish_idx > pr_gate_idx, "publish must follow pr-gate"
     assert enforce_idx > publish_idx, "enforce must follow publish"
@@ -112,7 +115,10 @@ def test_reusable_workflow_supports_combine_with_pr_risk_off():
     a gate verdict via release-readiness-evaluate alone."""
     text = REUSABLE.read_text(encoding="utf-8")
     assert "release-readiness-evaluate" in text
-    assert "evaluate-only-gate" in text
+    # Step id was renamed evaluate-only-gate -> evaluate_only_gate to keep
+    # GitHub Actions expressions (steps.<id>.outputs[…]) from being parsed
+    # as subtraction; underscore is the canonical form now.
+    assert "evaluate_only_gate" in text
 
 
 def test_reusable_workflow_enforcement_modes():
@@ -161,5 +167,5 @@ def test_smoke_pass_verifies_pass_outcome():
 def test_smoke_block_verifies_block_outcome():
     text = SMOKE_BLOCK.read_text(encoding="utf-8")
     assert 'if [ "$STATUS" != "BLOCK" ]' in text
-    # Block smoke must use continue-on-error so the verify job sees the BLOCK signal.
-    assert "continue-on-error: true" in text
+    # Reusable workflow call jobs cannot use continue-on-error; skip hard fail via input.
+    assert "fail-workflow-on-gate-failure: false" in text

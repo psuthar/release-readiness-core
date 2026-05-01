@@ -1,6 +1,6 @@
 # Release process
 
-`release-readiness-core` is currently distributed as an installable git repository, not a PyPI package. This document is the policy adopters should rely on until a `1.0.0` PyPI release lands.
+`release-readiness-core` is published to **PyPI** as [`release-readiness-core`](https://pypi.org/project/release-readiness-core/). Adopters who do not need the GitHub source can install a **pinned version** with `pip install release-readiness-core==X.Y.Z`. Git installs from this repository remain supported for forks and bleeding-edge pins.
 
 ## Versioning
 
@@ -12,17 +12,42 @@ The project follows Semantic Versioning (semver):
 
 Until `1.0.0`, **minor versions may include backwards-incompatible changes** if they unblock generalization correctness (this is the spirit of pre-1.0 in semver). Each such change is called out in `CHANGELOG.md` under "Changed" or "Removed" with the migration steps.
 
-## SHA pinning until PyPI
+## Install sources for adopters
 
-Adopters install via:
+### PyPI (recommended when consumers lack access to this git repository)
+
+```bash
+pip install "release-readiness-core==X.Y.Z"
+```
+
+Published versions are **immutable** on PyPI — pinning `==X.Y.Z` is the analogue of SHA-pinning for git installs.
+
+### Git (forks, unreleased commits, or when you need a specific SHA)
 
 ```bash
 pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 ```
 
-**Always pin a SHA**, not a branch or tag. SHAs are immutable; tags can be moved. This matters because `release-readiness-core` is itself the gate for an adopter's release pipeline — a moving install target would make the gate non-deterministic.
+**Always pin a SHA**, not a branch or tag, when using git. SHAs are immutable; tags can be moved. This matters because `release-readiness-core` is itself the gate for an adopter's release pipeline — a moving install target would make the gate non-deterministic.
 
 You can find the SHA for a given version in `CHANGELOG.md`'s commit log or via `git log` on this repo.
+
+**Note:** Adopters pin **`uses: …/readiness.yml@<sha>`** on the reusable workflow; inner composites load from the same commit via `./.github/actions/…`. That SHA pins the workflow and action YAML, not necessarily the Python wheel. Use `install-source: pypi` and `pypi-version` when you want the **package** from PyPI while the YAML stays pinned to `<sha>` (see `docs/how-to/9-adoption-tiers.md`).
+
+## PyPI trusted publishing (one-time maintainer setup)
+
+Publishing from CI uses **PyPI Trusted Publishing** (OIDC) — no long-lived PyPI password in GitHub secrets.
+
+1. Create the [`release-readiness-core`](https://pypi.org/project/release-readiness-core/) project on PyPI (or claim the name if unused).
+2. In PyPI project **Settings → Publishing**, add a **trusted publisher**:
+   - **Publisher:** GitHub
+   - **Owner / repository:** the GitHub repo that hosts this code (e.g. `psuthar/release-readiness-core`)
+   - **Workflow name:** `publish-pypi.yml`
+   - **Environment name:** `pypi`
+3. In GitHub: **Settings → Environments →** create an environment named **`pypi`** (optional: add protection rules / required reviewers).
+4. Confirm [`.github/workflows/publish-pypi.yml`](.github/workflows/publish-pypi.yml) uses `environment: name: pypi` and `permissions: id-token: write`.
+
+After this, pushing an annotated tag `vX.Y.Z` whose commit matches `pyproject.toml` `version = "X.Y.Z"` triggers a build and upload.
 
 ## Release checklist (maintainer)
 
@@ -32,8 +57,10 @@ You can find the SHA for a given version in `CHANGELOG.md`'s commit log or via `
    - Move "Unreleased" entries under a new `## [X.Y.Z] — YYYY-MM-DD` section.
    - Confirm "Added" / "Changed" / "Removed" / "Fixed" categories cover everything.
 4. Commit with message `release: vX.Y.Z` and push to `main`.
-5. Tag the commit: `git tag -a vX.Y.Z -m "release X.Y.Z"; git push --tags`.
-6. (Future, after PyPI publishing is set up) `python -m build && twine upload dist/*`.
+5. Tag the commit: `git tag -a vX.Y.Z -m "release X.Y.Z"; git push origin vX.Y.Z`.
+6. Wait for the **Publish to PyPI** GitHub Actions workflow to finish; confirm the files appear on PyPI.
+
+**Builds vs uploads:** ordinary PR/push CI runs tests and `uv build` but does **not** upload to PyPI. Only the publish workflow uploads. If a release is faulty, **yank** it on PyPI and ship a **new patch version** — you cannot replace files for an existing version.
 
 ## What counts as a contract
 

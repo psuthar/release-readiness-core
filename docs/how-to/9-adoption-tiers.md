@@ -6,7 +6,7 @@
 |---|---|---|
 | **Tier 1** — Reusable workflow | `uses: …/workflows/readiness.yml@<sha>` + 3 `with:` lines + `secrets: inherit` | Most adopters. The default. |
 | **Tier 2** — Composite actions | `uses: …/actions/release-readiness-pr-gate@<sha>` + `…/release-readiness-publish@<sha>` (and/or `…/release-readiness@<sha>`) | Adopters who want to inject custom pre/post steps around the gate. |
-| **Tier 3** — Raw CLIs | `uv pip install …` + invoke `release-readiness-evaluate` / `release-readiness-pr-risk` / `release-readiness-combine` / `release-readiness-check-payload` directly | Non-GitHub CIs (GitLab, Buildkite, Jenkins) and bespoke pipelines. |
+| **Tier 3** — Raw CLIs | `uv pip install "release-readiness-core==X.Y.Z"` (or `git+https://…@<sha>`) + invoke the CLIs directly | Non-GitHub CIs (GitLab, Buildkite, Jenkins) and bespoke pipelines. |
 
 The tiers are **opt-in deeper**, not opt-out shallower — Tier 1 is built on the same composite actions a Tier-2 adopter calls directly, which call the same CLIs a Tier-3 adopter shells out to. Picking a tier is a decision about how much YAML you want to own.
 
@@ -34,9 +34,11 @@ jobs:
     secrets: inherit
 ```
 
+The `uses: …@<sha>` ref must still point at a commit on `psuthar/release-readiness-core` (that loads this reusable workflow and the local composite actions under `.github/actions/`). By default, **`package-ref` is the git ref** for `pip install git+https://…@…` (same SHA you pass to `with:`). To install the **wheel from PyPI** instead (no git pip dependency), add `install-source: pypi` and `pypi-version: "X.Y.Z"` to `with:`.
+
 **What you get for free:** install + (optional) doctor pre-flight + pr-risk + readiness-evaluate + combine + GitHub Check publish + sticky PR comment + enforcement (fail on BLOCK; also fail on WARN if you set `enforcement-mode: warn_and_block`).
 
-**Working example:** [`examples/python-pytest/.github/workflows/release-readiness.yml`](../../examples/python-pytest/.github/workflows/release-readiness.yml). The reusable workflow itself: [`.github/workflows/readiness.yml`](../../.github/workflows/readiness.yml) (15 inputs, 2 outputs).
+**Working example:** [`examples/python-pytest/.github/workflows/release-readiness.yml`](../../examples/python-pytest/.github/workflows/release-readiness.yml). The reusable workflow itself: [`.github/workflows/readiness.yml`](../../.github/workflows/readiness.yml) (inputs include optional PyPI install mode; 2 outputs).
 
 **Who it's for:** any GitHub-Actions adopter without an explicit reason to fork. Picks up improvements to the reusable workflow on your next pin bump.
 
@@ -77,6 +79,8 @@ jobs:
       - uses: psuthar/release-readiness-core/.github/actions/release-readiness-pr-gate@<sha>
         with:
           package-ref: <sha>
+          # install-source: pypi
+          # pypi-version: "0.3.3"
           smoke-results: evidence/smoke.json
           e2e-results: evidence/e2e.json
           coverage: evidence/coverage.json
@@ -110,8 +114,11 @@ jobs:
 Nothing GitHub-specific. The four CLIs read JSON, write JSON, and exit non-zero on failure. Wire them into any CI runner that can install Python and execute a shell.
 
 ```bash
-# Install the package once.
-uv pip install --system "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+# Install the package once (PyPI — pin the version).
+uv pip install --system "release-readiness-core==0.3.3"
+
+# Or from git (pin a SHA).
+# uv pip install --system "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 
 # Per-PR run:
 release-readiness-pr-risk --base-ref origin/main --output-dir artifacts/release-readiness

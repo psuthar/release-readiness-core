@@ -167,7 +167,7 @@ The dependency jobs probably exited 0 even though their evidence said failed. Ch
       - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
         with: { path: evidence, pattern: readiness-evidence-*, merge-multiple: true }
-      - run: pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+      - run: pip install "release-readiness-core==0.3.3"
       - run: |
           release-readiness-doctor \
             --config ops/release-readiness/config.yaml \

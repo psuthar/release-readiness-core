@@ -52,6 +52,8 @@ def test_action_declares_required_inputs():
     inputs = action.get("inputs", {})
     expected = {
         "package-ref",
+        "install-source",
+        "pypi-version",
         "config-path",
         "pr-risk-config",
         "smoke-results",
@@ -67,10 +69,11 @@ def test_action_declares_required_inputs():
     assert not missing, f"missing inputs: {missing}"
 
 
-def test_action_marks_package_ref_required():
+def test_action_marks_package_ref_optional_for_pypi_install():
     action = _load_action()
     pkg = action["inputs"].get("package-ref", {})
-    assert pkg.get("required") is True
+    assert pkg.get("required", False) is False
+    assert action["inputs"]["install-source"]["default"] == "git"
 
 
 def test_action_exposes_gate_outputs():

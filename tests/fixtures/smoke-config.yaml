@@ -1,0 +1,46 @@
+# Minimal release-readiness config used by the smoke-readiness-{pass,block}
+# workflows. Not an adopter example — those live under examples/.
+
+version: 1
+
+validations:
+  smoke_passing:
+    description: Smoke tests passed.
+
+evidence_boolean_keys:
+  - smoke_passing
+
+infer_validations_when_pass:
+  smoke:
+    - smoke_passing
+  e2e: []
+
+optional_artifacts:
+  - prod_health
+
+scoring:
+  max_score: 100
+  pass_threshold: 80
+  warn_threshold: 60
+  block_score: 0
+  penalties:
+    missing_smoke_artifact: 25
+    missing_e2e_artifact: 15
+    missing_coverage_artifact: 5
+    missing_prod_health_artifact: 5
+    non_critical_e2e_failure: 15
+    e2e_retries_or_flaky: 10
+    coverage_regression: 12
+    risky_config_without_note: 10
+
+remediation:
+  smoke_artifact:
+    severity: warn
+    likely_cause: smoke job did not upload results
+    recommended_action: Re-run smoke job and upload smoke.json artifact.
+    fix_type: ci_config
+  e2e_critical:
+    severity: block
+    likely_cause: critical E2E spec failed
+    recommended_action: Fix the failing critical spec or revert the change.
+    fix_type: code

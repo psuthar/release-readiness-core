@@ -10,10 +10,12 @@ This guide shows how to run the readiness CLI inside CI and surface its PASS/WAR
 
 Two valid GitHub approaches:
 
-- **Consumer-owned (third-party-safe, recommended):** run `release-readiness-*` CLIs directly in your own workflow via `uvx --from release-readiness-core ...`.
+- **Consumer-owned (third-party-safe, recommended):** run `release-readiness-*` CLIs directly in your own workflow via `uvx --from release-readiness-core==X.Y.Z ...` (pin the version).
 - **Source-owned reusable workflow:** call `psuthar/release-readiness-core/.github/workflows/readiness.yml@<sha>`.
 
 Use consumer-owned mode when you cannot or do not want to depend on cross-repo reusable workflow access. For private repos, this avoids failures caused by reusable-workflow access policy mismatches.
+
+**Reusable workflow + PyPI wheel:** the `uses: …/readiness.yml@<sha>` line pins the **workflow YAML** to a commit on this repo. You can still install the **Python package** from PyPI (no `git+https` pip install) by passing `install-source: pypi` and `pypi-version: X.Y.Z` — see `docs/how-to/9-adoption-tiers.md`.
 
 ---
 
@@ -65,7 +67,9 @@ jobs:
 
       - uses: psuthar/release-readiness-core/.github/actions/release-readiness@<sha>
         with:
-          package-ref: <sha>          # same SHA — pins the package install
+          package-ref: <sha>          # same SHA — pins @ref and (by default) the git-based pip install
+          # install-source: pypi     # optional — pip from PyPI instead of git
+          # pypi-version: "0.3.3"    # required with install-source: pypi
           config-path: ops/release-readiness/config.yaml
           smoke-results: evidence/smoke.json
           e2e-results: evidence/e2e.json
@@ -274,7 +278,8 @@ The formatter is a `Callable[[GateSummary], Dict[str, Any]]`. Anything JSON-seri
 release-readiness:
   image: python:3.11
   script:
-    - pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+    - pip install "release-readiness-core==0.3.3"
+    # Or: pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
     - ./ci/collect-evidence.sh    # writes evidence/*.json
     - release-readiness-evaluate
         --repo-root .

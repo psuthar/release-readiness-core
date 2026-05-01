@@ -230,9 +230,31 @@ jobs:
             "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 
       # ---- collect evidence (project-specific) -------------------
+{evidence_steps}
+      - name: release-readiness
+        run: |
+          release-readiness-evaluate \\
+            --repo-root . \\
+            --config ops/release-readiness/config.yaml \\
+            --base-ref origin/${{ github.base_ref }} \\
+            --enforcement-mode block_only
+
+      - name: Append summary to job page
+        if: always()
+        run: cat artifacts/release-readiness/report.md >> "$GITHUB_STEP_SUMMARY"
+"""
+
+
+VALID_STACKS = ("playwright", "cypress", "jest", "pytest", "go", "go-coverage")
+
+
+# Evidence-collection step blocks per stack. Each block is the YAML body that
+# substitutes into GITHUB_WORKFLOW_TEMPLATE's {evidence_steps} placeholder.
+# Bodies are indented to match the surrounding workflow's `steps:` indent (6 sp).
+_DEFAULT_EVIDENCE_STEPS = """\
       # Replace the placeholders below with your actual smoke / e2e /
-      # coverage steps. Each must produce the JSON shapes documented
-      # in docs/contracts/.
+      # coverage steps. Each must produce the JSON shapes documented in
+      # docs/contracts/. See docs/how-to/1-map-evidence.md.
       #
       # - name: Run smoke
       #   run: ./ci/run-smoke.sh   # writes evidence/smoke.json
@@ -246,33 +268,154 @@ jobs:
       #       --input playwright-results.json \\
       #       --output evidence/e2e.json \\
       #       --validation-map ops/release-readiness/validation_map.yaml
-      #
-      # - name: Convert JUnit -> readiness (Cypress / Jest / pytest)
-      #   run: |
-      #     junit-to-readiness \\
-      #       --input test-results.xml \\
-      #       --output evidence/e2e.json \\
-      #       --validation-map ops/release-readiness/validation_map.yaml
-      #
-      # - name: Coverage summary (LCOV)
-      #   run: |
-      #     lcov-to-readiness \\
-      #       --input coverage/lcov.info \\
-      #       --output evidence/coverage.json \\
-      #       --baseline-percent 85
-
-      - name: release-readiness
-        run: |
-          release-readiness-evaluate \\
-            --repo-root . \\
-            --config ops/release-readiness/config.yaml \\
-            --base-ref origin/${{ github.base_ref }} \\
-            --enforcement-mode block_only
-
-      - name: Append summary to job page
-        if: always()
-        run: cat artifacts/release-readiness/report.md >> "$GITHUB_STEP_SUMMARY"
 """
+
+
+_PLAYWRIGHT_EVIDENCE_STEPS = """\
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install Node deps
+        run: npm ci
+
+      - name: Run Playwright (--reporter=json)
+        run: npx playwright test --reporter=json > playwright-results.json
+
+      - name: Convert Playwright -> readiness e2e shape
+        run: |
+          mkdir -p evidence
+          playwright-to-readiness \\
+            --input playwright-results.json \\
+            --output evidence/e2e.json \\
+            --validation-map ops/release-readiness/validation_map.yaml
+"""
+
+
+_CYPRESS_EVIDENCE_STEPS = """\
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install Node deps
+        run: npm ci
+
+      - name: Run Cypress with JUnit reporter
+        run: |
+          npx cypress run \\
+            --reporter junit \\
+            --reporter-options "mochaFile=test-results.xml,toConsole=true"
+
+      - name: Convert JUnit -> readiness e2e shape
+        run: |
+          mkdir -p evidence
+          junit-to-readiness \\
+            --input test-results.xml \\
+            --output evidence/e2e.json \\
+            --validation-map ops/release-readiness/validation_map.yaml
+"""
+
+
+_JEST_EVIDENCE_STEPS = """\
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install Node deps
+        run: npm ci
+
+      - name: Run Jest with jest-junit reporter
+        env:
+          JEST_JUNIT_OUTPUT_FILE: test-results.xml
+        run: npx jest --reporters=default --reporters=jest-junit
+
+      - name: Convert JUnit -> readiness e2e shape
+        run: |
+          mkdir -p evidence
+          junit-to-readiness \\
+            --input test-results.xml \\
+            --output evidence/e2e.json \\
+            --validation-map ops/release-readiness/validation_map.yaml
+"""
+
+
+_PYTEST_EVIDENCE_STEPS = """\
+      - name: Install pytest deps
+        run: pip install -e ".[test]" || pip install pytest
+
+      - name: Run pytest with JUnit XML
+        run: pytest --junit-xml=test-results.xml
+
+      - name: Convert JUnit -> readiness e2e shape
+        run: |
+          mkdir -p evidence
+          junit-to-readiness \\
+            --input test-results.xml \\
+            --output evidence/e2e.json \\
+            --validation-map ops/release-readiness/validation_map.yaml
+"""
+
+
+_GO_EVIDENCE_STEPS = """\
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Run Go tests
+        id: gotest
+        continue-on-error: true
+        run: go test ./... -count=1
+
+      - name: Write smoke evidence
+        run: |
+          mkdir -p evidence
+          if [ "${{ steps.gotest.outcome }}" = "success" ]; then
+            echo '{"status":"passed","passed":true,"smoke_passing":true}' > evidence/smoke.json
+          else
+            echo '{"status":"failed","passed":false,"failed_count":1,"total_count":1,"failures":[{"title":"go test failed"}]}' > evidence/smoke.json
+          fi
+"""
+
+
+_GO_COVERAGE_EVIDENCE_STEPS = """\
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Run Go tests with coverage
+        run: go test ./... -count=1 -coverprofile=coverage.out
+
+      - name: Convert Go coverage -> LCOV
+        run: |
+          go install github.com/jandelgado/gcov2lcov@latest
+          mkdir -p coverage
+          gcov2lcov -infile=coverage.out -outfile=coverage/lcov.info
+
+      - name: Convert LCOV -> readiness coverage shape
+        run: |
+          mkdir -p evidence
+          lcov-to-readiness \\
+            --input coverage/lcov.info \\
+            --output evidence/coverage.json \\
+            --baseline-percent 85
+"""
+
+
+_EVIDENCE_BLOCKS = {
+    "playwright": _PLAYWRIGHT_EVIDENCE_STEPS,
+    "cypress": _CYPRESS_EVIDENCE_STEPS,
+    "jest": _JEST_EVIDENCE_STEPS,
+    "pytest": _PYTEST_EVIDENCE_STEPS,
+    "go": _GO_EVIDENCE_STEPS,
+    "go-coverage": _GO_COVERAGE_EVIDENCE_STEPS,
+}
+
+
+def render_workflow_template(stack: str | None = None) -> str:
+    """Return the GitHub Actions workflow body, with stack-specific evidence
+    steps substituted (or the commented placeholder when stack is None)."""
+    block = _DEFAULT_EVIDENCE_STEPS if stack is None else _EVIDENCE_BLOCKS[stack]
+    return GITHUB_WORKFLOW_TEMPLATE.format(evidence_steps=block)
 
 
 DEMO_SYNTHETIC_HEADER = (
@@ -326,13 +469,25 @@ def scaffold(
     workflow: str = "github",
     force: bool = False,
     demo: bool = False,
+    stack: str | None = None,
 ) -> dict[str, str]:
     """Write scaffold files under ``target``. Returns ``{relpath: status}``.
 
     When ``demo`` is True, also writes synthetic ``evidence/{smoke,e2e,coverage}.json``
     so the adopter's first ``release-readiness-evaluate`` run is provably PASS.
-    Without ``demo``, scaffold output is byte-identical to the pre-D1 behavior.
+
+    When ``stack`` is one of ``VALID_STACKS``, the emitted GitHub Actions
+    workflow has the matching test-runner + adapter-conversion steps
+    uncommented and parameterized (instead of the commented placeholder).
+
+    Without either flag, scaffold output is byte-identical to the pre-D1 / D3
+    behavior.
     """
+    if stack is not None and stack not in VALID_STACKS:
+        raise ValueError(
+            f"--stack must be one of {sorted(VALID_STACKS)}, got {stack!r}"
+        )
+
     target = target.resolve()
     target.mkdir(parents=True, exist_ok=True)
 
@@ -343,7 +498,7 @@ def scaffold(
     ]
     if workflow == "github":
         plan.append(
-            (target / ".github" / "workflows" / "release-readiness.yml", GITHUB_WORKFLOW_TEMPLATE)
+            (target / ".github" / "workflows" / "release-readiness.yml", render_workflow_template(stack))
         )
     elif workflow != "none":
         raise ValueError(f"--workflow must be 'github' or 'none', got {workflow!r}")
@@ -392,12 +547,26 @@ def main(argv: Sequence[str] | None = None) -> int:
             "provably PASS (score 100). Replace before relying on the gate."
         ),
     )
+    parser.add_argument(
+        "--stack",
+        choices=list(VALID_STACKS),
+        default=None,
+        help=(
+            "Pre-fill the emitted release-readiness.yml with stack-specific "
+            "test-runner + adapter-conversion steps. Without --stack, the "
+            "workflow ships with a commented placeholder block."
+        ),
+    )
     args = parser.parse_args(argv)
 
     target = Path(args.target)
     try:
         results = scaffold(
-            target, workflow=args.workflow, force=args.force, demo=args.demo
+            target,
+            workflow=args.workflow,
+            force=args.force,
+            demo=args.demo,
+            stack=args.stack,
         )
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

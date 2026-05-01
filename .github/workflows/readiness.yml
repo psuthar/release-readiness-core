@@ -188,9 +188,9 @@ jobs:
               echo "::error::install-source=pypi requires pypi-version"
               exit 1
             fi
-            uv pip install --system "release-readiness-core==${PYPI_VERSION}"
+            uv pip install --system --break-system-packages "release-readiness-core==${PYPI_VERSION}"
           else
-            uv pip install --system \
+            uv pip install --system --break-system-packages \
               "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
           fi
 
@@ -255,9 +255,9 @@ jobs:
               echo "::error::install-source=pypi requires pypi-version"
               exit 1
             fi
-            uv pip install --system "release-readiness-core==${PYPI_VERSION}"
+            uv pip install --system --break-system-packages "release-readiness-core==${PYPI_VERSION}"
           else
-            uv pip install --system \
+            uv pip install --system --break-system-packages \
               "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
           fi
 

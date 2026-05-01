@@ -106,13 +106,13 @@ runs:
             echo "::error file=.github/actions/release-readiness-pr-gate/action.yml::install-source=pypi requires a non-empty pypi-version input"
             exit 1
           fi
-          uv pip install --system "release-readiness-core==${PYPI_VERSION}"
+          uv pip install --system --break-system-packages "release-readiness-core==${PYPI_VERSION}"
         else
           if [ -z "${PACKAGE_REF}" ]; then
             echo "::error file=.github/actions/release-readiness-pr-gate/action.yml::install-source=git requires a non-empty package-ref input"
             exit 1
           fi
-          uv pip install --system \
+          uv pip install --system --break-system-packages \
             "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
         fi
 

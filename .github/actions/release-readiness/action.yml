@@ -6,11 +6,25 @@ description: >-
   artifacts; this action handles install + invoke + publish.
 
 inputs:
+  install-source:
+    description: >-
+      git — pip install from github.com/psuthar/release-readiness-core at package-ref.
+      pypi — pip install release-readiness-core==pypi-version (no git access to source).
+    required: false
+    default: "git"
+  pypi-version:
+    description: >-
+      Version to install from PyPI when install-source is pypi (e.g. 0.3.3).
+      Ignored when install-source is git.
+    required: false
+    default: ""
   package-ref:
     description: >-
-      git ref (SHA or tag) to install from this repo.
-      Pin to a SHA in production.
-    required: true
+      When install-source is git: git ref (SHA or tag) for the pip install URL.
+      Pin to a SHA in production. When using actions from this repo, this is
+      typically the same ref as the @ref on uses: for this composite.
+    required: false
+    default: ""
   config-path:
     description: Path to the project's release-readiness config.yaml.
     required: false
@@ -66,9 +80,26 @@ runs:
 
     - name: Install release-readiness-core
       shell: bash
+      env:
+        INSTALL_SOURCE: ${{ inputs.install-source }}
+        PACKAGE_REF: ${{ inputs.package-ref }}
+        PYPI_VERSION: ${{ inputs.pypi-version }}
       run: |
-        uv pip install --system \
-          "git+https://github.com/psuthar/release-readiness-core.git@${{ inputs.package-ref }}"
+        set -euo pipefail
+        if [ "$INSTALL_SOURCE" = "pypi" ]; then
+          if [ -z "${PYPI_VERSION}" ]; then
+            echo "::error file=.github/actions/release-readiness/action.yml::install-source=pypi requires a non-empty pypi-version input"
+            exit 1
+          fi
+          uv pip install --system "release-readiness-core==${PYPI_VERSION}"
+        else
+          if [ -z "${PACKAGE_REF}" ]; then
+            echo "::error file=.github/actions/release-readiness/action.yml::install-source=git requires a non-empty package-ref input"
+            exit 1
+          fi
+          uv pip install --system \
+            "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
+        fi
 
     - name: Run release-readiness-doctor (pre-flight)
       if: inputs.run-doctor == 'true'

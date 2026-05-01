@@ -11,14 +11,14 @@ The fastest path from "I want to try this" to a green `release-readiness` Check 
 Install the package as a third-party dependency, then scaffold:
 
 ```bash
-pip install release-readiness-core
+pip install "release-readiness-core==0.3.3"
 release-readiness-init my-project --demo --stack pytest
 cd my-project && git init && git add . && git commit -m "release-readiness scaffold"
 
 # Push to your repo and open a PR — the release-readiness Check will appear
 ```
 
-That's the whole thing. The scaffold ships with synthetic green evidence (`evidence/*.json`), a stack-specific evidence-collection block, and a workflow pinned to the SHA you chose. First CI run is a deterministic PASS.
+That's the whole thing. The scaffold ships with synthetic green evidence (`evidence/*.json`), a stack-specific evidence-collection block, and a workflow that installs the package from **PyPI** at the version baked into the template (current release when you ran `init`). First CI run is a deterministic PASS. Bump the version string in `.github/workflows/release-readiness.yml` when you adopt a newer release, or switch to the commented git-install block if you install from source instead.
 
 Replace `--stack pytest` with whichever runner matches your project — `playwright`, `cypress`, `jest`, `pytest`, `go`, or `go-coverage`. See [`docs/how-to/8-recipe-matrix.md`](8-recipe-matrix.md) for the full list and per-stack snippets.
 
@@ -48,8 +48,8 @@ If you are adopting as an external consumer and do **not** want to rely on cross
 
 ```yaml
 - uses: astral-sh/setup-uv@v6
-- run: uvx --from release-readiness-core release-readiness-doctor --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json
-- run: uvx --from release-readiness-core release-readiness-evaluate --repo-root . --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json --enforcement-mode block_only
+- run: uvx --from release-readiness-core==0.3.3 release-readiness-doctor --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json
+- run: uvx --from release-readiness-core==0.3.3 release-readiness-evaluate --repo-root . --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json --enforcement-mode block_only
 ```
 
 Use this mode when:

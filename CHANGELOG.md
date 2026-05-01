@@ -1,6 +1,15 @@
 # Changelog
 
-All notable changes to this project will be documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (see `RELEASE.md` for SHA-pinning until a `1.0` is published).
+All notable changes to this project will be documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). See `RELEASE.md` for PyPI version pins, git SHA pins, and the release checklist.
+
+## [0.3.3] — 2026-05-01
+
+### Added
+- **PyPI distribution** — package metadata (`license`, `classifiers`, `project.urls`) and a tag-driven [`.github/workflows/publish-pypi.yml`](.github/workflows/publish-pypi.yml) workflow using Trusted Publishing (OIDC) to upload wheels and sdist. Install without git: `pip install release-readiness-core==0.3.3`.
+- **Composite / reusable workflow install mode** — `install-source: git | pypi` and `pypi-version` on `.github/actions/release-readiness`, `.github/actions/release-readiness-pr-gate`, and inputs on `.github/workflows/readiness.yml`. `package-ref` remains the Git ref for `uses: …@ref`; when `install-source` is `pypi`, the Python package is installed from PyPI instead of `git+https://…`.
+
+### Changed
+- `release-readiness-init` default workflow documents a PyPI-pinned install line (version read from this repo’s `pyproject.toml` at scaffold time) with a commented git-install alternative.
 
 ## [0.3.2] — 2026-04-29
 

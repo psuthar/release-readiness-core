@@ -25,9 +25,22 @@ on:
   workflow_call:
     inputs:
       package-ref:
-        description: git ref (SHA or tag) to install release-readiness-core from. Pin to a SHA in production.
+        description: >-
+          Git ref (SHA or tag) for uses: …@ref on composites in this workflow.
+          When install-source is git, also used for pip install git+https://…
         required: true
         type: string
+      install-source:
+        description: git (pip from GitHub) or pypi (pip from PyPI).
+        required: false
+        type: string
+        default: git
+      pypi-version:
+        description: >-
+          PEP 440 version for PyPI (e.g. 0.3.3). Required when install-source is pypi.
+        required: false
+        type: string
+        default: ""
       config-path:
         description: Path to ops/release-readiness/config.yaml.
         required: false
@@ -149,9 +162,22 @@ jobs:
       - name: Install release-readiness-core (for doctor pre-flight)
         if: inputs.run-doctor
         shell: bash
+        env:
+          INSTALL_SOURCE: ${{ inputs.install-source }}
+          PACKAGE_REF: ${{ inputs.package-ref }}
+          PYPI_VERSION: ${{ inputs.pypi-version }}
         run: |
-          uv pip install --system \
-            "git+https://github.com/psuthar/release-readiness-core.git@${{ inputs.package-ref }}"
+          set -euo pipefail
+          if [ "$INSTALL_SOURCE" = "pypi" ]; then
+            if [ -z "${PYPI_VERSION}" ]; then
+              echo "::error::install-source=pypi requires pypi-version"
+              exit 1
+            fi
+            uv pip install --system "release-readiness-core==${PYPI_VERSION}"
+          else
+            uv pip install --system \
+              "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
+          fi
 
       - name: release-readiness-doctor (pre-flight)
         if: inputs.run-doctor
@@ -178,6 +204,8 @@ jobs:
         uses: psuthar/release-readiness-core/.github/actions/release-readiness-pr-gate@${{ inputs.package-ref }}
         with:
           package-ref: ${{ inputs.package-ref }}
+          install-source: ${{ inputs.install-source }}
+          pypi-version: ${{ inputs.pypi-version }}
           config-path: ${{ inputs.config-path }}
           pr-risk-config: ${{ inputs.pr-risk-config }}
           smoke-results: ${{ inputs.smoke-results }}
@@ -201,9 +229,22 @@ jobs:
       - name: Install release-readiness-core (evaluate-only path)
         if: ${{ ! inputs.combine-with-pr-risk }}
         shell: bash
+        env:
+          INSTALL_SOURCE: ${{ inputs.install-source }}
+          PACKAGE_REF: ${{ inputs.package-ref }}
+          PYPI_VERSION: ${{ inputs.pypi-version }}
         run: |
-          uv pip install --system \
-            "git+https://github.com/psuthar/release-readiness-core.git@${{ inputs.package-ref }}"
+          set -euo pipefail
+          if [ "$INSTALL_SOURCE" = "pypi" ]; then
+            if [ -z "${PYPI_VERSION}" ]; then
+              echo "::error::install-source=pypi requires pypi-version"
+              exit 1
+            fi
+            uv pip install --system "release-readiness-core==${PYPI_VERSION}"
+          else
+            uv pip install --system \
+              "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
+          fi
 
       - name: release-readiness-evaluate (no PR risk)
         id: evaluate-only

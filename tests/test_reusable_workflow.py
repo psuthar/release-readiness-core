@@ -46,6 +46,8 @@ def test_reusable_workflow_declares_required_inputs():
     inputs = on_block["workflow_call"].get("inputs", {})
     expected = {
         "package-ref",
+        "install-source",
+        "pypi-version",
         "config-path",
         "pr-risk-config",
         "smoke-results",

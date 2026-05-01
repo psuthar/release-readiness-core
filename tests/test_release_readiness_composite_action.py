@@ -20,6 +20,13 @@ def test_action_is_composite():
     assert _load()["runs"]["using"] == "composite"
 
 
+def test_install_source_inputs_declared():
+    inputs = _load()["inputs"]
+    assert inputs["install-source"]["default"] == "git"
+    assert "pypi-version" in inputs
+    assert inputs["package-ref"].get("required", False) is False
+
+
 def test_run_doctor_input_declared():
     inputs = _load()["inputs"]
     assert "run-doctor" in inputs

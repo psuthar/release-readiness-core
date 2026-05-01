@@ -78,9 +78,17 @@ def test_main_workflow_none(tmp_path: Path):
 
 
 def test_workflow_template_references_pinned_sha_placeholder():
-    """The workflow template must remind adopters to pin a SHA — this
+    """The workflow template keeps a git-install example with <sha> — this
     test guards against accidentally shipping an unpinned `@main`."""
     assert "@<sha>" in GITHUB_WORKFLOW_TEMPLATE
+
+
+def test_render_workflow_includes_pypi_version_pin():
+    from release_readiness_core.init_scaffold import render_workflow_template
+
+    body = render_workflow_template(None)
+    assert "release-readiness-core==" in body
+    assert "pypi.org/project/release-readiness-core" in body
 
 
 def test_config_template_references_optional_artifacts_pattern():
@@ -320,7 +328,8 @@ def test_main_pin_arg_substitutes(tmp_path: Path, capsys: pytest.CaptureFixture)
     assert "<sha>" not in body
     assert "v0.4.0" in body
     out = capsys.readouterr().out
-    assert "Workflow pinned to v0.4.0" in out
+    assert "v0.4.0" in out
+    assert "pin v0.4.0" in out
 
 
 def test_main_pin_env_substitutes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture):
@@ -336,5 +345,5 @@ def test_main_no_pin_source_prints_replace_hint(tmp_path: Path, monkeypatch: pyt
     code = main([str(tmp_path)])
     assert code == 0
     out = capsys.readouterr().out
-    assert "Replace <sha>" in out
+    assert "PyPI" in out
     assert "RR_PIN_REF" in out

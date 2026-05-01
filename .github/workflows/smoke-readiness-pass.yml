@@ -23,7 +23,7 @@ jobs:
   prep-evidence:
     runs-on: ubuntu-latest
     outputs:
-      base-sha: ${{ steps.write.outputs.base-sha }}
+      base-sha: ${{ steps.write.outputs['base-sha'] }}
     steps:
       - uses: actions/checkout@v5
       - name: Write synthetic PASS evidence

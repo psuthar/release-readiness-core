@@ -78,10 +78,10 @@ inputs:
 outputs:
   gate-status:
     description: final_gate.status from pr-gate-summary.json (PASS | WARN | BLOCK)
-    value: ${{ steps.combine.outputs.gate-status }}
+    value: ${{ steps.combine.outputs['gate-status'] }}
   workflow-should-fail:
     description: workflow_should_fail flag from pr-gate-summary.json (true | false)
-    value: ${{ steps.combine.outputs.workflow-should-fail }}
+    value: ${{ steps.combine.outputs['workflow-should-fail'] }}
 
 runs:
   using: composite
@@ -176,7 +176,7 @@ runs:
       shell: bash
       env:
         OUTDIR: ${{ inputs.output-dir }}
-        PARENT: ${{ steps.paths.outputs.parent-dir }}
+        PARENT: ${{ steps.paths.outputs['parent-dir'] }}
       run: |
         if ! release-readiness-combine \
           --pr-risk-json "$PARENT/pr-risk.json" \
@@ -203,7 +203,7 @@ runs:
       id: check
       shell: bash
       env:
-        PARENT: ${{ steps.paths.outputs.parent-dir }}
+        PARENT: ${{ steps.paths.outputs['parent-dir'] }}
         RUN_URL: ${{ inputs.run-url }}
       run: |
         ARGS=(

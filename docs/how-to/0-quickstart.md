@@ -1,29 +1,81 @@
-# Quickstart: adopting `release-readiness-core` in a new project
+# Quickstart: foolproof drop-in for `release-readiness-core`
 
-This walkthrough takes you from zero to a green PASS report in under 30 minutes. By the end you will have:
+The fastest path from "I want to try this" to a green `release-readiness` Check on your first PR is **four shell commands**. Pick a stack, scaffold pre-pinned + pre-greened, and push.
 
-1. Installed `release-readiness-core` into a Python project.
-2. Authored a minimal `config.yaml`.
-3. Run the evaluator against synthetic evidence and read the report.
-
-It assumes you have Python 3.9+ and either `pip` or `uv` available.
-
-> Worked example: a fully runnable version of every step lives at `examples/second-project/` in this repo. If you get stuck, diff your setup against that fixture.
+> If you want the deep dive on validation keys, scoring, and adapter mechanics, jump to the [Under the hood](#under-the-hood) appendix or the dedicated guides linked from the [README](../../README.md).
 
 ---
 
-## 0. Scaffold (optional, recommended)
+## TL;DR — four commands
 
-Skip §§1–2 by using the scaffold command:
+Pick the SHA you want to pin to (latest release tag works fine; for production prefer a SHA from `git log` on `release-readiness-core`'s `main`):
 
 ```bash
-pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
-release-readiness-init my-project
+PIN=v0.4.0  # or any release tag / commit SHA
+
+pip install "git+https://github.com/psuthar/release-readiness-core.git@${PIN}"
+release-readiness-init my-project --demo --stack pytest --pin "${PIN}"
+cd my-project && git init && git add . && git commit -m "release-readiness scaffold"
+
+# Push to your repo and open a PR — the release-readiness Check will appear
 ```
 
-This writes `ops/release-readiness/config.yaml`, `ops/release-readiness/validation_map.yaml`, and a starter `.github/workflows/release-readiness.yml` under `my-project/`. Skim the placeholders, swap in your validation keys, and you have a working baseline. The rest of this guide explains what the scaffold emits.
+That's the whole thing. The scaffold ships with synthetic green evidence (`evidence/*.json`), a stack-specific evidence-collection block, and a workflow pinned to the SHA you chose. First CI run is a deterministic PASS.
 
-After editing the config and gathering some evidence files, verify your setup with the doctor before pushing:
+Replace `--stack pytest` with whichever runner matches your project — `playwright`, `cypress`, `jest`, `pytest`, `go`, or `go-coverage`. See [`docs/how-to/8-recipe-matrix.md`](8-recipe-matrix.md) for the full list and per-stack snippets.
+
+---
+
+## What just got scaffolded
+
+```
+my-project/
+├── ops/release-readiness/
+│   ├── config.yaml              # validations + scoring + remediation
+│   ├── validation_map.yaml      # JUnit / Playwright stem -> validation key
+│   └── pr-risk-config.yaml      # PR-risk scoring config (optional)
+├── .github/workflows/
+│   └── release-readiness.yml    # uses Tier-1 reusable workflow @ pinned SHA
+└── evidence/                    # only with --demo
+    ├── smoke.json               # synthetic — replace before relying on the gate
+    ├── e2e.json
+    └── coverage.json
+```
+
+The workflow calls `psuthar/release-readiness-core/.github/workflows/readiness.yml@<pinned-SHA>` which internally runs install + (optional) doctor + pr-risk + readiness-evaluate + combine + Check publish + sticky-comment + enforcement. You don't need to wire any of that yourself.
+
+---
+
+## Three adoption tiers
+
+The package supports three usage patterns. The quickstart above uses **Tier 1** (recommended for most adopters).
+
+| Tier | Surface | Use when |
+|---|---|---|
+| **Tier 1** | Reusable workflow `uses: …/workflows/readiness.yml@<sha>` | Default. Most adopters. Two lines + `secrets: inherit`. |
+| **Tier 2** | Composite actions (`release-readiness-pr-gate`, `release-readiness-publish`, `release-readiness`) | You want to swap in custom pre/post steps. |
+| **Tier 3** | Raw CLIs (`release-readiness-evaluate`, `release-readiness-pr-risk`, `release-readiness-combine`, `release-readiness-check-payload`) | Non-GitHub CIs (GitLab, Buildkite, Jenkins) and bespoke pipelines. |
+
+Full breakdown with canonical snippets per tier: [`docs/how-to/9-adoption-tiers.md`](9-adoption-tiers.md).
+
+---
+
+## When the first PR shows BLOCK
+
+Open the PR and check the `release-readiness` Check's "Details" tab. The sticky comment also surfaces the verdict. The most common first-PR surprises:
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `BLOCK` immediately, "missing smoke artifact" | You scaffolded without `--demo` and CI hasn't emitted real evidence yet | Re-run with `--demo`, or wire the per-stack evidence step from [`docs/how-to/8-recipe-matrix.md`](8-recipe-matrix.md) |
+| `BLOCK` with "smoke parse error" | Your test runner emitted JSON in a different shape | Compare against `docs/contracts/smoke-input-v1.schema.json` and adjust your adapter step |
+| `WARN` at score 100 | Optional artifact (e.g. `prod_health`) missing — warning suppresses PASS | Either provide the artifact or add it to `optional_artifacts:` in `config.yaml` |
+| Workflow itself failed (red dot, no Check) | `<sha>` literal still in `.github/workflows/release-readiness.yml` | Re-run `release-readiness-init . --pin <sha> --force` |
+
+For unexpected validation states (`missing` / `not_evaluated`), see [`docs/how-to/1-map-evidence.md`](1-map-evidence.md) §7.
+
+---
+
+## Verify locally before pushing
 
 ```bash
 release-readiness-doctor \
@@ -33,42 +85,39 @@ release-readiness-doctor \
   --coverage evidence/coverage.json
 ```
 
-Doctor catches typos, missing fields, and common inconsistencies (e.g. `failed_count > 0` with `failures: []`) before they hit a real CI run. Exits non-zero on any error.
+Doctor catches typos, evidence-shape mismatches, and common inconsistencies (e.g. `failed_count > 0` with `failures: []`) before they hit a real CI run. Exits non-zero on any error.
 
-## 1. Install
-
-The package is published from this Git repository. Pin a SHA in production:
+If you scaffolded with `--demo`, you can also run the evaluator against the synthetic evidence to confirm green locally:
 
 ```bash
-pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
-```
-
-For local exploration, install the latest `main`:
-
-```bash
-pip install "git+https://github.com/psuthar/release-readiness-core.git"
-```
-
-The install puts four CLIs on your `PATH`:
-
-| Command | What it does |
-|---|---|
-| `release-readiness-evaluate` | Full PASS/WARN/BLOCK evaluator. **The one you want for CI.** |
-| `release-readiness` | Lightweight summary of validation booleans (no scoring). |
-| `playwright-to-readiness` | Convert a Playwright JSON report to readiness E2E shape. |
-| `pr-risk-semantic` | Combine PR-risk JSON with a check generator outcome. |
-
-Verify the install:
-
-```bash
-release-readiness-evaluate --help
+release-readiness-evaluate \
+  --repo-root . \
+  --config ops/release-readiness/config.yaml \
+  --smoke-results evidence/smoke.json \
+  --e2e-results evidence/e2e.json \
+  --coverage evidence/coverage.json \
+  --empty-diff
+# Expected: Result: PASS, score=100
 ```
 
 ---
 
-## 2. Minimum viable `config.yaml`
+## Next steps
 
-Drop a `config.yaml` at the root of the project (or wherever you want; you'll point the CLI at it with `--config`). The smallest config that runs without errors:
+- **Replace synthetic evidence with real CI:** wire your test runner's output through the matching adapter — see [`docs/how-to/8-recipe-matrix.md`](8-recipe-matrix.md) for the per-stack snippet and [`docs/how-to/1-map-evidence.md`](1-map-evidence.md) for the mechanics of validation keys and evidence channels.
+- **Tune the gate:** [`docs/how-to/2-tune-scoring.md`](2-tune-scoring.md) walks through penalties, thresholds, and the warnings-suppress-PASS rule.
+- **Wire CI integrations:** if you outgrow Tier 1, [`docs/how-to/3-ci-integration.md`](3-ci-integration.md) covers GitHub Checks + the generic adapter pattern for non-GitHub CIs.
+- **Make the check required:** once the gate has stabilized, [`docs/how-to/5-branch-protection.md`](5-branch-protection.md) shows the phased rollout to a required check.
+
+---
+
+## Under the hood
+
+Want to know what each scaffolded file does? Or you want to author a config from scratch instead of using `release-readiness-init`? This appendix is the legacy walkthrough — it explains the moving parts but takes longer than the four-command path above.
+
+### Minimum viable `config.yaml`
+
+The smallest config that runs without errors:
 
 ```yaml
 version: 1
@@ -101,59 +150,15 @@ scoring:
     risky_config_without_note: 10
 ```
 
-What each block does:
+Each block:
 
 - **`version`** — schema version, currently `1`.
-- **`validations`** — registry of the validation keys your project knows about. Required keys appear here with a human description.
-- **`evidence_boolean_keys`** — top-level keys in your smoke / e2e JSON that mark a validation as satisfied when set to `true`. Without this, the engine falls back to TalkBack-flavored defaults (see `docs/how-to/1-map-evidence.md` for why you almost always want to set this explicitly).
-- **`infer_validations_when_pass`** — optional inference: when smoke or e2e passes overall, mark these validation keys as satisfied even without explicit booleans.
-- **`scoring`** — thresholds and per-signal penalties. Defaults below preserve the deterministic engine's behavior. Tune per `docs/how-to/2-tune-scoring.md`.
+- **`validations`** — registry of validation keys. Required keys appear here with a human description.
+- **`evidence_boolean_keys`** — top-level keys in your smoke / e2e JSON that mark a validation as satisfied when set to `true`. Without this, the engine falls back to TalkBack-flavored defaults.
+- **`infer_validations_when_pass`** — when the smoke or e2e suite passes overall, mark these validation keys as satisfied even without explicit booleans.
+- **`scoring`** — thresholds and per-signal penalties. Tune per [`docs/how-to/2-tune-scoring.md`](2-tune-scoring.md).
 
-Everything else (`risk_from_paths`, `risky_config_patterns`, `remediation`, `e2e_critical_name_patterns`, etc.) is optional — start without it and add as you need it.
-
----
-
-## 3. First run — no evidence
-
-Run the evaluator from the project root with no artifacts attached:
-
-```bash
-release-readiness-evaluate \
-  --repo-root . \
-  --config config.yaml \
-  --empty-diff \
-  --output-dir artifacts/release-readiness
-```
-
-`--empty-diff` skips the `git diff` step. Use it for local runs and non-CI invocations. In CI, drop it and the package will compute changed files via `git diff origin/main…HEAD`.
-
-Expected output (excerpt):
-
-```
-## Result: **BLOCK** (score 50.0)
-
-### Warnings
-- Smoke results artifact missing or unreadable
-- E2E test results artifact missing or unreadable
-- Coverage summary not provided (confidence reduced)
-- Production health snapshot not provided (optional)
-```
-
-This is the package telling you the truth: no evidence, no confidence, no PASS. It's also a healthy first signal that your install works.
-
-Outputs land in:
-
-```
-artifacts/release-readiness/report.json   # full structured payload
-artifacts/release-readiness/report.md     # human-readable markdown
-artifacts/release-readiness.json          # short summary the CI gate reads
-```
-
----
-
-## 4. Second run — with synthetic evidence
-
-Create three synthetic artifact files. These mimic what your real CI will emit later.
+### Synthetic evidence shapes (the same files `--demo` writes)
 
 `evidence/smoke.json`:
 
@@ -177,72 +182,26 @@ Create three synthetic artifact files. These mimic what your real CI will emit l
 `evidence/coverage.json`:
 
 ```json
-{ "line_percent": 88.0, "baseline_percent": 85.0 }
+{ "line_percent": 92.0, "baseline_percent": 85.0 }
 ```
 
-(Optional — add `evidence/prod_health.json` if your project has a production-health source. If your project doesn't have one, declare `optional_artifacts: [prod_health]` in your `config.yaml` and the warning won't fire — see `tune-scoring.md` for the full opt-out list.)
-
-Re-run, this time pointing at the artifacts:
-
-```bash
-release-readiness-evaluate \
-  --repo-root . \
-  --config config.yaml \
-  --smoke-results evidence/smoke.json \
-  --e2e-results evidence/e2e.json \
-  --coverage evidence/coverage.json \
-  --empty-diff \
-  --output-dir artifacts/release-readiness
-```
-
-Expected:
+### Outputs after `release-readiness-evaluate`
 
 ```
-## Result: **WARN** (score 95.0)
-### Warnings
-- Production health snapshot not provided (optional)
+artifacts/release-readiness/report.json   # full structured payload
+artifacts/release-readiness/report.md     # human-readable markdown
+artifacts/release-readiness.json          # short summary the CI gate reads
 ```
 
-The score is 95/100 (one optional warning) but PASS requires score ≥ 80 **and** zero warnings, so the outcome demotes to WARN. Two ways to clear it:
-
-- **Provide a stub `prod_health.json`** (e.g. `{ "status": "healthy" }`) and re-run with `--prod-health evidence/prod_health.json`. Use this when your project genuinely has a production-health source you want to start tracking.
-- **Declare it optional in `config.yaml`** when your project has no production-health monitoring at all:
-
-  ```yaml
-  optional_artifacts:
-    - prod_health
-  ```
-
-  The warning is suppressed and so is the score penalty. Coverage can be opted out the same way.
-
-Either gets you to:
-
-```
-## Result: **PASS** (score 100.0)
-```
-
-That's the green path. From here, every CI run that emits the same artifact shapes will produce a deterministic, reviewable readiness report.
-
----
-
-## 5. Where to look first
-
-When the report says BLOCK or WARN, read in this order:
+### Where to look first when the report says BLOCK or WARN
 
 1. **`### Outcome determination` table** — score, blockers, warnings, and any outcome override.
-2. **`### Warnings` / `### Blockers` lists** — the human-readable signals that drove the result.
+2. **`### Warnings` / `### Blockers` lists** — human-readable signals that drove the result.
 3. **`### Failed checks`** — short keys (`smoke_artifact`, `e2e_critical`, …) for each signal. These are the join keys for `remediation` in `config.yaml`.
-4. **`### Remediation guidance` table** — the recommended action for each failed check, populated from your `remediation` config.
+4. **`### Remediation guidance` table** — recommended action for each failed check, populated from your `remediation` config.
 
-For programmatic use, `report.json` carries everything the markdown shows, plus `critical_failed_titles` and `non_critical_failed_titles` arrays so a CI gate doesn't have to re-parse `playwright-results.json`.
+For programmatic use, `report.json` carries everything the markdown shows, plus `critical_failed_titles` and `non_critical_failed_titles` arrays so a CI gate doesn't have to re-parse raw test output.
 
 ---
 
-## 6. Next steps
-
-- **Wire your real evidence:** `docs/how-to/1-map-evidence.md` covers smoke / e2e schemas, the Playwright adapter, and how `infer_validations_when_pass` interacts with explicit JSON validations.
-- **Tune the scoring:** `docs/how-to/2-tune-scoring.md` walks through penalties, thresholds, and avoiding the common "warning suppresses PASS at 100" anti-pattern.
-- **Plug into CI:** `docs/how-to/3-ci-integration.md` shows the GitHub Checks pattern and a generic adapter pattern for non-GitHub CI.
-- **Reference docs:** `docs/contracts/README.md` has the JSON schemas for inputs and outputs.
-
-If something in this quickstart didn't behave as advertised, please open an issue against `release-readiness-core`.
+If the four-command path didn't behave as advertised, please open an issue against `release-readiness-core`.

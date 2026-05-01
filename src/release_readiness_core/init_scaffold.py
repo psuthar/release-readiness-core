@@ -20,6 +20,15 @@ Files written under ``<target-dir>``::
     ops/release-readiness/config.yaml              # starter config
     ops/release-readiness/validation_map.yaml      # starter validation map
     .github/workflows/release-readiness.yml        # only if --workflow github
+    evidence/smoke.json                            # only if --demo
+    evidence/e2e.json                              # only if --demo
+    evidence/coverage.json                         # only if --demo
+
+When ``--demo`` is passed, the scaffold also writes synthetic
+``evidence/*.json`` files whose shapes match the starter config so the
+adopter's first ``release-readiness-evaluate`` run is provably PASS /
+score=100. Each demo file carries a ``_comment`` field marking it as
+synthetic with a pointer to ``docs/how-to/1-map-evidence.md``.
 """
 
 from __future__ import annotations
@@ -266,6 +275,41 @@ jobs:
 """
 
 
+DEMO_SYNTHETIC_HEADER = (
+    "Synthetic — replace before relying on this gate. "
+    "See docs/how-to/1-map-evidence.md for the real evidence shapes."
+)
+
+DEMO_SMOKE_JSON = """\
+{
+  "_comment": "%s",
+  "status": "passed",
+  "passed": true,
+  "smoke_passing": true
+}
+""" % DEMO_SYNTHETIC_HEADER
+
+DEMO_E2E_JSON = """\
+{
+  "_comment": "%s",
+  "status": "passed",
+  "failed_count": 0,
+  "total_count": 0,
+  "retries": 0,
+  "failures": [],
+  "validations": {}
+}
+""" % DEMO_SYNTHETIC_HEADER
+
+DEMO_COVERAGE_JSON = """\
+{
+  "_comment": "%s",
+  "line_percent": 92.0,
+  "baseline_percent": 85.0
+}
+""" % DEMO_SYNTHETIC_HEADER
+
+
 def _write_file(path: Path, content: str, force: bool) -> str:
     """Return one of: ``'created'``, ``'overwrote'``, ``'skipped (exists)'``."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -276,8 +320,19 @@ def _write_file(path: Path, content: str, force: bool) -> str:
     return state
 
 
-def scaffold(target: Path, *, workflow: str = "github", force: bool = False) -> dict[str, str]:
-    """Write scaffold files under ``target``. Returns ``{relpath: status}``."""
+def scaffold(
+    target: Path,
+    *,
+    workflow: str = "github",
+    force: bool = False,
+    demo: bool = False,
+) -> dict[str, str]:
+    """Write scaffold files under ``target``. Returns ``{relpath: status}``.
+
+    When ``demo`` is True, also writes synthetic ``evidence/{smoke,e2e,coverage}.json``
+    so the adopter's first ``release-readiness-evaluate`` run is provably PASS.
+    Without ``demo``, scaffold output is byte-identical to the pre-D1 behavior.
+    """
     target = target.resolve()
     target.mkdir(parents=True, exist_ok=True)
 
@@ -292,6 +347,13 @@ def scaffold(target: Path, *, workflow: str = "github", force: bool = False) -> 
         )
     elif workflow != "none":
         raise ValueError(f"--workflow must be 'github' or 'none', got {workflow!r}")
+
+    if demo:
+        plan.extend([
+            (target / "evidence" / "smoke.json", DEMO_SMOKE_JSON),
+            (target / "evidence" / "e2e.json", DEMO_E2E_JSON),
+            (target / "evidence" / "coverage.json", DEMO_COVERAGE_JSON),
+        ])
 
     results: dict[str, str] = {}
     for path, content in plan:
@@ -321,11 +383,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="Overwrite existing files instead of skipping them.",
     )
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help=(
+            "Also write synthetic evidence/{smoke,e2e,coverage}.json that match "
+            "the starter config so the first release-readiness-evaluate run is "
+            "provably PASS (score 100). Replace before relying on the gate."
+        ),
+    )
     args = parser.parse_args(argv)
 
     target = Path(args.target)
     try:
-        results = scaffold(target, workflow=args.workflow, force=args.force)
+        results = scaffold(
+            target, workflow=args.workflow, force=args.force, demo=args.demo
+        )
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
@@ -340,6 +413,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.workflow == "github":
         print("  3. Replace <sha> in .github/workflows/release-readiness.yml with a pinned SHA.")
         print("  4. Wire the evidence-collection steps to your CI's smoke / E2E / coverage jobs.")
+    if args.demo:
+        print()
+        print("Demo evidence written. Verify a green PASS with:")
+        print("  release-readiness-evaluate --repo-root . \\")
+        print("    --config ops/release-readiness/config.yaml \\")
+        print("    --smoke-results evidence/smoke.json \\")
+        print("    --e2e-results evidence/e2e.json \\")
+        print("    --coverage evidence/coverage.json --empty-diff")
+        print("Replace evidence/*.json with real CI outputs before relying on the gate.")
     return 0
 
 

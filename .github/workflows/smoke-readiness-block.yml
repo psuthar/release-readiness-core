@@ -38,6 +38,7 @@ jobs:
     uses: ./.github/workflows/readiness.yml
     with:
       package-ref: ${{ inputs.package-ref }}
+      config-path: tests/fixtures/smoke-config.yaml
       smoke-results: tests/fixtures/smoke-block/smoke.json
       e2e-results: tests/fixtures/smoke-block/e2e.json
       coverage: tests/fixtures/smoke-block/coverage.json

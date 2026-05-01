@@ -1,0 +1,188 @@
+name: release-readiness-pr-gate
+description: >-
+  Orchestrate release-readiness-pr-risk + release-readiness-evaluate +
+  release-readiness-combine + release-readiness-check-payload. Emits
+  artifacts/pr-gate-summary.{json,md} and artifacts/pr-gate-check.json
+  for downstream Check publishing and enforcement steps.
+  Adopters keep responsibility for collecting smoke / E2E / coverage
+  artifacts; this action handles install + the four orchestrator steps.
+
+inputs:
+  package-ref:
+    description: >-
+      git ref (SHA or tag) to install release-readiness-core from.
+      Pin to a SHA in production.
+    required: true
+  config-path:
+    description: Path to the project's release-readiness config.yaml.
+    required: false
+    default: ops/release-readiness/config.yaml
+  pr-risk-config:
+    description: >-
+      Path to the project's pr-risk-config.yaml. Empty string uses the
+      bundled language-agnostic default.
+    required: false
+    default: ""
+  smoke-results:
+    description: Path to evidence/smoke.json (relative to repo root).
+    required: false
+    default: ""
+  e2e-results:
+    description: Path to evidence/e2e.json (relative to repo root).
+    required: false
+    default: ""
+  coverage:
+    description: Path to evidence/coverage.json (relative to repo root).
+    required: false
+    default: ""
+  prod-health:
+    description: Path to evidence/prod_health.json (relative to repo root).
+    required: false
+    default: ""
+  base-ref:
+    description: Git base ref for diff computation. Defaults to origin/main.
+    required: false
+    default: ""
+  output-dir:
+    description: >-
+      Directory for pr_risk.json / report.json / report.md.
+      Lean summaries (pr-risk.json, release-readiness.json) and
+      pr-gate outputs (pr-gate-summary.json, pr-gate-check.json,
+      pr-gate-summary.md) land in the parent directory.
+    required: false
+    default: artifacts/release-readiness
+  check-name:
+    description: GitHub Check name embedded in pr-gate-check.json.
+    required: false
+    default: release-readiness
+  run-url:
+    description: >-
+      Workflow run URL for pr-gate-check.json details_url. Falls back
+      to GITHUB_RUN_URL env var when empty.
+    required: false
+    default: ""
+
+outputs:
+  gate-status:
+    description: final_gate.status from pr-gate-summary.json (PASS | WARN | BLOCK)
+    value: ${{ steps.combine.outputs.gate-status }}
+  workflow-should-fail:
+    description: workflow_should_fail flag from pr-gate-summary.json (true | false)
+    value: ${{ steps.combine.outputs.workflow-should-fail }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+
+    - name: Set up Python
+      shell: bash
+      run: uv python install
+
+    - name: Install release-readiness-core
+      shell: bash
+      run: |
+        uv pip install --system \
+          "git+https://github.com/psuthar/release-readiness-core.git@${{ inputs.package-ref }}"
+
+    - name: Compute parent output directory
+      id: paths
+      shell: bash
+      env:
+        OUTDIR: ${{ inputs.output-dir }}
+      run: |
+        PARENT=$(dirname "$OUTDIR")
+        # When output-dir has no parent (e.g. just "artifacts"), default parent to "."
+        if [ "$PARENT" = "" ] || [ "$PARENT" = "$OUTDIR" ]; then
+          PARENT="."
+        fi
+        echo "parent-dir=$PARENT" >> "$GITHUB_OUTPUT"
+        mkdir -p "$OUTDIR" "$PARENT"
+
+    - name: Run release-readiness-pr-risk
+      id: prrisk
+      shell: bash
+      env:
+        BASE: ${{ inputs.base-ref }}
+        PRRISK_CONFIG: ${{ inputs.pr-risk-config }}
+        OUTDIR: ${{ inputs.output-dir }}
+      run: |
+        ARGS=(--repo-root . --output-dir "$OUTDIR")
+        [ -n "$BASE" ]          && ARGS+=(--base-ref "$BASE")
+        [ -n "$PRRISK_CONFIG" ] && ARGS+=(--config "$PRRISK_CONFIG")
+        if ! release-readiness-pr-risk "${ARGS[@]}"; then
+          echo "::error file=.github/actions/release-readiness-pr-gate/action.yml::release-readiness-pr-risk failed; cannot compute PR risk"
+          exit 1
+        fi
+
+    - name: Run release-readiness-evaluate
+      id: evaluate
+      shell: bash
+      env:
+        SMOKE: ${{ inputs.smoke-results }}
+        E2E: ${{ inputs.e2e-results }}
+        COVERAGE: ${{ inputs.coverage }}
+        PROD: ${{ inputs.prod-health }}
+        BASE: ${{ inputs.base-ref }}
+        OUTDIR: ${{ inputs.output-dir }}
+      run: |
+        ARGS=(--repo-root . --config "${{ inputs.config-path }}" --output-dir "$OUTDIR")
+        [ -n "$SMOKE" ]    && ARGS+=(--smoke-results "$SMOKE")
+        [ -n "$E2E" ]      && ARGS+=(--e2e-results "$E2E")
+        [ -n "$COVERAGE" ] && ARGS+=(--coverage "$COVERAGE")
+        [ -n "$PROD" ]     && ARGS+=(--prod-health "$PROD")
+        [ -n "$BASE" ]     && ARGS+=(--base-ref "$BASE")
+        if ! release-readiness-evaluate "${ARGS[@]}"; then
+          # evaluate exits non-zero on BLOCK by default; that's expected — the
+          # combiner step still runs to emit a partial pr-gate-summary.json.
+          # Don't fail the action here; the enforcement step downstream uses
+          # workflow_should_fail to decide whether to fail the workflow.
+          echo "::warning file=.github/actions/release-readiness-pr-gate/action.yml::release-readiness-evaluate exited non-zero — gate will reflect outcome"
+        fi
+
+    - name: Run release-readiness-combine
+      id: combine
+      shell: bash
+      env:
+        OUTDIR: ${{ inputs.output-dir }}
+        PARENT: ${{ steps.paths.outputs.parent-dir }}
+      run: |
+        if ! release-readiness-combine \
+          --pr-risk-json "$PARENT/pr-risk.json" \
+          --readiness-json "$PARENT/release-readiness.json" \
+          --readiness-report-json "$OUTDIR/report.json" \
+          --output-dir "$PARENT" \
+          --step-summary; then
+          # Combine exits 1 on parse failure; partial summary is still written.
+          # The check-payload step + enforcement still need to run.
+          echo "::warning file=.github/actions/release-readiness-pr-gate/action.yml::release-readiness-combine exited non-zero — partial gate summary emitted"
+        fi
+        if [ -f "$PARENT/pr-gate-summary.json" ]; then
+          STATUS=$(jq -r '.final_gate.status // "UNKNOWN"' "$PARENT/pr-gate-summary.json")
+          WSF=$(jq -r '.final_gate.workflow_should_fail // true' "$PARENT/pr-gate-summary.json")
+          echo "gate-status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "workflow-should-fail=$WSF" >> "$GITHUB_OUTPUT"
+        else
+          echo "::error file=.github/actions/release-readiness-pr-gate/action.yml::pr-gate-summary.json missing after combine step"
+          echo "gate-status=UNKNOWN" >> "$GITHUB_OUTPUT"
+          echo "workflow-should-fail=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Run release-readiness-check-payload
+      id: check
+      shell: bash
+      env:
+        PARENT: ${{ steps.paths.outputs.parent-dir }}
+        RUN_URL: ${{ inputs.run-url }}
+      run: |
+        ARGS=(
+          --gate-json "$PARENT/pr-gate-summary.json"
+          --output "$PARENT/pr-gate-check.json"
+          --check-name "${{ inputs.check-name }}"
+        )
+        [ -n "$RUN_URL" ] && ARGS+=(--run-url "$RUN_URL")
+        if ! release-readiness-check-payload "${ARGS[@]}"; then
+          echo "::error file=.github/actions/release-readiness-pr-gate/action.yml::release-readiness-check-payload failed"
+          exit 1
+        fi

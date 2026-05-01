@@ -62,6 +62,7 @@ def test_reusable_workflow_declares_required_inputs():
         "run-doctor",
         "check-name",
         "output-dir",
+        "fail-workflow-on-gate-failure",
     }
     missing = expected - set(inputs.keys())
     assert not missing, f"missing inputs: {missing}"
@@ -88,7 +89,7 @@ def test_reusable_workflow_chains_composites_in_order():
     text = REUSABLE.read_text(encoding="utf-8")
     pr_gate_idx = text.find("./.github/actions/release-readiness-pr-gate")
     publish_idx = text.find("./.github/actions/release-readiness-publish")
-    enforce_idx = text.find("Enforce gate")
+    enforce_idx = text.find("- name: Enforce gate")
     assert pr_gate_idx > 0
     assert publish_idx > pr_gate_idx, "publish must follow pr-gate"
     assert enforce_idx > publish_idx, "enforce must follow publish"
@@ -163,5 +164,5 @@ def test_smoke_pass_verifies_pass_outcome():
 def test_smoke_block_verifies_block_outcome():
     text = SMOKE_BLOCK.read_text(encoding="utf-8")
     assert 'if [ "$STATUS" != "BLOCK" ]' in text
-    # Block smoke must use continue-on-error so the verify job sees the BLOCK signal.
-    assert "continue-on-error: true" in text
+    # Reusable workflow call jobs cannot use continue-on-error; skip hard fail via input.
+    assert "fail-workflow-on-gate-failure: false" in text

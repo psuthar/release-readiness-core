@@ -40,8 +40,8 @@ jobs:
 
   readiness:
     needs: prep-evidence
-    # Job is expected to fail; verify job below confirms the BLOCK signal.
-    continue-on-error: true
+    # BLOCK is asserted via outputs in verify; do not fail this job (invalid:
+    # continue-on-error is not allowed on reusable workflow call jobs).
     uses: ./.github/workflows/readiness.yml
     with:
       package-ref: ${{ inputs.package-ref }}
@@ -52,6 +52,7 @@ jobs:
       comment-on-pr: false
       publish-check: false
       combine-with-pr-risk: false
+      fail-workflow-on-gate-failure: false
     secrets: inherit
 
   verify:

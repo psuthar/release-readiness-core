@@ -156,3 +156,58 @@ def test_doctor_against_second_project_fixture_passes_clean():
     )
     counts = _summarize(findings)
     assert counts["ERROR"] == 0, [f.render() for f in findings if f.severity == "ERROR"]
+
+
+# ---------------------------------------------------------------------------
+# --ci mode (D4)
+# ---------------------------------------------------------------------------
+
+
+def test_finding_render_ci_per_severity():
+    assert Finding("ERROR", "broken").render_ci() == "::error::broken"
+    assert Finding("WARN", "iffy").render_ci() == "::warning::iffy"
+    assert Finding("INFO", "fyi").render_ci() == "::notice::fyi"
+    # OK is intentionally suppressed in --ci mode (no annotation).
+    assert Finding("OK", "good").render_ci() is None
+
+
+def test_main_ci_mode_emits_workflow_commands(tmp_path: Path, capsys: pytest.CaptureFixture):
+    """Run main --ci against a misconfigured fixture; expect ::error / ::warning / ::notice
+    lines on stdout instead of the default plain-text rendering."""
+    bad_config = _write_yaml(tmp_path, "version: 1\n")  # minimal but missing critical keys
+
+    rc = main(["--config", str(bad_config), "--ci"])
+    out = capsys.readouterr().out
+    # The default mode banners must NOT appear in --ci mode.
+    assert "release-readiness-doctor" not in out
+    assert "Summary:" not in out
+    # At least one workflow command must appear (warnings on the minimal config).
+    has_command = any(prefix in out for prefix in ("::error::", "::warning::", "::notice::"))
+    assert has_command, f"expected workflow command in output, got: {out!r}"
+    # Exit code semantics unchanged: 0 when no ERROR severity, 1 otherwise.
+    assert rc in (0, 1)
+
+
+def test_main_default_mode_unchanged(tmp_path: Path, capsys: pytest.CaptureFixture):
+    """Without --ci, doctor output is byte-identical to today's plain-text format."""
+    bad_config = _write_yaml(tmp_path, "version: 1\n")
+
+    main(["--config", str(bad_config)])
+    out = capsys.readouterr().out
+    assert "release-readiness-doctor" in out
+    assert "Summary:" in out
+    # No GH-Actions workflow commands in default mode.
+    for prefix in ("::error::", "::warning::", "::notice::"):
+        assert prefix not in out
+
+
+def test_main_ci_mode_preserves_exit_code_on_error(tmp_path: Path):
+    """--ci must not change exit-code semantics — 1 on any ERROR finding."""
+    # Pass a non-existent smoke results file to force an ERROR finding.
+    bad_config = _write_yaml(tmp_path, "version: 1\n")
+    rc = main([
+        "--config", str(bad_config),
+        "--smoke-results", str(tmp_path / "missing.json"),
+        "--ci",
+    ])
+    assert rc == 1

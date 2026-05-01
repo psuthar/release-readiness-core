@@ -93,6 +93,7 @@ uv build
 - Branch protection — make the readiness check required: `docs/how-to/5-branch-protection.md`
 - Migrating from an existing gate: `docs/how-to/6-migrate-from-existing-gate.md`
 - Configure PR Risk for your project: `docs/how-to/7-configure-pr-risk.md`
+- Recipe matrix — adapter snippets per stack (Playwright / pytest / Cypress / Jest / Vitest / Go): `docs/how-to/8-recipe-matrix.md`
 
 ### Reference
 

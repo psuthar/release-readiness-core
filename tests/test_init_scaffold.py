@@ -165,3 +165,92 @@ def test_scaffold_without_demo_byte_identical_to_legacy(tmp_path: Path):
             rel = path_a.relative_to(a)
             path_b = b / rel
             assert path_b.read_bytes() == path_a.read_bytes(), f"divergence at {rel}"
+
+
+# ---------------------------------------------------------------------------
+# --stack flag
+# ---------------------------------------------------------------------------
+
+
+from release_readiness_core.init_scaffold import VALID_STACKS, render_workflow_template
+
+
+@pytest.mark.parametrize("stack", VALID_STACKS)
+def test_render_workflow_template_for_each_stack(stack: str):
+    body = render_workflow_template(stack)
+    # Common header (stack-agnostic) preserved.
+    assert "name: release-readiness" in body
+    assert "uses: actions/checkout@v5" in body
+    # Stack-specific marker should be present.
+    markers = {
+        "playwright": "playwright-to-readiness",
+        "cypress": "cypress run",
+        "jest": "jest-junit",
+        "pytest": "pytest --junit-xml",
+        "go": "go test ./...",
+        "go-coverage": "lcov-to-readiness",
+    }
+    assert markers[stack] in body, f"{stack} marker missing in rendered workflow"
+
+
+def test_render_workflow_template_default_uses_commented_placeholder():
+    body = render_workflow_template(None)
+    # Commented placeholder marker.
+    assert "Replace the placeholders below" in body
+
+
+def test_scaffold_with_stack_uncomments_runner_block(tmp_path: Path):
+    scaffold(tmp_path, stack="playwright")
+    workflow = (tmp_path / ".github/workflows/release-readiness.yml").read_text(encoding="utf-8")
+    assert "Replace the placeholders below" not in workflow
+    assert "Run Playwright" in workflow
+
+
+def test_scaffold_unknown_stack_raises(tmp_path: Path):
+    with pytest.raises(ValueError, match="--stack must be one of"):
+        scaffold(tmp_path, stack="circleci")
+
+
+def test_scaffold_stack_combines_with_demo(tmp_path: Path):
+    """--stack and --demo are independent; combining must work."""
+    scaffold(tmp_path, stack="pytest", demo=True)
+    assert (tmp_path / "evidence" / "smoke.json").is_file()
+    workflow = (tmp_path / ".github/workflows/release-readiness.yml").read_text(encoding="utf-8")
+    assert "pytest --junit-xml" in workflow
+
+
+def test_scaffold_without_stack_byte_identical(tmp_path: Path):
+    """Without --stack and without --demo, scaffold output must remain
+    byte-identical to today's behavior (no regression)."""
+    a = tmp_path / "a"
+    b = tmp_path / "b"
+    scaffold(a)
+    scaffold(b, stack=None, demo=False)
+    for path_a in a.rglob("*"):
+        if path_a.is_file():
+            rel = path_a.relative_to(a)
+            assert (b / rel).read_bytes() == path_a.read_bytes()
+
+
+def test_main_unknown_stack_exits_nonzero(tmp_path: Path, capsys: pytest.CaptureFixture):
+    """argparse's choices= validation raises SystemExit(2) on invalid input
+    and prints valid choices to stderr — that's the clean-error path."""
+    with pytest.raises(SystemExit) as exc:
+        main([str(tmp_path), "--stack", "circleci"])
+    assert exc.value.code != 0
+    err = capsys.readouterr().err
+    # The error message must enumerate valid choices.
+    for stack in VALID_STACKS:
+        assert stack in err
+
+
+@pytest.mark.parametrize("stack", VALID_STACKS)
+def test_main_each_stack_succeeds(tmp_path: Path, stack: str):
+    sub = tmp_path / stack
+    code = main([str(sub), "--stack", stack])
+    assert code == 0
+    workflow_path = sub / ".github/workflows/release-readiness.yml"
+    assert workflow_path.is_file()
+    body = workflow_path.read_text(encoding="utf-8")
+    # The commented placeholder must be replaced.
+    assert "Replace the placeholders below" not in body

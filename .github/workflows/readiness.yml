@@ -144,8 +144,8 @@ jobs:
   readiness:
     runs-on: ubuntu-latest
     outputs:
-      gate-status: ${{ steps.pr-gate.outputs['gate-status'] || steps.evaluate-only-gate.outputs['gate-status'] }}
-      workflow-should-fail: ${{ steps.pr-gate.outputs['workflow-should-fail'] || steps.evaluate-only-gate.outputs['workflow-should-fail'] }}
+      gate-status: ${{ steps.pr_gate.outputs['gate-status'] || steps.evaluate_only_gate.outputs['gate-status'] }}
+      workflow-should-fail: ${{ steps.pr_gate.outputs['workflow-should-fail'] || steps.evaluate_only_gate.outputs['workflow-should-fail'] }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -214,7 +214,7 @@ jobs:
           fi
 
       - name: release-readiness-pr-gate (pr-risk + evaluate + combine + check-payload)
-        id: pr-gate
+        id: pr_gate
         if: ${{ inputs['combine-with-pr-risk'] }}
         uses: ./.github/actions/release-readiness-pr-gate
         with:
@@ -262,7 +262,7 @@ jobs:
           fi
 
       - name: release-readiness-evaluate (no PR risk)
-        id: evaluate-only
+        id: evaluate_only
         if: ${{ ! inputs['combine-with-pr-risk'] }}
         shell: bash
         env:
@@ -281,7 +281,7 @@ jobs:
           release-readiness-evaluate "${ARGS[@]}" || true
 
       - name: Compute gate fallback (no PR risk)
-        id: evaluate-only-gate
+        id: evaluate_only_gate
         if: ${{ ! inputs['combine-with-pr-risk'] }}
         shell: bash
         env:
@@ -329,8 +329,8 @@ jobs:
         if: ${{ always() && inputs['fail-workflow-on-gate-failure'] }}
         shell: bash
         env:
-          GATE_STATUS: ${{ steps.pr-gate.outputs['gate-status'] || steps.evaluate-only-gate.outputs['gate-status'] }}
-          WSF: ${{ steps.pr-gate.outputs['workflow-should-fail'] || steps.evaluate-only-gate.outputs['workflow-should-fail'] }}
+          GATE_STATUS: ${{ steps.pr_gate.outputs['gate-status'] || steps.evaluate_only_gate.outputs['gate-status'] }}
+          WSF: ${{ steps.pr_gate.outputs['workflow-should-fail'] || steps.evaluate_only_gate.outputs['workflow-should-fail'] }}
           MODE: ${{ inputs['enforcement-mode'] }}
         run: |
           echo "Gate status: $GATE_STATUS, workflow_should_fail: $WSF, enforcement-mode: $MODE"

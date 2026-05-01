@@ -21,6 +21,14 @@ on:
         required: false
         default: main
 
+# The reusable readiness.yml requests checks: write + pull-requests: write
+# (for Check publishing + sticky comment). Caller must grant these or GitHub
+# rejects the workflow_call at startup.
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   prep-evidence:
     runs-on: ubuntu-latest

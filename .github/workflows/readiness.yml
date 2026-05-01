@@ -317,7 +317,7 @@ jobs:
         if: always()
         uses: ./.github/actions/release-readiness-publish
         with:
-          gate-payload: ${{ inputs['combine-with-pr-risk'] && format('{0}/../pr-gate-check.json', inputs['output-dir']) || format('{0}/../pr-gate-check.json', inputs['output-dir']) }}
+          gate-payload: ${{ format('{0}/../pr-gate-check.json', inputs['output-dir']) }}
           report-md: ${{ inputs['output-dir'] }}/report.md
           check-name: ${{ inputs['check-name'] }}
           comment-header: ${{ inputs['check-name'] }}

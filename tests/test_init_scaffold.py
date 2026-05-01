@@ -254,3 +254,87 @@ def test_main_each_stack_succeeds(tmp_path: Path, stack: str):
     body = workflow_path.read_text(encoding="utf-8")
     # The commented placeholder must be replaced.
     assert "Replace the placeholders below" not in body
+
+
+# ---------------------------------------------------------------------------
+# --pin flag (D2)
+# ---------------------------------------------------------------------------
+
+
+from release_readiness_core.init_scaffold import (
+    PIN_REF_ENV_VAR,
+    resolve_pin_ref,
+)
+
+
+def test_resolve_pin_ref_arg_wins(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(PIN_REF_ENV_VAR, "from-env")
+    assert resolve_pin_ref("from-arg") == "from-arg"
+
+
+def test_resolve_pin_ref_falls_back_to_env(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(PIN_REF_ENV_VAR, "abc1234")
+    assert resolve_pin_ref(None) == "abc1234"
+
+
+def test_resolve_pin_ref_falls_back_to_default(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv(PIN_REF_ENV_VAR, raising=False)
+    # DEFAULT_PIN_REF is empty in dev; resolution returns empty string.
+    assert resolve_pin_ref(None) == ""
+
+
+def test_resolve_pin_ref_treats_whitespace_as_unset(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv(PIN_REF_ENV_VAR, raising=False)
+    assert resolve_pin_ref("   ") == ""
+
+
+def test_scaffold_with_pin_substitutes_sha_in_workflow(tmp_path: Path):
+    scaffold(tmp_path, pin_ref="abc1234567")
+    body = (tmp_path / ".github/workflows/release-readiness.yml").read_text(encoding="utf-8")
+    assert "<sha>" not in body
+    assert "abc1234567" in body
+
+
+def test_scaffold_without_pin_keeps_sha_placeholder(tmp_path: Path):
+    scaffold(tmp_path)  # no pin_ref
+    body = (tmp_path / ".github/workflows/release-readiness.yml").read_text(encoding="utf-8")
+    assert "<sha>" in body
+
+
+def test_scaffold_pin_byte_identical_to_no_pin_for_other_files(tmp_path: Path):
+    """--pin only affects the workflow file; other scaffold files are
+    byte-identical to the no-pin output."""
+    a = tmp_path / "a"
+    b = tmp_path / "b"
+    scaffold(a)
+    scaffold(b, pin_ref="deadbeef")
+    for path_a in a.rglob("*"):
+        if path_a.is_file() and path_a.relative_to(a).as_posix() != ".github/workflows/release-readiness.yml":
+            assert (b / path_a.relative_to(a)).read_bytes() == path_a.read_bytes()
+
+
+def test_main_pin_arg_substitutes(tmp_path: Path, capsys: pytest.CaptureFixture):
+    code = main([str(tmp_path), "--pin", "v0.4.0"])
+    assert code == 0
+    body = (tmp_path / ".github/workflows/release-readiness.yml").read_text(encoding="utf-8")
+    assert "<sha>" not in body
+    assert "v0.4.0" in body
+    out = capsys.readouterr().out
+    assert "Workflow pinned to v0.4.0" in out
+
+
+def test_main_pin_env_substitutes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture):
+    monkeypatch.setenv(PIN_REF_ENV_VAR, "abc1234")
+    code = main([str(tmp_path)])
+    assert code == 0
+    body = (tmp_path / ".github/workflows/release-readiness.yml").read_text(encoding="utf-8")
+    assert "abc1234" in body
+
+
+def test_main_no_pin_source_prints_replace_hint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture):
+    monkeypatch.delenv(PIN_REF_ENV_VAR, raising=False)
+    code = main([str(tmp_path)])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "Replace <sha>" in out
+    assert "RR_PIN_REF" in out

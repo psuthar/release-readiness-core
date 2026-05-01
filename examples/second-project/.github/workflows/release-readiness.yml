@@ -1,0 +1,31 @@
+# Example workflow for examples/second-project (todo-api Python service).
+# Demonstrates Tier-1 adopter wiring against the fixture's existing
+# evidence/{smoke,e2e,coverage}.json files.
+#
+# Copy this into your real repo, replace <sha> with a pinned release SHA
+# (or use `release-readiness-init --pin <sha>` to scaffold pre-pinned),
+# and adjust evidence paths to match your CI's outputs.
+
+name: release-readiness
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  readiness:
+    uses: psuthar/release-readiness-core/.github/workflows/readiness.yml@<sha>
+    with:
+      package-ref: <sha>
+      config-path: examples/second-project/config.yaml
+      smoke-results: examples/second-project/evidence/smoke.json
+      e2e-results: examples/second-project/evidence/e2e.json
+      coverage: examples/second-project/evidence/coverage.json
+      enforcement-mode: block_only
+      combine-with-pr-risk: false
+    secrets: inherit

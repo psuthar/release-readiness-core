@@ -1,0 +1,10 @@
+# Playwright file-stem -> readiness validation key map.
+# Used by playwright-to-readiness; see docs/how-to/1-map-evidence.md.
+
+auth_login:
+  - login-flow
+  - oauth-callback
+
+homepage_render:
+  - homepage
+  - marketing

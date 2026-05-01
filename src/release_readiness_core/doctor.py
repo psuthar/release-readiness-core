@@ -52,6 +52,22 @@ class Finding:
     def render(self) -> str:
         return f"[{self.severity:<5}] {self.message}"
 
+    def render_ci(self) -> str | None:
+        """Render as a GitHub Actions workflow command. ``None`` skips emission.
+
+        ERROR  -> ``::error::<message>``
+        WARN   -> ``::warning::<message>``
+        INFO   -> ``::notice::<message>``
+        OK     -> skipped (would otherwise drown signal in noise)
+        """
+        if self.severity == "ERROR":
+            return f"::error::{self.message}"
+        if self.severity == "WARN":
+            return f"::warning::{self.message}"
+        if self.severity == "INFO":
+            return f"::notice::{self.message}"
+        return None
+
 
 def _check_install() -> list[Finding]:
     out: list[Finding] = []
@@ -478,6 +494,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--e2e-results", type=Path, default=None)
     parser.add_argument("--coverage", type=Path, default=None)
     parser.add_argument("--prod-health", type=Path, default=None)
+    parser.add_argument(
+        "--ci",
+        action="store_true",
+        help=(
+            "Emit findings as GitHub Actions workflow commands "
+            "(::error / ::warning / ::notice) so they surface as inline "
+            "annotations on the PR Files tab. Default rendering is unchanged."
+        ),
+    )
     args = parser.parse_args(argv)
 
     findings = run(
@@ -489,18 +514,25 @@ def main(argv: list[str] | None = None) -> int:
         prod_health_path=args.prod_health,
     )
 
-    print("release-readiness-doctor")
-    print("=" * 60)
-    for f in findings:
-        print(f.render())
+    if args.ci:
+        for f in findings:
+            line = f.render_ci()
+            if line is not None:
+                print(line)
+    else:
+        print("release-readiness-doctor")
+        print("=" * 60)
+        for f in findings:
+            print(f.render())
+
+        counts = _summarize(findings)
+        print()
+        print(
+            f"Summary: {counts['OK']} ok, {counts['INFO']} info, "
+            f"{counts['WARN']} warn, {counts['ERROR']} error"
+        )
 
     counts = _summarize(findings)
-    print()
-    print(
-        f"Summary: {counts['OK']} ok, {counts['INFO']} info, "
-        f"{counts['WARN']} warn, {counts['ERROR']} error"
-    )
-
     return 1 if counts["ERROR"] > 0 else 0
 
 

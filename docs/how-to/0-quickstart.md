@@ -8,13 +8,11 @@ The fastest path from "I want to try this" to a green `release-readiness` Check 
 
 ## TL;DR — four commands
 
-Pick the SHA you want to pin to (latest release tag works fine; for production prefer a SHA from `git log` on `release-readiness-core`'s `main`):
+Install the package as a third-party dependency, then scaffold:
 
 ```bash
-PIN=v0.4.0  # or any release tag / commit SHA
-
-pip install "git+https://github.com/psuthar/release-readiness-core.git@${PIN}"
-release-readiness-init my-project --demo --stack pytest --pin "${PIN}"
+pip install release-readiness-core
+release-readiness-init my-project --demo --stack pytest
 cd my-project && git init && git add . && git commit -m "release-readiness scaffold"
 
 # Push to your repo and open a PR — the release-readiness Check will appear
@@ -42,7 +40,22 @@ my-project/
     └── coverage.json
 ```
 
-The workflow calls `psuthar/release-readiness-core/.github/workflows/readiness.yml@<pinned-SHA>` which internally runs install + (optional) doctor + pr-risk + readiness-evaluate + combine + Check publish + sticky-comment + enforcement. You don't need to wire any of that yourself.
+The scaffold defaults to Tier-1 reusable workflow integration (`uses: psuthar/release-readiness-core/.../readiness.yml@<sha>`). This is the shortest setup when your repo has access to reusable workflows from `release-readiness-core`.
+
+### Third-party-safe path (no source-workflow coupling)
+
+If you are adopting as an external consumer and do **not** want to rely on cross-repo reusable workflow access, keep the scaffolded config/evidence files but run the CLIs directly in your own workflow (Tier 3):
+
+```yaml
+- uses: astral-sh/setup-uv@v6
+- run: uvx --from release-readiness-core release-readiness-doctor --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json
+- run: uvx --from release-readiness-core release-readiness-evaluate --repo-root . --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json --enforcement-mode block_only
+```
+
+Use this mode when:
+- your org policy blocks cross-repo reusable workflows,
+- the source repo is private, or
+- you want all CI logic to live in the consumer repo.
 
 ---
 

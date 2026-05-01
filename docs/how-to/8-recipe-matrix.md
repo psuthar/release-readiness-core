@@ -2,7 +2,11 @@
 
 One row per common test-runner. Each row gives the 6-line evidence-collection snippet, the matching adapter CLI, the `--validation-map` requirement (if any), and a link to a working example workflow.
 
-All snippets call the Tier-1 reusable workflow. Replace `<sha>` with a pinned `release-readiness-core` release SHA (or scaffold pre-pinned via `release-readiness-init --pin <sha>`).
+All snippets below focus on evidence collection and work with either:
+- **Tier 1** reusable workflow (`uses: .../workflows/readiness.yml@<sha>`), or
+- **Tier 3** in-repo CLI execution (`uvx --from release-readiness-core release-readiness-evaluate ...`).
+
+If you're adopting as a third-party consumer and want to avoid cross-repo reusable workflow access dependencies, prefer Tier 3.
 
 | Stack | Adapter | Validation map | Example |
 |---|---|---|---|
@@ -170,6 +174,26 @@ Same `lcov-to-readiness` adapter as the Go-cover path.
 The validation map is only required when you want **per-validation-key satisfaction** (e.g., `auth_login: true` in the e2e shape). Without it, the adapter still emits valid `e2e.json` (counts, failures, status) — and you can use `infer_validations_when_pass` in `config.yaml` to mark validation keys satisfied when the suite passes overall.
 
 See [`docs/how-to/1-map-evidence.md`](1-map-evidence.md) for the full evidence-channel walkthrough.
+
+---
+
+## Complete with Tier-3 CLI execution (third-party-safe)
+
+After your stack-specific evidence steps, run readiness directly from your own workflow:
+
+```yaml
+- uses: astral-sh/setup-uv@v6
+- run: |
+    uvx --from release-readiness-core release-readiness-evaluate \
+      --repo-root . \
+      --config ops/release-readiness/config.yaml \
+      --smoke-results evidence/smoke.json \
+      --e2e-results evidence/e2e.json \
+      --coverage evidence/coverage.json \
+      --enforcement-mode block_only
+```
+
+This avoids requiring access to reusable workflows in the source repo.
 
 ---
 

@@ -6,6 +6,17 @@ This guide shows how to run the readiness CLI inside CI and surface its PASS/WAR
 
 ---
 
+## 0. Choose your integration mode first
+
+Two valid GitHub approaches:
+
+- **Consumer-owned (third-party-safe, recommended):** run `release-readiness-*` CLIs directly in your own workflow via `uvx --from release-readiness-core ...`.
+- **Source-owned reusable workflow:** call `psuthar/release-readiness-core/.github/workflows/readiness.yml@<sha>`.
+
+Use consumer-owned mode when you cannot or do not want to depend on cross-repo reusable workflow access. For private repos, this avoids failures caused by reusable-workflow access policy mismatches.
+
+---
+
 ## 1. What the CLI emits
 
 `release-readiness-evaluate` writes three artifacts under `--output-dir` (default `artifacts/release-readiness/`):
@@ -92,12 +103,6 @@ jobs:
           fetch-depth: 0   # readiness needs git history for diff
 
       - uses: astral-sh/setup-uv@v6
-      - run: uv python install
-
-      - name: Install release-readiness-core
-        run: |
-          uv pip install --system \
-            "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 
       # ---- collect evidence (project-specific) -------------------
       - name: Run smoke
@@ -108,7 +113,7 @@ jobs:
 
       - name: Convert Playwright -> readiness
         run: |
-          playwright-to-readiness \
+          uvx --from release-readiness-core playwright-to-readiness \
             --input playwright-results.json \
             --output evidence/e2e.json \
             --validation-map ops/release-readiness/e2e_validation_map.yaml
@@ -120,7 +125,7 @@ jobs:
       - name: release-readiness
         id: readiness
         run: |
-          release-readiness-evaluate \
+          uvx --from release-readiness-core release-readiness-evaluate \
             --repo-root . \
             --config ops/release-readiness/config.yaml \
             --base-ref origin/${{ github.base_ref }} \
@@ -169,6 +174,11 @@ Notes:
 - `actions/checkout@v5` with `fetch-depth: 0` is required because the CLI shells out to `git diff <base-ref>` to compute changed files. If you want to skip that, pass `--empty-diff` and don't set fetch-depth.
 - The `if: always()` on publish steps ensures the report still posts even when the readiness step exits non-zero on BLOCK. Without that, a BLOCK leaves no PR comment.
 - `marocchino/sticky-pull-request-comment` keeps a single PR comment updated across pushes; `actions/github-script` is just one of many ways to publish the Check.
+- `uvx --from release-readiness-core ...` avoids system Python writes (`pip --system`) and works on externally managed GitHub runners.
+
+### Reusable workflow caveat for private repos
+
+If you use `uses: psuthar/release-readiness-core/.github/workflows/readiness.yml@<sha>`, verify reusable-workflow access is enabled on the source repo. A disabled policy can surface as a confusing "workflow was not found" error even when the file exists.
 
 ### Gating merges
 

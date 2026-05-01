@@ -94,6 +94,7 @@ uv build
 - Migrating from an existing gate: `docs/how-to/6-migrate-from-existing-gate.md`
 - Configure PR Risk for your project: `docs/how-to/7-configure-pr-risk.md`
 - Recipe matrix — adapter snippets per stack (Playwright / pytest / Cypress / Jest / Vitest / Go): `docs/how-to/8-recipe-matrix.md`
+- Adoption tiers — pick reusable workflow vs. composables vs. raw CLIs: `docs/how-to/9-adoption-tiers.md`
 
 ### Reference
 

@@ -37,7 +37,7 @@ jobs:
       - name: Convert Playwright -> readiness e2e shape
         run: |
           mkdir -p evidence
-          uvx --from "release-readiness-core==0.3.3" playwright-to-readiness \
+          uvx --from "release-readiness-core==0.3.4" playwright-to-readiness \
             --input playwright-results.json \
             --output evidence/e2e.json \
             --validation-map ops/release-readiness/validation_map.yaml

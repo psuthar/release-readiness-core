@@ -11,7 +11,7 @@ The fastest path from "I want to try this" to a green `release-readiness` Check 
 Install the package as a third-party dependency, then scaffold:
 
 ```bash
-pip install "release-readiness-core==0.3.3"
+pip install "release-readiness-core==0.3.4"
 release-readiness-init my-project --demo --stack pytest
 cd my-project && git init && git add . && git commit -m "release-readiness scaffold"
 
@@ -48,8 +48,8 @@ If you are adopting as an external consumer and do **not** want to rely on cross
 
 ```yaml
 - uses: astral-sh/setup-uv@v6
-- run: uvx --from release-readiness-core==0.3.3 release-readiness-doctor --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json
-- run: uvx --from release-readiness-core==0.3.3 release-readiness-evaluate --repo-root . --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json --enforcement-mode block_only
+- run: uvx --from release-readiness-core==0.3.4 release-readiness-doctor --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json
+- run: uvx --from release-readiness-core==0.3.4 release-readiness-evaluate --repo-root . --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json --enforcement-mode block_only
 ```
 
 Use this mode when:

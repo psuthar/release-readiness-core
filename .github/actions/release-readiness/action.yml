@@ -14,7 +14,7 @@ inputs:
     default: "git"
   pypi-version:
     description: >-
-      Version to install from PyPI when install-source is pypi (e.g. 0.3.3).
+      Version to install from PyPI when install-source is pypi (e.g. 0.3.4).
       Ignored when install-source is git.
     required: false
     default: ""

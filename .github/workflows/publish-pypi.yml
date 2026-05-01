@@ -4,7 +4,7 @@
 # trusted publisher for this repository — see RELEASE.md § PyPI trusted publishing.
 #
 # Triggers:
-#   - push of an annotated tag matching v*.*.* (e.g. v0.3.3)
+#   - push of an annotated tag matching v*.*.* (e.g. v0.3.4)
 #   - workflow_dispatch (run workflow against a chosen tag in the UI)
 
 name: Publish to PyPI

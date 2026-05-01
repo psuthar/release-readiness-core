@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). See `RELEASE.md` for PyPI version pins, git SHA pins, and the release checklist.
 
+## [0.3.4] — 2026-05-01
+
+### Changed
+- Scaffold and example workflows prefer **`uvx --from release-readiness-core==…`** against PyPI with a pinned version; quickstart and Python / Node examples updated accordingly.
+
 ## [0.3.3] — 2026-05-01
 
 ### Added

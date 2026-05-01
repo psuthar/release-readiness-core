@@ -44,7 +44,7 @@ on:
         default: git
       pypi-version:
         description: >-
-          PEP 440 version for PyPI (e.g. 0.3.3). Required when install-source is pypi.
+          PEP 440 version for PyPI (e.g. 0.3.4). Required when install-source is pypi.
         required: false
         type: string
         default: ""

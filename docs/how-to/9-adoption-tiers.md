@@ -80,7 +80,7 @@ jobs:
         with:
           package-ref: <sha>
           # install-source: pypi
-          # pypi-version: "0.3.3"
+          # pypi-version: "0.3.4"
           smoke-results: evidence/smoke.json
           e2e-results: evidence/e2e.json
           coverage: evidence/coverage.json
@@ -115,7 +115,7 @@ Nothing GitHub-specific. The four CLIs read JSON, write JSON, and exit non-zero 
 
 ```bash
 # Install the package once (PyPI — pin the version).
-uv pip install --system "release-readiness-core==0.3.3"
+uv pip install --system "release-readiness-core==0.3.4"
 
 # Or from git (pin a SHA).
 # uv pip install --system "git+https://github.com/psuthar/release-readiness-core.git@<sha>"

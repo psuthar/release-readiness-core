@@ -4,7 +4,7 @@ Most teams adopting `release-readiness-core` already have *some* gate in place â
 
 The strategy: **run both gates in parallel for one to two weeks, tune the new one against real PRs, then cut over.** This is the same pattern TalkBack used internally and the one we recommend to every new adopter.
 
-> Prerequisites: the `release-readiness-doctor` command (introduced in v0.3.0). If it isn't available on your install, run `pip install --upgrade "release-readiness-core==0.3.3"` (or install from git with a pinned SHA per `RELEASE.md`).
+> Prerequisites: the `release-readiness-doctor` command (introduced in v0.3.0). If it isn't available on your install, run `pip install --upgrade "release-readiness-core==0.3.4"` (or install from git with a pinned SHA per `RELEASE.md`).
 
 ---
 

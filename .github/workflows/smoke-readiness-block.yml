@@ -63,7 +63,7 @@ jobs:
       - name: Assert gate-status is BLOCK
         shell: bash
         run: |
-          STATUS="${{ needs.readiness.outputs.gate-status }}"
+          STATUS="${{ needs.readiness.outputs['gate-status'] }}"
           echo "Observed gate-status: $STATUS"
           if [ "$STATUS" != "BLOCK" ]; then
             echo "::error::expected BLOCK, got '$STATUS'"

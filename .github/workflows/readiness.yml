@@ -130,10 +130,10 @@ on:
     outputs:
       gate-status:
         description: final_gate.status from pr-gate-summary.json (PASS | WARN | BLOCK)
-        value: ${{ jobs.readiness.outputs.gate-status }}
+        value: ${{ jobs.readiness.outputs['gate-status'] }}
       workflow-should-fail:
         description: workflow_should_fail flag (true | false) — true when the calling workflow's enforcement step should exit non-zero.
-        value: ${{ jobs.readiness.outputs.workflow-should-fail }}
+        value: ${{ jobs.readiness.outputs['workflow-should-fail'] }}
 
 permissions:
   contents: read
@@ -144,8 +144,8 @@ jobs:
   readiness:
     runs-on: ubuntu-latest
     outputs:
-      gate-status: ${{ steps.pr-gate.outputs.gate-status || steps.evaluate-only-gate.outputs.gate-status }}
-      workflow-should-fail: ${{ steps.pr-gate.outputs.workflow-should-fail || steps.evaluate-only-gate.outputs.workflow-should-fail }}
+      gate-status: ${{ steps.pr-gate.outputs['gate-status'] || steps.evaluate-only-gate.outputs['gate-status'] }}
+      workflow-should-fail: ${{ steps.pr-gate.outputs['workflow-should-fail'] || steps.evaluate-only-gate.outputs['workflow-should-fail'] }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -329,8 +329,8 @@ jobs:
         if: ${{ always() && inputs['fail-workflow-on-gate-failure'] }}
         shell: bash
         env:
-          GATE_STATUS: ${{ steps.pr-gate.outputs.gate-status || steps.evaluate-only-gate.outputs.gate-status }}
-          WSF: ${{ steps.pr-gate.outputs.workflow-should-fail || steps.evaluate-only-gate.outputs.workflow-should-fail }}
+          GATE_STATUS: ${{ steps.pr-gate.outputs['gate-status'] || steps.evaluate-only-gate.outputs['gate-status'] }}
+          WSF: ${{ steps.pr-gate.outputs['workflow-should-fail'] || steps.evaluate-only-gate.outputs['workflow-should-fail'] }}
           MODE: ${{ inputs['enforcement-mode'] }}
         run: |
           echo "Gate status: $GATE_STATUS, workflow_should_fail: $WSF, enforcement-mode: $MODE"

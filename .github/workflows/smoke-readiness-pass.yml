@@ -62,7 +62,7 @@ jobs:
       - name: Assert gate-status is PASS
         shell: bash
         run: |
-          STATUS="${{ needs.readiness.outputs.gate-status }}"
+          STATUS="${{ needs.readiness.outputs['gate-status'] }}"
           echo "Observed gate-status: $STATUS"
           if [ "$STATUS" != "PASS" ]; then
             echo "::error::expected PASS, got $STATUS"

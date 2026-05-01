@@ -165,6 +165,20 @@ jobs:
             echo "base_ref=HEAD~1" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Configure git credentials for private-repo pip install
+        if: ${{ inputs['install-source'] == 'git' }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # uv pip install runs `git clone` in its own temp dir, not the
+          # actions/checkout-managed working tree, so it does not inherit
+          # the local extraheader auth. Configure a global insteadOf rewrite
+          # so any subsequent github.com clone uses the workflow token.
+          git config --global \
+            "url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf" \
+            "https://github.com/"
+
       - name: Set up uv (for doctor pre-flight)
         if: ${{ inputs['run-doctor'] }}
         uses: astral-sh/setup-uv@v6
@@ -181,6 +195,7 @@ jobs:
           INSTALL_SOURCE: ${{ inputs['install-source'] }}
           PACKAGE_REF: ${{ inputs['package-ref'] }}
           PYPI_VERSION: ${{ inputs['pypi-version'] }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if [ "$INSTALL_SOURCE" = "pypi" ]; then
@@ -190,6 +205,9 @@ jobs:
             fi
             uv pip install --system --break-system-packages "release-readiness-core==${PYPI_VERSION}"
           else
+            git config --global \
+              "url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf" \
+              "https://github.com/"
             uv pip install --system --break-system-packages \
               "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
           fi
@@ -248,6 +266,7 @@ jobs:
           INSTALL_SOURCE: ${{ inputs['install-source'] }}
           PACKAGE_REF: ${{ inputs['package-ref'] }}
           PYPI_VERSION: ${{ inputs['pypi-version'] }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if [ "$INSTALL_SOURCE" = "pypi" ]; then
@@ -257,6 +276,13 @@ jobs:
             fi
             uv pip install --system --break-system-packages "release-readiness-core==${PYPI_VERSION}"
           else
+            # uv pip install runs git clone in its own temp dir (not the
+            # actions/checkout-managed working tree), so it does not inherit
+            # the local extraheader auth. Configure a global insteadOf rewrite
+            # using the workflow's GITHUB_TOKEN so private-repo refs install.
+            git config --global \
+              "url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf" \
+              "https://github.com/"
             uv pip install --system --break-system-packages \
               "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
           fi

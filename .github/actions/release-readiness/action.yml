@@ -43,6 +43,16 @@ inputs:
     description: Output directory for report.json/report.md (relative to --repo-root).
     required: false
     default: artifacts/release-readiness
+  run-doctor:
+    description: >-
+      When 'true', run release-readiness-doctor against the same config +
+      evidence inputs before invoking release-readiness-evaluate. Doctor
+      catches typos, evidence-shape mismatches, and common inconsistencies
+      (e.g. failed_count > 0 with failures: []) before they reach the
+      evaluator. Doctor failure surfaces as a ::error annotation and the
+      step exits non-zero. Defaults to 'false' to preserve today's behavior.
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -59,6 +69,25 @@ runs:
       run: |
         uv pip install --system \
           "git+https://github.com/psuthar/release-readiness-core.git@${{ inputs.package-ref }}"
+
+    - name: Run release-readiness-doctor (pre-flight)
+      if: inputs.run-doctor == 'true'
+      shell: bash
+      env:
+        SMOKE: ${{ inputs.smoke-results }}
+        E2E: ${{ inputs.e2e-results }}
+        COVERAGE: ${{ inputs.coverage }}
+        PROD: ${{ inputs.prod-health }}
+      run: |
+        ARGS=(--config "${{ inputs.config-path }}")
+        [ -n "$SMOKE" ]    && ARGS+=(--smoke-results "$SMOKE")
+        [ -n "$E2E" ]      && ARGS+=(--e2e-results "$E2E")
+        [ -n "$COVERAGE" ] && ARGS+=(--coverage "$COVERAGE")
+        [ -n "$PROD" ]     && ARGS+=(--prod-health "$PROD")
+        if ! release-readiness-doctor "${ARGS[@]}"; then
+          echo "::error file=${{ inputs.config-path }}::release-readiness-doctor reported errors — fix before evaluate"
+          exit 1
+        fi
 
     - name: Run release-readiness-evaluate
       shell: bash

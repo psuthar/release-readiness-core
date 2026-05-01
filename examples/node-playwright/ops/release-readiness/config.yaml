@@ -1,0 +1,58 @@
+# Minimal release-readiness config for a Node + Playwright service.
+# See docs/how-to/0-quickstart.md and docs/how-to/2-tune-scoring.md.
+
+version: 1
+
+validations:
+  smoke_passing:
+    description: Smoke E2E spec passed.
+  auth_login:
+    description: Login flow returns a valid token.
+  homepage_render:
+    description: Marketing homepage renders without console errors.
+
+evidence_boolean_keys:
+  - smoke_passing
+  - auth_login
+  - homepage_render
+
+infer_validations_when_pass:
+  smoke:
+    - smoke_passing
+  e2e:
+    - auth_login
+    - homepage_render
+
+optional_artifacts:
+  - prod_health
+  - coverage
+
+scoring:
+  max_score: 100
+  pass_threshold: 80
+  warn_threshold: 60
+  block_score: 0
+  penalties:
+    missing_smoke_artifact: 25
+    missing_e2e_artifact: 15
+    missing_coverage_artifact: 5
+    missing_prod_health_artifact: 5
+    non_critical_e2e_failure: 15
+    e2e_retries_or_flaky: 10
+    coverage_regression: 12
+    risky_config_without_note: 10
+
+e2e_critical_name_patterns:
+  - "auth_login"
+
+remediation:
+  smoke_artifact:
+    severity: warn
+    likely_cause: Playwright JSON reporter did not write playwright-results.json
+    recommended_action: Re-run Playwright with --reporter=json.
+    fix_type: ci_config
+  e2e_critical:
+    severity: block
+    likely_cause: critical Playwright spec failed (auth flow)
+    recommended_action: Fix the failing spec or revert the offending change.
+    fix_type: code

@@ -1,0 +1,50 @@
+# Minimal release-readiness config for a Python + pytest service.
+# See docs/how-to/0-quickstart.md and docs/how-to/2-tune-scoring.md.
+
+version: 1
+
+validations:
+  smoke_passing:
+    description: pytest smoke suite passed.
+  api_health:
+    description: /health endpoint returns 200.
+
+evidence_boolean_keys:
+  - smoke_passing
+  - api_health
+
+infer_validations_when_pass:
+  smoke:
+    - smoke_passing
+  e2e:
+    - api_health
+
+optional_artifacts:
+  - prod_health
+
+scoring:
+  max_score: 100
+  pass_threshold: 80
+  warn_threshold: 60
+  block_score: 0
+  penalties:
+    missing_smoke_artifact: 25
+    missing_e2e_artifact: 15
+    missing_coverage_artifact: 5
+    missing_prod_health_artifact: 5
+    non_critical_e2e_failure: 15
+    e2e_retries_or_flaky: 10
+    coverage_regression: 12
+    risky_config_without_note: 10
+
+remediation:
+  smoke_artifact:
+    severity: warn
+    likely_cause: pytest job did not write JUnit XML
+    recommended_action: Re-run pytest with --junit-xml=test-results.xml.
+    fix_type: ci_config
+  e2e_critical:
+    severity: block
+    likely_cause: critical pytest spec failed
+    recommended_action: Fix the failing test or revert the change.
+    fix_type: code

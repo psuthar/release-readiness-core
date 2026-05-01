@@ -1,0 +1,64 @@
+# Example workflow: Python + pytest + JUnit XML.
+#
+# Calls the Tier-1 reusable workflow with a JUnit-derived e2e shape.
+# Replace <sha> with a pinned release-readiness-core SHA before adopting.
+
+name: release-readiness
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  collect-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run pytest with JUnit XML
+        run: pytest --junit-xml=test-results.xml
+
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install
+
+      - name: Install release-readiness-core for the adapter CLI
+        run: |
+          uv pip install --system \
+            "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
+
+      - name: Convert JUnit -> readiness e2e shape
+        run: |
+          mkdir -p evidence
+          junit-to-readiness \
+            --input test-results.xml \
+            --output evidence/e2e.json \
+            --validation-map ops/release-readiness/validation_map.yaml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: readiness-evidence
+          path: evidence/
+
+  readiness:
+    needs: collect-evidence
+    uses: psuthar/release-readiness-core/.github/workflows/readiness.yml@<sha>
+    with:
+      package-ref: <sha>
+      e2e-results: evidence/e2e.json
+      enforcement-mode: block_only
+      combine-with-pr-risk: false
+    secrets: inherit

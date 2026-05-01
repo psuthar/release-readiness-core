@@ -1,0 +1,6 @@
+# JUnit classname / testname -> readiness validation key map.
+# Used by junit-to-readiness; see docs/how-to/1-map-evidence.md.
+
+api_health:
+  - tests.test_health
+  - test_health

@@ -1,0 +1,289 @@
+# Reusable workflow: release-readiness PR gate
+#
+# Tier-1 adopter wiring — drop-in two-line usage:
+#
+#   # .github/workflows/release-readiness.yml in your repo
+#   jobs:
+#     readiness:
+#       uses: psuthar/release-readiness-core/.github/workflows/readiness.yml@<sha>
+#       with:
+#         package-ref: <sha>
+#         smoke-results: evidence/smoke.json
+#         e2e-results: evidence/e2e.json
+#       secrets: inherit
+#
+# Internally chains: checkout -> setup-uv -> install package -> optional doctor
+# -> release-readiness-pr-gate composite (pr-risk + evaluate + combine + check-payload)
+# -> release-readiness-publish composite (Check + sticky comment + step summary)
+# -> enforcement step (fail on BLOCK; also fail on WARN when enforcement-mode=warn_and_block).
+#
+# Outputs gate-status and workflow-should-fail for downstream callers.
+
+name: release-readiness
+
+on:
+  workflow_call:
+    inputs:
+      package-ref:
+        description: git ref (SHA or tag) to install release-readiness-core from. Pin to a SHA in production.
+        required: true
+        type: string
+      config-path:
+        description: Path to ops/release-readiness/config.yaml.
+        required: false
+        type: string
+        default: ops/release-readiness/config.yaml
+      pr-risk-config:
+        description: Path to ops/release-readiness/pr-risk-config.yaml. Empty uses bundled defaults.
+        required: false
+        type: string
+        default: ""
+      smoke-results:
+        description: Path to evidence/smoke.json.
+        required: false
+        type: string
+        default: ""
+      e2e-results:
+        description: Path to evidence/e2e.json.
+        required: false
+        type: string
+        default: ""
+      coverage:
+        description: Path to evidence/coverage.json.
+        required: false
+        type: string
+        default: ""
+      prod-health:
+        description: Path to evidence/prod_health.json.
+        required: false
+        type: string
+        default: ""
+      base-ref:
+        description: Git base ref for diff. Defaults to origin/<base>.
+        required: false
+        type: string
+        default: ""
+      enforcement-mode:
+        description: block_only or warn_and_block.
+        required: false
+        type: string
+        default: block_only
+      comment-on-pr:
+        description: Post/update sticky PR comment via marocchino/sticky-pull-request-comment@v2.
+        required: false
+        type: boolean
+        default: true
+      publish-check:
+        description: Create/update GitHub Check from pr-gate-check.json.
+        required: false
+        type: boolean
+        default: true
+      combine-with-pr-risk:
+        description: When true, run pr-risk + combine + check-payload via the pr-gate composite. When false, skip pr-risk and run only release-readiness-evaluate plus a no-op gate.
+        required: false
+        type: boolean
+        default: true
+      run-doctor:
+        description: Run release-readiness-doctor before evaluate to catch config / evidence-shape issues.
+        required: false
+        type: boolean
+        default: false
+      check-name:
+        description: GitHub Check name.
+        required: false
+        type: string
+        default: release-readiness
+      output-dir:
+        description: Directory for pr_risk.json / report.json / report.md.
+        required: false
+        type: string
+        default: artifacts/release-readiness
+
+    outputs:
+      gate-status:
+        description: final_gate.status from pr-gate-summary.json (PASS | WARN | BLOCK)
+        value: ${{ jobs.readiness.outputs.gate-status }}
+      workflow-should-fail:
+        description: workflow_should_fail flag (true | false) — true when the calling workflow's enforcement step should exit non-zero.
+        value: ${{ jobs.readiness.outputs.workflow-should-fail }}
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    outputs:
+      gate-status: ${{ steps.pr-gate.outputs.gate-status || steps.evaluate-only-gate.outputs.gate-status }}
+      workflow-should-fail: ${{ steps.pr-gate.outputs.workflow-should-fail || steps.evaluate-only-gate.outputs.workflow-should-fail }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Determine base ref
+        id: base
+        shell: bash
+        env:
+          INPUT_BASE: ${{ inputs.base-ref }}
+        run: |
+          if [ -n "$INPUT_BASE" ]; then
+            echo "base_ref=$INPUT_BASE" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base_ref=origin/${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base_ref=HEAD~1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up uv (for doctor pre-flight)
+        if: inputs.run-doctor
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python (for doctor pre-flight)
+        if: inputs.run-doctor
+        shell: bash
+        run: uv python install
+
+      - name: Install release-readiness-core (for doctor pre-flight)
+        if: inputs.run-doctor
+        shell: bash
+        run: |
+          uv pip install --system \
+            "git+https://github.com/psuthar/release-readiness-core.git@${{ inputs.package-ref }}"
+
+      - name: release-readiness-doctor (pre-flight)
+        if: inputs.run-doctor
+        shell: bash
+        env:
+          SMOKE: ${{ inputs.smoke-results }}
+          E2E: ${{ inputs.e2e-results }}
+          COVERAGE: ${{ inputs.coverage }}
+          PROD: ${{ inputs.prod-health }}
+        run: |
+          ARGS=(--config "${{ inputs.config-path }}")
+          [ -n "$SMOKE" ]    && ARGS+=(--smoke-results "$SMOKE")
+          [ -n "$E2E" ]      && ARGS+=(--e2e-results "$E2E")
+          [ -n "$COVERAGE" ] && ARGS+=(--coverage "$COVERAGE")
+          [ -n "$PROD" ]     && ARGS+=(--prod-health "$PROD")
+          if ! release-readiness-doctor "${ARGS[@]}"; then
+            echo "::error file=${{ inputs.config-path }}::release-readiness-doctor reported errors — fix before evaluate"
+            exit 1
+          fi
+
+      - name: release-readiness-pr-gate (pr-risk + evaluate + combine + check-payload)
+        id: pr-gate
+        if: inputs.combine-with-pr-risk
+        uses: psuthar/release-readiness-core/.github/actions/release-readiness-pr-gate@${{ inputs.package-ref }}
+        with:
+          package-ref: ${{ inputs.package-ref }}
+          config-path: ${{ inputs.config-path }}
+          pr-risk-config: ${{ inputs.pr-risk-config }}
+          smoke-results: ${{ inputs.smoke-results }}
+          e2e-results: ${{ inputs.e2e-results }}
+          coverage: ${{ inputs.coverage }}
+          prod-health: ${{ inputs.prod-health }}
+          base-ref: ${{ steps.base.outputs.base_ref }}
+          output-dir: ${{ inputs.output-dir }}
+          check-name: ${{ inputs.check-name }}
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Set up uv (evaluate-only path)
+        if: ${{ ! inputs.combine-with-pr-risk }}
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python (evaluate-only path)
+        if: ${{ ! inputs.combine-with-pr-risk }}
+        shell: bash
+        run: uv python install
+
+      - name: Install release-readiness-core (evaluate-only path)
+        if: ${{ ! inputs.combine-with-pr-risk }}
+        shell: bash
+        run: |
+          uv pip install --system \
+            "git+https://github.com/psuthar/release-readiness-core.git@${{ inputs.package-ref }}"
+
+      - name: release-readiness-evaluate (no PR risk)
+        id: evaluate-only
+        if: ${{ ! inputs.combine-with-pr-risk }}
+        shell: bash
+        env:
+          SMOKE: ${{ inputs.smoke-results }}
+          E2E: ${{ inputs.e2e-results }}
+          COVERAGE: ${{ inputs.coverage }}
+          PROD: ${{ inputs.prod-health }}
+          OUTDIR: ${{ inputs.output-dir }}
+        run: |
+          ARGS=(--repo-root . --config "${{ inputs.config-path }}" --output-dir "$OUTDIR" --base-ref "${{ steps.base.outputs.base_ref }}")
+          [ -n "$SMOKE" ]    && ARGS+=(--smoke-results "$SMOKE")
+          [ -n "$E2E" ]      && ARGS+=(--e2e-results "$E2E")
+          [ -n "$COVERAGE" ] && ARGS+=(--coverage "$COVERAGE")
+          [ -n "$PROD" ]     && ARGS+=(--prod-health "$PROD")
+          # evaluate exits non-zero on BLOCK; capture but don't fail here.
+          release-readiness-evaluate "${ARGS[@]}" || true
+
+      - name: Compute gate fallback (no PR risk)
+        id: evaluate-only-gate
+        if: ${{ ! inputs.combine-with-pr-risk }}
+        shell: bash
+        env:
+          OUTDIR: ${{ inputs.output-dir }}
+        run: |
+          PARENT=$(dirname "$OUTDIR")
+          [ "$PARENT" = "" ] && PARENT="."
+          if [ -f "$PARENT/release-readiness.json" ]; then
+            STATUS=$(jq -r '.outcome // "BLOCK"' "$PARENT/release-readiness.json")
+            WSF=$([ "$STATUS" = "BLOCK" ] && echo true || echo false)
+          else
+            STATUS="BLOCK"
+            WSF="true"
+          fi
+          echo "gate-status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "workflow-should-fail=$WSF" >> "$GITHUB_OUTPUT"
+          # Synthesize a minimal pr-gate-check.json so the publish step has something to read.
+          mkdir -p "$PARENT"
+          cat > "$PARENT/pr-gate-check.json" <<EOF
+          {
+            "check_name": "${{ inputs.check-name }}",
+            "check_conclusion": "$([ "$STATUS" = "PASS" ] && echo success || ([ "$STATUS" = "WARN" ] && echo action_required || echo failure))",
+            "title": "${{ inputs.check-name }}: $STATUS",
+            "summary": "release-readiness only (combine-with-pr-risk disabled)",
+            "text": "Release readiness outcome: $STATUS",
+            "workflow_should_fail": $WSF,
+            "details_url": null,
+            "final_gate_status": "$STATUS"
+          }
+          EOF
+
+      - name: release-readiness-publish (Check + sticky comment + step summary)
+        if: always()
+        uses: psuthar/release-readiness-core/.github/actions/release-readiness-publish@${{ inputs.package-ref }}
+        with:
+          gate-payload: ${{ inputs.combine-with-pr-risk && format('{0}/../pr-gate-check.json', inputs.output-dir) || format('{0}/../pr-gate-check.json', inputs.output-dir) }}
+          report-md: ${{ inputs.output-dir }}/report.md
+          check-name: ${{ inputs.check-name }}
+          comment-header: ${{ inputs.check-name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-on-pr: ${{ inputs.comment-on-pr }}
+          publish-check: ${{ inputs.publish-check }}
+
+      - name: Enforce gate
+        if: always()
+        shell: bash
+        env:
+          GATE_STATUS: ${{ steps.pr-gate.outputs.gate-status || steps.evaluate-only-gate.outputs.gate-status }}
+          WSF: ${{ steps.pr-gate.outputs.workflow-should-fail || steps.evaluate-only-gate.outputs.workflow-should-fail }}
+          MODE: ${{ inputs.enforcement-mode }}
+        run: |
+          echo "Gate status: $GATE_STATUS, workflow_should_fail: $WSF, enforcement-mode: $MODE"
+          if [ "$GATE_STATUS" = "BLOCK" ] || [ "$WSF" = "true" ]; then
+            echo "::error::release-readiness gate is BLOCK — failing workflow"
+            exit 1
+          fi
+          if [ "$GATE_STATUS" = "WARN" ] && [ "$MODE" = "warn_and_block" ]; then
+            echo "::error::release-readiness gate is WARN and enforcement-mode=warn_and_block — failing workflow"
+            exit 1
+          fi
+          echo "release-readiness gate passed enforcement"

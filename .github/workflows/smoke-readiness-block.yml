@@ -1,0 +1,71 @@
+# Smoke workflow: BLOCK path for the reusable readiness.yml.
+#
+# Manual-only (workflow_dispatch). Verifies the reusable workflow correctly
+# escalates BLOCK to a non-zero workflow exit when enforcement-mode=block_only.
+#
+# Usage:
+#   gh workflow run smoke-readiness-block.yml --ref <branch>
+#
+# Expected: the readiness job FAILS (gate-status BLOCK + workflow_should_fail
+# true). The verify job reads the failed job's outputs and asserts the BLOCK
+# was correctly detected — making the overall smoke green even though the
+# readiness job itself was red.
+
+name: smoke-readiness-block
+
+on:
+  workflow_dispatch:
+    inputs:
+      package-ref:
+        description: git ref to install release-readiness-core from (default main)
+        required: false
+        default: main
+
+jobs:
+  prep-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Write synthetic BLOCK evidence
+        shell: bash
+        run: |
+          mkdir -p evidence
+          echo '{"status":"failed","passed":false,"failed_count":1,"total_count":1,"failures":[{"title":"smoke probe failed"}]}' > evidence/smoke.json
+          echo '{"status":"passed","failed_count":0,"total_count":0,"retries":0,"failures":[],"validations":{}}' > evidence/e2e.json
+          echo '{"line_percent":40.0,"baseline_percent":85.0}' > evidence/coverage.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smoke-block-evidence
+          path: evidence/
+
+  readiness:
+    needs: prep-evidence
+    # Job is expected to fail; verify job below confirms the BLOCK signal.
+    continue-on-error: true
+    uses: ./.github/workflows/readiness.yml
+    with:
+      package-ref: ${{ inputs.package-ref }}
+      smoke-results: evidence/smoke.json
+      e2e-results: evidence/e2e.json
+      coverage: evidence/coverage.json
+      enforcement-mode: block_only
+      comment-on-pr: false
+      publish-check: false
+      combine-with-pr-risk: false
+    secrets: inherit
+
+  verify:
+    needs: readiness
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert gate-status is BLOCK
+        shell: bash
+        run: |
+          STATUS="${{ needs.readiness.outputs.gate-status }}"
+          echo "Observed gate-status: $STATUS"
+          if [ "$STATUS" != "BLOCK" ]; then
+            echo "::error::expected BLOCK, got '$STATUS'"
+            exit 1
+          fi
+          echo "BLOCK correctly detected and enforced — smoke validation green"

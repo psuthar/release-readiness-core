@@ -27,6 +27,7 @@ release-readiness-check-payload = "release_readiness_core.pr_gate_check:main"
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "jsonschema>=4.0",
 ]
 
 [build-system]

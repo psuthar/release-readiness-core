@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/pr-gate-summary-v1.schema.json",
+  "title": "PR Gate Summary v1",
+  "description": "Output of release-readiness-combine: deterministic merge of pr-risk.json and release-readiness.json into a single PR-gate verdict. Applies BLOCK > WARN > PASS precedence.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "version",
+    "pr_risk",
+    "release_readiness",
+    "final_gate",
+    "required_actions",
+    "report_enriched"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "v1",
+      "description": "Schema version. Bumped only on breaking changes."
+    },
+    "pr_risk": {
+      "type": "object",
+      "description": "Snapshot of the pr-risk.json input. UNKNOWN status indicates the input could not be parsed.",
+      "additionalProperties": true,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "WARN", "BLOCK", "UNKNOWN"]
+        },
+        "label": {"type": "string"},
+        "score": {"type": "number"},
+        "band": {"type": "string"},
+        "confidence": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
+        "top_risk_factors": {"type": "array", "items": {"type": "string"}},
+        "error": {"type": "string"}
+      }
+    },
+    "release_readiness": {
+      "type": "object",
+      "description": "Snapshot of the release-readiness.json input plus optional report.json enrichment.",
+      "additionalProperties": true,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "WARN", "BLOCK", "UNKNOWN"]
+        },
+        "score": {"type": "number"},
+        "warnings": {"type": "integer", "minimum": 0},
+        "blockers": {"type": "integer", "minimum": 0},
+        "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+        "critical_failed_titles": {"type": "array", "items": {"type": "string"}},
+        "non_critical_failed_titles": {"type": "array", "items": {"type": "string"}},
+        "error": {"type": "string"}
+      }
+    },
+    "final_gate": {
+      "type": "object",
+      "description": "Deterministic combined verdict. workflow_should_fail mirrors status==BLOCK and is the canonical signal for the enforcement step in CI.",
+      "additionalProperties": false,
+      "required": ["status", "confidence", "summary", "workflow_should_fail"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "WARN", "BLOCK"]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "moderate", "low"]
+        },
+        "summary": {"type": "string"},
+        "workflow_should_fail": {"type": "boolean"}
+      }
+    },
+    "required_actions": {
+      "type": "array",
+      "description": "Deduplicated, ordered list of human-readable actions before merge. Order: standard items, then PR-risk required validations, then RR blockers, then RR warnings, then RR recommended actions.",
+      "items": {"type": "string"}
+    },
+    "report_enriched": {
+      "type": "boolean",
+      "description": "True when release-readiness/report.json was loaded successfully and contributed blocker/warning/recommendation strings."
+    }
+  }
+}

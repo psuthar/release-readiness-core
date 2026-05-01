@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/pr-gate-check-v1.schema.json",
+  "title": "PR Gate Check Payload v1",
+  "description": "Output of release-readiness-check-payload: shape consumed by actions/github-script for github.rest.checks.create / checks.update. Status mapping: PASS -> success, WARN -> action_required, BLOCK / error -> failure. workflow_should_fail is the canonical signal for the enforcement step.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_name",
+    "check_conclusion",
+    "title",
+    "summary",
+    "text",
+    "workflow_should_fail",
+    "final_gate_status"
+  ],
+  "properties": {
+    "check_name": {
+      "type": "string",
+      "description": "Name passed to github.rest.checks.create({name, ...}). Default 'release-readiness'; override via --check-name."
+    },
+    "check_conclusion": {
+      "type": "string",
+      "enum": ["success", "action_required", "failure"],
+      "description": "GitHub Checks API conclusion value. action_required keeps the workflow green but blocks mergeable_state."
+    },
+    "title": {
+      "type": "string",
+      "description": "Check output title (e.g. 'release-readiness: PASS')."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short human-readable summary line. May be empty."
+    },
+    "text": {
+      "type": "string",
+      "description": "Markdown body for the Check 'Details' page. Renders signals table, required actions, supporting detail, and footer."
+    },
+    "workflow_should_fail": {
+      "type": "boolean",
+      "description": "True when the calling workflow's enforcement step should exit non-zero. True for BLOCK and error payloads; false for PASS and WARN."
+    },
+    "details_url": {
+      "type": ["string", "null"],
+      "description": "Workflow run URL passed to checks.create({details_url}). Null when the CLI was invoked without --run-url and without $GITHUB_RUN_URL."
+    },
+    "final_gate_status": {
+      "type": "string",
+      "enum": ["PASS", "WARN", "BLOCK", "ERROR"],
+      "description": "Mirrors final_gate.status from pr-gate-summary.json. ERROR indicates the input could not be parsed."
+    }
+  }
+}

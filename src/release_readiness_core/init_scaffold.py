@@ -34,6 +34,7 @@ synthetic with a pointer to ``docs/how-to/1-map-evidence.md``.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -248,6 +249,31 @@ jobs:
 VALID_STACKS = ("playwright", "cypress", "jest", "pytest", "go", "go-coverage")
 
 
+# Baked-in pin reference. Updated at release time by maintenance tooling so
+# `release-readiness-init --pin` can resolve to the latest release SHA without
+# requiring the adopter to look one up. Empty in development.
+DEFAULT_PIN_REF = ""
+
+# Environment variable consulted when --pin is not passed and DEFAULT_PIN_REF
+# is empty. Lets adopters set a pin once via env without typing it on every
+# scaffold invocation.
+PIN_REF_ENV_VAR = "RR_PIN_REF"
+
+
+def resolve_pin_ref(cli_pin: str | None = None) -> str:
+    """Source precedence: --pin arg → RR_PIN_REF env → DEFAULT_PIN_REF.
+
+    Returns the resolved ref or the empty string when no source is set.
+    Whitespace-only values are treated as unset.
+    """
+    if cli_pin and cli_pin.strip():
+        return cli_pin.strip()
+    env_value = os.environ.get(PIN_REF_ENV_VAR, "")
+    if env_value.strip():
+        return env_value.strip()
+    return DEFAULT_PIN_REF.strip()
+
+
 # Evidence-collection step blocks per stack. Each block is the YAML body that
 # substitutes into GITHUB_WORKFLOW_TEMPLATE's {evidence_steps} placeholder.
 # Bodies are indented to match the surrounding workflow's `steps:` indent (6 sp).
@@ -411,11 +437,18 @@ _EVIDENCE_BLOCKS = {
 }
 
 
-def render_workflow_template(stack: str | None = None) -> str:
-    """Return the GitHub Actions workflow body, with stack-specific evidence
-    steps substituted (or the commented placeholder when stack is None)."""
+def render_workflow_template(stack: str | None = None, pin_ref: str = "") -> str:
+    """Return the GitHub Actions workflow body.
+
+    With ``stack``, substitute the matching evidence-collection block.
+    With ``pin_ref`` non-empty, substitute every ``<sha>`` literal so the
+    emitted workflow installs from a pinned ref instead of the placeholder.
+    """
     block = _DEFAULT_EVIDENCE_STEPS if stack is None else _EVIDENCE_BLOCKS[stack]
-    return GITHUB_WORKFLOW_TEMPLATE.format(evidence_steps=block)
+    body = GITHUB_WORKFLOW_TEMPLATE.format(evidence_steps=block)
+    if pin_ref:
+        body = body.replace("<sha>", pin_ref)
+    return body
 
 
 DEMO_SYNTHETIC_HEADER = (
@@ -470,6 +503,7 @@ def scaffold(
     force: bool = False,
     demo: bool = False,
     stack: str | None = None,
+    pin_ref: str = "",
 ) -> dict[str, str]:
     """Write scaffold files under ``target``. Returns ``{relpath: status}``.
 
@@ -480,8 +514,13 @@ def scaffold(
     workflow has the matching test-runner + adapter-conversion steps
     uncommented and parameterized (instead of the commented placeholder).
 
-    Without either flag, scaffold output is byte-identical to the pre-D1 / D3
-    behavior.
+    When ``pin_ref`` is non-empty, every ``<sha>`` literal in the emitted
+    workflow is substituted so the scaffold ships pre-pinned. Use
+    ``resolve_pin_ref`` to honor the --pin / RR_PIN_REF / DEFAULT_PIN_REF
+    precedence chain.
+
+    Without any of these flags, scaffold output is byte-identical to the
+    pre-D1 / D3 / D2 behavior.
     """
     if stack is not None and stack not in VALID_STACKS:
         raise ValueError(
@@ -498,7 +537,10 @@ def scaffold(
     ]
     if workflow == "github":
         plan.append(
-            (target / ".github" / "workflows" / "release-readiness.yml", render_workflow_template(stack))
+            (
+                target / ".github" / "workflows" / "release-readiness.yml",
+                render_workflow_template(stack, pin_ref=pin_ref),
+            )
         )
     elif workflow != "none":
         raise ValueError(f"--workflow must be 'github' or 'none', got {workflow!r}")
@@ -557,7 +599,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             "workflow ships with a commented placeholder block."
         ),
     )
+    parser.add_argument(
+        "--pin",
+        default=None,
+        help=(
+            "git ref (SHA or tag) substituted for every <sha> literal in the "
+            "emitted workflow. Source precedence: --pin arg -> RR_PIN_REF env "
+            "-> DEFAULT_PIN_REF (release-time constant, empty in dev). When no "
+            "source is set, the workflow ships with the literal <sha> placeholder."
+        ),
+    )
     args = parser.parse_args(argv)
+
+    pin_ref = resolve_pin_ref(args.pin)
 
     target = Path(args.target)
     try:
@@ -567,6 +621,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             force=args.force,
             demo=args.demo,
             stack=args.stack,
+            pin_ref=pin_ref,
         )
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -580,7 +635,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     print("  1. Edit ops/release-readiness/config.yaml — declare your validation keys.")
     print("  2. Edit ops/release-readiness/validation_map.yaml — map keys to test stems.")
     if args.workflow == "github":
-        print("  3. Replace <sha> in .github/workflows/release-readiness.yml with a pinned SHA.")
+        if pin_ref:
+            print(f"  3. Workflow pinned to {pin_ref} via --pin / RR_PIN_REF / DEFAULT_PIN_REF.")
+        else:
+            print("  3. Replace <sha> in .github/workflows/release-readiness.yml with a pinned SHA")
+            print("     (or re-run with --pin <sha-or-tag> / set RR_PIN_REF).")
         print("  4. Wire the evidence-collection steps to your CI's smoke / E2E / coverage jobs.")
     if args.demo:
         print()

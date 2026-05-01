@@ -221,25 +221,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      # uv runs CLIs from PyPI without touching the runner system Python (PEP 668 safe).
+      # Bump {pypi_version} when you upgrade: https://pypi.org/project/release-readiness-core/
+      # Tier-1 reusable workflow adopters pin package-ref / uses @<sha> — docs/how-to/9-adoption-tiers.md
       - uses: astral-sh/setup-uv@v6
-      - run: uv python install
-
-      # Default: install from PyPI (no git access to this repo). Bump the
-      # version when you upgrade. See https://pypi.org/project/release-readiness-core/
-      - name: Install release-readiness-core
-        run: |
-          uv pip install --system "release-readiness-core=={pypi_version}"
-
-      # Alternative — pip install from GitHub (pin a SHA, not a branch):
-      # - run: |
-      #     uv pip install --system \\
-      #       "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 
       # ---- collect evidence (project-specific) -------------------
 {evidence_steps}
       - name: release-readiness
         run: |
-          release-readiness-evaluate \\
+          uvx --from "release-readiness-core=={pypi_version}" release-readiness-evaluate \\
             --repo-root . \\
             --config ops/release-readiness/config.yaml \\
             --base-ref origin/${{{{ github.base_ref }}}} \\
@@ -313,10 +304,12 @@ _PLAYWRIGHT_EVIDENCE_STEPS = """\
       - name: Run Playwright (--reporter=json)
         run: npx playwright test --reporter=json > playwright-results.json
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Convert Playwright -> readiness e2e shape
         run: |
           mkdir -p evidence
-          playwright-to-readiness \\
+          uvx --from "release-readiness-core=={pypi_version}" playwright-to-readiness \\
             --input playwright-results.json \\
             --output evidence/e2e.json \\
             --validation-map ops/release-readiness/validation_map.yaml
@@ -337,10 +330,12 @@ _CYPRESS_EVIDENCE_STEPS = """\
             --reporter junit \\
             --reporter-options "mochaFile=test-results.xml,toConsole=true"
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Convert JUnit -> readiness e2e shape
         run: |
           mkdir -p evidence
-          junit-to-readiness \\
+          uvx --from "release-readiness-core=={pypi_version}" junit-to-readiness \\
             --input test-results.xml \\
             --output evidence/e2e.json \\
             --validation-map ops/release-readiness/validation_map.yaml
@@ -360,10 +355,12 @@ _JEST_EVIDENCE_STEPS = """\
           JEST_JUNIT_OUTPUT_FILE: test-results.xml
         run: npx jest --reporters=default --reporters=jest-junit
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Convert JUnit -> readiness e2e shape
         run: |
           mkdir -p evidence
-          junit-to-readiness \\
+          uvx --from "release-readiness-core=={pypi_version}" junit-to-readiness \\
             --input test-results.xml \\
             --output evidence/e2e.json \\
             --validation-map ops/release-readiness/validation_map.yaml
@@ -377,10 +374,12 @@ _PYTEST_EVIDENCE_STEPS = """\
       - name: Run pytest with JUnit XML
         run: pytest --junit-xml=test-results.xml
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Convert JUnit -> readiness e2e shape
         run: |
           mkdir -p evidence
-          junit-to-readiness \\
+          uvx --from "release-readiness-core=={pypi_version}" junit-to-readiness \\
             --input test-results.xml \\
             --output evidence/e2e.json \\
             --validation-map ops/release-readiness/validation_map.yaml
@@ -422,10 +421,12 @@ _GO_COVERAGE_EVIDENCE_STEPS = """\
           mkdir -p coverage
           gcov2lcov -infile=coverage.out -outfile=coverage/lcov.info
 
+      - uses: astral-sh/setup-uv@v6
+
       - name: Convert LCOV -> readiness coverage shape
         run: |
           mkdir -p evidence
-          lcov-to-readiness \\
+          uvx --from "release-readiness-core=={pypi_version}" lcov-to-readiness \\
             --input coverage/lcov.info \\
             --output evidence/coverage.json \\
             --baseline-percent 85
@@ -467,6 +468,7 @@ def render_workflow_template(stack: str | None = None, pin_ref: str = "") -> str
     """
     block = _DEFAULT_EVIDENCE_STEPS if stack is None else _EVIDENCE_BLOCKS[stack]
     pypi_version = _read_project_version()
+    block = block.replace("{pypi_version}", pypi_version)
     body = GITHUB_WORKFLOW_TEMPLATE.format(
         evidence_steps=block,
         pypi_version=pypi_version,

@@ -33,17 +33,11 @@ jobs:
         run: pytest --junit-xml=test-results.xml
 
       - uses: astral-sh/setup-uv@v6
-      - run: uv python install
-
-      - name: Install release-readiness-core for the adapter CLI
-        run: |
-          uv pip install --system \
-            "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 
       - name: Convert JUnit -> readiness e2e shape
         run: |
           mkdir -p evidence
-          junit-to-readiness \
+          uvx --from "release-readiness-core==0.3.3" junit-to-readiness \
             --input test-results.xml \
             --output evidence/e2e.json \
             --validation-map ops/release-readiness/validation_map.yaml

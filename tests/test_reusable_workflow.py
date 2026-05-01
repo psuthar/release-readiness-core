@@ -86,8 +86,8 @@ def test_reusable_workflow_chains_composites_in_order():
     """The readiness job must call the pr-gate composite then the publish
     composite then the enforce step."""
     text = REUSABLE.read_text(encoding="utf-8")
-    pr_gate_idx = text.find("psuthar/release-readiness-core/.github/actions/release-readiness-pr-gate")
-    publish_idx = text.find("psuthar/release-readiness-core/.github/actions/release-readiness-publish")
+    pr_gate_idx = text.find("./.github/actions/release-readiness-pr-gate")
+    publish_idx = text.find("./.github/actions/release-readiness-publish")
     enforce_idx = text.find("Enforce gate")
     assert pr_gate_idx > 0
     assert publish_idx > pr_gate_idx, "publish must follow pr-gate"

@@ -18,6 +18,11 @@
 # -> enforcement step (fail on BLOCK; also fail on WARN when enforcement-mode=warn_and_block).
 #
 # Outputs gate-status and workflow-should-fail for downstream callers.
+#
+# Composite actions are referenced with ./.github/actions/... so they always
+# match the same commit as this reusable workflow. Dynamic uses: org/repo@ref
+# with inputs.package-ref breaks workflow validation; adopters still pin the
+# workflow via uses: .../readiness.yml@<sha>.
 
 name: release-readiness
 
@@ -26,8 +31,10 @@ on:
     inputs:
       package-ref:
         description: >-
-          Git ref (SHA or tag) for uses: …@ref on composites in this workflow.
-          When install-source is git, also used for pip install git+https://…
+          Git ref (SHA or tag). Required for uses: …/readiness.yml@… on the
+          caller side. When install-source is git, also used for pip install
+          git+https://… Composites in this workflow use ./.github/actions/… at
+          the same commit as this workflow.
         required: true
         type: string
       install-source:
@@ -201,7 +208,7 @@ jobs:
       - name: release-readiness-pr-gate (pr-risk + evaluate + combine + check-payload)
         id: pr-gate
         if: inputs.combine-with-pr-risk
-        uses: psuthar/release-readiness-core/.github/actions/release-readiness-pr-gate@${{ inputs.package-ref }}
+        uses: ./.github/actions/release-readiness-pr-gate
         with:
           package-ref: ${{ inputs.package-ref }}
           install-source: ${{ inputs.install-source }}
@@ -300,7 +307,7 @@ jobs:
 
       - name: release-readiness-publish (Check + sticky comment + step summary)
         if: always()
-        uses: psuthar/release-readiness-core/.github/actions/release-readiness-publish@${{ inputs.package-ref }}
+        uses: ./.github/actions/release-readiness-publish
         with:
           gate-payload: ${{ inputs.combine-with-pr-risk && format('{0}/../pr-gate-check.json', inputs.output-dir) || format('{0}/../pr-gate-check.json', inputs.output-dir) }}
           report-md: ${{ inputs.output-dir }}/report.md

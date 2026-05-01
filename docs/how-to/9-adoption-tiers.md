@@ -34,7 +34,7 @@ jobs:
     secrets: inherit
 ```
 
-The `uses: …@<sha>` ref must still point at a commit on `psuthar/release-readiness-core` (that loads the workflow and composite YAML). By default, **`package-ref` is also the git ref** for `pip install git+https://…@…`. To install the **wheel from PyPI** instead (no git pip dependency), add `install-source: pypi` and `pypi-version: "X.Y.Z"` to `with:`; the workflow YAML stays pinned to `<sha>`.
+The `uses: …@<sha>` ref must still point at a commit on `psuthar/release-readiness-core` (that loads this reusable workflow and the local composite actions under `.github/actions/`). By default, **`package-ref` is the git ref** for `pip install git+https://…@…` (same SHA you pass to `with:`). To install the **wheel from PyPI** instead (no git pip dependency), add `install-source: pypi` and `pypi-version: "X.Y.Z"` to `with:`.
 
 **What you get for free:** install + (optional) doctor pre-flight + pr-risk + readiness-evaluate + combine + GitHub Check publish + sticky PR comment + enforcement (fail on BLOCK; also fail on WARN if you set `enforcement-mode: warn_and_block`).
 

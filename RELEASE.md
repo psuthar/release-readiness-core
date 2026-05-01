@@ -32,7 +32,7 @@ pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
 
 You can find the SHA for a given version in `CHANGELOG.md`'s commit log or via `git log` on this repo.
 
-**Note:** GitHub composite actions and reusable workflows in this repo are still referenced with `uses: …@<sha>` — that SHA pins the **workflow/action YAML**, not necessarily the Python wheel. Use `install-source: pypi` and `pypi-version` on those actions when you want the **Python package** from PyPI while keeping the action definition pinned to a SHA (see `docs/how-to/9-adoption-tiers.md`).
+**Note:** Adopters pin **`uses: …/readiness.yml@<sha>`** on the reusable workflow; inner composites load from the same commit via `./.github/actions/…`. That SHA pins the workflow and action YAML, not necessarily the Python wheel. Use `install-source: pypi` and `pypi-version` when you want the **package** from PyPI while the YAML stays pinned to `<sha>` (see `docs/how-to/9-adoption-tiers.md`).
 
 ## PyPI trusted publishing (one-time maintainer setup)
 

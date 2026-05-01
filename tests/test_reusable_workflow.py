@@ -115,7 +115,10 @@ def test_reusable_workflow_supports_combine_with_pr_risk_off():
     a gate verdict via release-readiness-evaluate alone."""
     text = REUSABLE.read_text(encoding="utf-8")
     assert "release-readiness-evaluate" in text
-    assert "evaluate-only-gate" in text
+    # Step id was renamed evaluate-only-gate -> evaluate_only_gate to keep
+    # GitHub Actions expressions (steps.<id>.outputs[…]) from being parsed
+    # as subtraction; underscore is the canonical form now.
+    assert "evaluate_only_gate" in text
 
 
 def test_reusable_workflow_enforcement_modes():

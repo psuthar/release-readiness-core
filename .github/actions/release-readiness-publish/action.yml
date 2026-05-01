@@ -1,0 +1,152 @@
+name: release-readiness-publish
+description: >-
+  Publish a release-readiness PR Gate verdict: append the readiness report
+  to $GITHUB_STEP_SUMMARY, create/update a GitHub Check from the
+  pr-gate-check.json payload, and post/update a sticky PR comment via
+  marocchino/sticky-pull-request-comment@v2. Idempotent on re-runs.
+  Tier-2 adopters call this directly after release-readiness-pr-gate;
+  Tier-1 adopters use the readiness.yml reusable workflow that wraps both.
+
+inputs:
+  gate-payload:
+    description: >-
+      Path to pr-gate-check.json (default artifacts/pr-gate-check.json).
+      When absent or unreadable, the Check publish step records a failure.
+    required: false
+    default: artifacts/pr-gate-check.json
+  report-md:
+    description: >-
+      Path to the human-readable readiness report (default
+      artifacts/release-readiness/report.md). Appended to
+      $GITHUB_STEP_SUMMARY when present.
+    required: false
+    default: artifacts/release-readiness/report.md
+  check-name:
+    description: >-
+      GitHub Check name. Should match check_name in gate-payload; the
+      payload's value wins on conflict.
+    required: false
+    default: release-readiness
+  comment-header:
+    description: >-
+      Header value passed to the sticky-comment action (used as the
+      idempotency key — must be stable across re-runs of the same PR).
+    required: false
+    default: release-readiness
+  github-token:
+    description: >-
+      Token used by actions/github-script and the sticky-comment action.
+      Typically secrets.GITHUB_TOKEN. Forked-PR runs may have read-only
+      tokens; the action degrades gracefully (warning + step summary only).
+    required: true
+  comment-on-pr:
+    description: When 'true' and the event is a pull_request, post/update a sticky comment.
+    required: false
+    default: "true"
+  publish-check:
+    description: When 'true', create/update a GitHub Check from gate-payload.
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Append readiness report to $GITHUB_STEP_SUMMARY
+      if: always()
+      shell: bash
+      env:
+        REPORT: ${{ inputs.report-md }}
+      run: |
+        if [ -n "$REPORT" ] && [ -f "$REPORT" ]; then
+          cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "::warning file=.github/actions/release-readiness-publish/action.yml::report-md not found at '$REPORT' — skipping step summary append"
+        fi
+
+    - name: Publish GitHub Check
+      if: always() && inputs.publish-check == 'true'
+      uses: actions/github-script@v8
+      env:
+        GATE_PAYLOAD_PATH: ${{ inputs.gate-payload }}
+        DEFAULT_CHECK_NAME: ${{ inputs.check-name }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+
+          const ws = process.env.GITHUB_WORKSPACE || process.cwd();
+          const payloadPath = path.join(ws, process.env.GATE_PAYLOAD_PATH);
+          const fallbackName = process.env.DEFAULT_CHECK_NAME || 'release-readiness';
+
+          let payload;
+          try {
+            payload = JSON.parse(fs.readFileSync(payloadPath, 'utf8'));
+          } catch (e) {
+            payload = {
+              check_name: fallbackName,
+              check_conclusion: 'failure',
+              title: `${fallbackName}: error`,
+              summary: `Could not read pr-gate-check.json at ${process.env.GATE_PAYLOAD_PATH} — ${String(e)}`,
+              text: '### Error\n\n' + String(e),
+              workflow_should_fail: true,
+            };
+          }
+
+          const headSha = context.payload.pull_request?.head?.sha || context.sha;
+          const checkName = payload.check_name || fallbackName;
+          const output = {
+            title: payload.title || `${checkName}: ${payload.final_gate_status || 'unknown'}`,
+            summary: payload.summary || '',
+            text: payload.text || '',
+          };
+          const common = {
+            status: 'completed',
+            conclusion: payload.check_conclusion || 'failure',
+            output,
+          };
+          if (payload.details_url) {
+            common.details_url = payload.details_url;
+          }
+
+          // Forked-PR / read-only token degradation: catch the 403 from
+          // checks API and emit a warning instead of failing the action.
+          try {
+            const { data: listed } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: headSha,
+              check_name: checkName,
+            });
+            const runs = (listed.check_runs || []).slice().sort((a, b) => b.id - a.id);
+            if (runs.length > 0) {
+              await github.rest.checks.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                check_run_id: runs[0].id,
+                ...common,
+              });
+              core.info(`Updated check run #${runs[0].id} for ${checkName}`);
+            } else {
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: checkName,
+                head_sha: headSha,
+                ...common,
+              });
+              core.info(`Created check run for ${checkName}`);
+            }
+          } catch (err) {
+            const msg = `Failed to publish ${checkName} check (likely read-only token on a forked PR) — ${String(err)}`;
+            core.warning(msg);
+          }
+
+    - name: Post sticky PR comment
+      if: always() && inputs.comment-on-pr == 'true' && github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      continue-on-error: true
+      with:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        path: ${{ inputs.report-md }}
+        header: ${{ inputs.comment-header }}

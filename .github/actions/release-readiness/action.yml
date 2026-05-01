@@ -71,12 +71,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+
     - name: Set up uv
       uses: astral-sh/setup-uv@v6
-
-    - name: Set up Python
-      shell: bash
-      run: uv python install
 
     - name: Install release-readiness-core
       shell: bash
@@ -91,13 +92,13 @@ runs:
             echo "::error file=.github/actions/release-readiness/action.yml::install-source=pypi requires a non-empty pypi-version input"
             exit 1
           fi
-          uv pip install --system --break-system-packages "release-readiness-core==${PYPI_VERSION}"
+          uv pip install --system "release-readiness-core==${PYPI_VERSION}"
         else
           if [ -z "${PACKAGE_REF}" ]; then
             echo "::error file=.github/actions/release-readiness/action.yml::install-source=git requires a non-empty package-ref input"
             exit 1
           fi
-          uv pip install --system --break-system-packages \
+          uv pip install --system \
             "git+https://github.com/psuthar/release-readiness-core.git@${PACKAGE_REF}"
         fi
 

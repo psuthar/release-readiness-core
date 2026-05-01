@@ -1,8 +1,9 @@
 # Smoke workflow: PASS path for the reusable readiness.yml.
 #
 # Manual-only (workflow_dispatch). Verifies the reusable workflow accepts
-# PASS-shaped inputs and finishes green. Synthetic evidence is written
-# inline so this smoke does not depend on real CI evidence files.
+# PASS-shaped inputs and finishes green. Synthetic evidence is committed
+# under tests/fixtures/smoke-pass/ so the reusable workflow's own
+# actions/checkout step picks it up without an inter-job artifact dance.
 #
 # Usage:
 #   gh workflow run smoke-readiness-pass.yml --ref <branch>
@@ -28,35 +29,13 @@ permissions:
   checks: write
 
 jobs:
-  prep-evidence:
-    runs-on: ubuntu-latest
-    outputs:
-      base-sha: ${{ steps.write.outputs['base-sha'] }}
-    steps:
-      - uses: actions/checkout@v5
-      - name: Write synthetic PASS evidence
-        id: write
-        shell: bash
-        run: |
-          mkdir -p evidence
-          echo '{"status":"passed","passed":true,"smoke_passing":true}' > evidence/smoke.json
-          echo '{"status":"passed","failed_count":0,"total_count":0,"retries":0,"failures":[],"validations":{}}' > evidence/e2e.json
-          echo '{"line_percent":92.0,"baseline_percent":85.0}' > evidence/coverage.json
-          echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Upload evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: smoke-pass-evidence
-          path: evidence/
-
   readiness:
-    needs: prep-evidence
     uses: ./.github/workflows/readiness.yml
     with:
       package-ref: ${{ inputs.package-ref }}
-      smoke-results: evidence/smoke.json
-      e2e-results: evidence/e2e.json
-      coverage: evidence/coverage.json
+      smoke-results: tests/fixtures/smoke-pass/smoke.json
+      e2e-results: tests/fixtures/smoke-pass/e2e.json
+      coverage: tests/fixtures/smoke-pass/coverage.json
       enforcement-mode: block_only
       comment-on-pr: false
       publish-check: false
@@ -73,6 +52,7 @@ jobs:
           STATUS="${{ needs.readiness.outputs['gate-status'] }}"
           echo "Observed gate-status: $STATUS"
           if [ "$STATUS" != "PASS" ]; then
-            echo "::error::expected PASS, got $STATUS"
+            echo "::error::expected PASS, got '$STATUS'"
             exit 1
           fi
+          echo "PASS correctly detected — smoke validation green"

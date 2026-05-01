@@ -88,3 +88,80 @@ def test_config_template_references_optional_artifacts_pattern():
     opt-out (avoids the second-project gap #2 surprise on first run)."""
     assert "optional_artifacts:" in CONFIG_TEMPLATE
     assert "prod_health" in CONFIG_TEMPLATE
+
+
+# ---------------------------------------------------------------------------
+# --demo flag
+# ---------------------------------------------------------------------------
+
+
+def test_scaffold_without_demo_does_not_write_evidence(tmp_path: Path):
+    results = scaffold(tmp_path)
+    assert "evidence/smoke.json" not in results
+    assert not (tmp_path / "evidence").exists()
+
+
+def test_scaffold_demo_writes_three_evidence_files(tmp_path: Path):
+    results = scaffold(tmp_path, demo=True)
+    for rel in ("evidence/smoke.json", "evidence/e2e.json", "evidence/coverage.json"):
+        assert results[rel] == "created"
+        assert (tmp_path / rel).is_file()
+
+
+def test_demo_evidence_carries_synthetic_marker(tmp_path: Path):
+    import json
+    scaffold(tmp_path, demo=True)
+    for rel in ("evidence/smoke.json", "evidence/e2e.json", "evidence/coverage.json"):
+        data = json.loads((tmp_path / rel).read_text(encoding="utf-8"))
+        assert "_comment" in data
+        assert "Synthetic" in data["_comment"]
+        assert "1-map-evidence.md" in data["_comment"]
+
+
+def test_demo_evidence_produces_pass_outcome(tmp_path: Path):
+    """End-to-end: scaffold with --demo, run release-readiness-evaluate,
+    expect PASS / score=100."""
+    import subprocess
+    import sys
+    scaffold(tmp_path, demo=True)
+    result = subprocess.run(
+        [
+            sys.executable, "-m", "release_readiness_core.readiness_evaluate",
+            "--repo-root", str(tmp_path),
+            "--config", "ops/release-readiness/config.yaml",
+            "--smoke-results", "evidence/smoke.json",
+            "--e2e-results", "evidence/e2e.json",
+            "--coverage", "evidence/coverage.json",
+            "--empty-diff",
+            "--output-dir", "artifacts/release-readiness",
+        ],
+        capture_output=True, text=True, cwd=str(tmp_path),
+    )
+    assert result.returncode == 0, f"evaluate failed: {result.stderr}"
+    # Verify PASS in the lean summary.
+    import json
+    summary = json.loads((tmp_path / "artifacts" / "release-readiness.json").read_text(encoding="utf-8"))
+    assert summary["outcome"] == "PASS", f"expected PASS, got {summary['outcome']}; full summary: {summary}"
+    assert summary["score"] == 100, f"expected score 100, got {summary['score']}"
+
+
+def test_main_demo_flag_writes_evidence(tmp_path: Path, capsys: pytest.CaptureFixture):
+    code = main([str(tmp_path), "--demo"])
+    assert code == 0
+    assert (tmp_path / "evidence" / "smoke.json").is_file()
+    out = capsys.readouterr().out
+    assert "Demo evidence written" in out
+
+
+def test_scaffold_without_demo_byte_identical_to_legacy(tmp_path: Path):
+    """Without --demo, the scaffold output must be byte-identical to the
+    pre-D1 behavior (no regressions for adopters who don't opt in)."""
+    a = tmp_path / "a"
+    b = tmp_path / "b"
+    scaffold(a)
+    scaffold(b, demo=False)
+    for path_a in a.rglob("*"):
+        if path_a.is_file():
+            rel = path_a.relative_to(a)
+            path_b = b / rel
+            assert path_b.read_bytes() == path_a.read_bytes(), f"divergence at {rel}"

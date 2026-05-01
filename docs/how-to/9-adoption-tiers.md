@@ -10,6 +10,8 @@
 
 The tiers are **opt-in deeper**, not opt-out shallower — Tier 1 is built on the same composite actions a Tier-2 adopter calls directly, which call the same CLIs a Tier-3 adopter shells out to. Picking a tier is a decision about how much YAML you want to own.
 
+> **Third-party default:** if you're adopting from outside this repo and want zero dependency on cross-repo reusable-workflow access, start at **Tier 3** and run CLIs directly (prefer `uvx --from release-readiness-core ...` in GitHub Actions).
+
 ---
 
 ## Tier 1 — reusable workflow (recommended)

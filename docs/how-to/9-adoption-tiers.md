@@ -159,6 +159,172 @@ The output JSON shapes are documented under [`docs/contracts/`](../contracts/) �
 
 ---
 
+## Tier 3 in GitHub Actions: complete worked example
+
+If you're on GitHub Actions but explicitly want a Tier-3 setup (no cross-repo reusable workflow dependency, all CI logic in your own repo), this section gives you the full workflow YAML. It's stack-agnostic — drop in any evidence-collection block from [`docs/how-to/8-recipe-matrix.md`](8-recipe-matrix.md) and the rest works unchanged.
+
+The blocks below are extracted from a working third-party adopter ([`release-readiness-sample-app`](https://github.com/psuthar/release-readiness-sample-app)) — link there for a real-repo "all stitched together" view.
+
+### Workflow skeleton
+
+```yaml
+name: release-readiness
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  RELEASE_READINESS_CORE_VERSION: "0.3.4"
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  collect-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # required so --base-ref can diff against the target branch
+
+      # --- stack-specific test + adapter steps go here ---
+      # See docs/how-to/8-recipe-matrix.md for per-stack snippets.
+      # Each step writes evidence/{smoke,e2e,coverage}.json.
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: readiness-evidence
+          path: evidence/
+
+  readiness:
+    needs: collect-evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: readiness-evidence
+          path: evidence/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install release-readiness-core
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -U pip
+          .venv/bin/pip install "release-readiness-core==${{ env.RELEASE_READINESS_CORE_VERSION }}"
+
+      - name: Evaluate release readiness
+        id: evaluate
+        continue-on-error: true
+        run: |
+          # PR: diff vs target branch. Push to main: diff vs parent commit.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="origin/${{ github.base_ref }}"
+          elif [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            BASE_REF="${{ github.event.before }}"
+          else
+            BASE_REF="HEAD~1"
+          fi
+          .venv/bin/release-readiness-evaluate \
+            --repo-root . \
+            --config ops/release-readiness/config.yaml \
+            --base-ref "$BASE_REF" \
+            --smoke-results evidence/smoke.json \
+            --e2e-results evidence/e2e.json \
+            --coverage evidence/coverage.json \
+            --enforcement-mode block_only
+
+      - name: Append report to run summary
+        if: always()
+        run: |
+          if [ -f artifacts/release-readiness/report.md ]; then
+            cat artifacts/release-readiness/report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always() && hashFiles('artifacts/release-readiness/report.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: artifacts/release-readiness/report.md
+          header: release-readiness
+
+      - name: Publish Check run
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summaryPath = 'artifacts/release-readiness.json';
+            const reportPath = 'artifacts/release-readiness/report.md';
+            const fallback = { outcome: 'BLOCK', score: 0 };
+            const data = fs.existsSync(summaryPath) ? JSON.parse(fs.readFileSync(summaryPath, 'utf8')) : fallback;
+            const conclusionMap = { PASS: 'success', WARN: 'neutral', BLOCK: 'failure' };
+            try {
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'release-readiness',
+                head_sha: context.payload.pull_request?.head.sha ?? context.sha,
+                status: 'completed',
+                conclusion: conclusionMap[data.outcome] ?? 'failure',
+                output: {
+                  title: `release-readiness: ${data.outcome} (score ${data.score})`,
+                  summary: fs.existsSync(reportPath)
+                    ? fs.readFileSync(reportPath, 'utf8')
+                    : 'release-readiness report was not generated.',
+                },
+              });
+            } catch (e) {
+              console.warn(`Could not publish Check run: ${e}`);
+            }
+
+      - name: Enforce BLOCK outcome
+        if: always()
+        run: |
+          if [ ! -f artifacts/release-readiness.json ]; then
+            echo "Missing artifacts/release-readiness.json"; exit 1
+          fi
+          outcome="$(jq -r '.outcome // "BLOCK"' artifacts/release-readiness.json)"
+          echo "release-readiness outcome: ${outcome}"
+          if [ "${outcome}" = "BLOCK" ]; then exit 1; fi
+```
+
+### Why each block matters
+
+- **`fetch-depth: 0`** — `--base-ref` needs full history to compute the diff. Shallow clones silently produce empty diffs (PR-risk and coverage-regression signals no-op).
+- **`env.RELEASE_READINESS_CORE_VERSION`** — single source of truth for the package version. Bump it in one place; both jobs pick it up.
+- **Two-job split (`collect-evidence` → `readiness`)** — keeps test execution and verdict computation in separate runners. Evidence flows through `upload-artifact`/`download-artifact`. Lets you parallelize evidence collection across N jobs later.
+- **`continue-on-error: true` on `evaluate`** — readiness runs even when verdict is BLOCK so the publish/comment/enforce steps can render the diagnostics. The `Enforce BLOCK outcome` step at the end is what actually fails the workflow.
+- **PR-vs-push `BASE_REF` switch** — without this, push-to-main runs evaluate against the wrong base (or empty diff), and PR-risk / coverage-regression signals don't fire. The three branches cover: PR (diff vs target), normal push (diff vs parent commit), and first-push edge case.
+- **Check + sticky comment + step summary** — these are what an adopter gets "for free" from Tier 1's reusable workflow. In Tier 3 you write them yourself; the YAML above is the canonical implementation.
+- **`Enforce BLOCK outcome`** — Tier 1's hidden enforce step. Reads `artifacts/release-readiness.json`, fails the workflow on BLOCK only (matching `--enforcement-mode block_only`). Switch to `warn_and_block` mode when warnings are trustworthy.
+
+### Output paths the workflow assumes
+
+`release-readiness-evaluate` writes to fixed paths the publish steps read from:
+
+```
+artifacts/release-readiness.json          # short summary the gate reads
+artifacts/release-readiness/report.json   # full structured payload
+artifacts/release-readiness/report.md     # markdown for sticky comment + step summary
+```
+
+These paths are stable contracts — don't override `--output-dir` unless you also update the publish steps.
+
+---
+
 ## Migrating between tiers
 
 You can move from Tier 1 → Tier 2 by replacing the reusable-workflow `uses:` line with the two composite-action `uses:` lines from the Tier-2 example above (plus your own enforce step). The configs and evidence formats are identical.

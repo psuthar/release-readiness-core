@@ -147,6 +147,12 @@ infer_validations_when_pass:
     - smoke_passing
   e2e: []
 
+# Suppress WARN for artifacts you don't intend to ship. Most first-time adopters
+# don't have a production health probe — listing it here keeps the gate at PASS
+# instead of WARN-at-score-100.
+optional_artifacts:
+  - prod_health
+
 scoring:
   max_score: 100
   pass_threshold: 80
@@ -169,6 +175,7 @@ Each block:
 - **`validations`** — registry of validation keys. Required keys appear here with a human description.
 - **`evidence_boolean_keys`** — top-level keys in your smoke / e2e JSON that mark a validation as satisfied when set to `true`. Without this, the engine falls back to TalkBack-flavored defaults.
 - **`infer_validations_when_pass`** — when the smoke or e2e suite passes overall, mark these validation keys as satisfied even without explicit booleans.
+- **`optional_artifacts`** — names of evidence artifacts you've intentionally chosen not to provide (e.g. `prod_health` if you don't have a production health probe). Without this, missing artifacts produce warnings that suppress PASS.
 - **`scoring`** — thresholds and per-signal penalties. Tune per [`docs/how-to/2-tune-scoring.md`](2-tune-scoring.md).
 
 ### Synthetic evidence shapes (the same files `--demo` writes)

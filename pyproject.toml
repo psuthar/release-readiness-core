@@ -21,6 +21,8 @@ junit-to-readiness = "release_readiness_core.adapters.junit_xml:main"
 lcov-to-readiness = "release_readiness_core.adapters.lcov_coverage:main"
 pr-risk-semantic = "release_readiness_core.adapters.pr_risk_semantic:main"
 release-readiness-pr-risk = "release_readiness_core.pr_risk.cli:main"
+release-readiness-combine = "release_readiness_core.pr_gate_combine:main"
+release-readiness-check-payload = "release_readiness_core.pr_gate_check:main"
 
 [dependency-groups]
 dev = [

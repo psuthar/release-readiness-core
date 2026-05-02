@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). See `RELEASE.md` for PyPI version pins, git SHA pins, and the release checklist.
 
+## [Unreleased]
+
+### Added
+- **`--warn-conclusion` flag on `release-readiness-check-payload`** and a corresponding `warn-conclusion` input on the reusable workflow (`.github/workflows/readiness.yml`) and the `release-readiness-pr-gate` composite action. Choices: `action_required` (default — blocks PR merge but keeps the workflow green; matches existing behavior), `failure` (blocks merge AND turns the workflow red — strict Phase-3 rollout), `neutral` (visible but non-blocking — Phase-1/2 soft rollout). Lets Tier-1/Tier-2 adopters reach strict Phase-3 enforcement without forking. Default preserves current behavior — non-breaking.
+- **`docs/contracts/prod-health-input-v1.schema.json`** — versioned schema for the `prod_health` evidence artifact consumed by `--prod-health`. Documents the shape both reference probes produce (`url`, `healthy`, `http_status`, `latency_ms`, `checked_at`, `source`, `body`, optional `error`).
+- **§3.5 "Choosing the WARN Check conclusion"** in `docs/how-to/3-ci-integration.md`, with a three-option table (`neutral` / `action_required` / `failure`), Tier 1/2/3 wiring instructions, and a callout for the Tier-3 "two-edit dance" (enforcement-mode flag AND conclusion mapping must change together).
+- Phase-3 promotion guidance in `docs/how-to/5-branch-protection.md` §3 explaining the Tier-1 vs Tier-3 mechanics.
+- Production-health subsection (§2.1) in `docs/how-to/1-map-evidence.md` with schema reference and pointers to the Go and TypeScript reference probes.
+- Cross-references to both sample apps (Go = Phase 2, TypeScript = Phase 3) in `docs/how-to/8-recipe-matrix.md` and `docs/how-to/9-adoption-tiers.md`.
+
+### Changed
+- `pr-gate-check-v1.schema.json` — `check_conclusion` enum extended to include `neutral` (was `["success", "action_required", "failure"]`). Description updated to reflect that WARN's conclusion is now configurable.
+- `docs/contracts/README.md` — input list now includes `prod-health-input-v1`; status mapping table flags WARN's conclusion as override-able.
+- Description on the `release-readiness` composite action clarified: evaluate-only, no Check publication.
+- `docs/how-to/3-ci-integration.md` Tier-3 example `conclusionMap` updated from `WARN: 'neutral'` to `WARN: 'action_required'` to match the reusable-workflow default. The previous example was a silent footgun for Tier-3 adopters who later promoted to Phase 3.
+
 ## [0.3.4] — 2026-05-01
 
 ### Changed

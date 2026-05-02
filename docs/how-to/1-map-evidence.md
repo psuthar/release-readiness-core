@@ -45,7 +45,23 @@ The engine reads two artifact types as the canonical sources of validation evide
 
 Both are plain JSON. Both are optional — but a missing artifact triggers a soft-penalty warning that suppresses PASS.
 
-`coverage` and `prod_health` are also consumed but are not validation-evidence sources; they affect the score, not the validation map.
+### 2.1. Score-only artifacts (`coverage`, `prod_health`)
+
+Two more artifacts are consumed but **don't drive the validation map** — they affect the score and surface in the report instead.
+
+| Artifact | CLI flag | Schema | Sample probe |
+|---|---|---|---|
+| Coverage | `--coverage path/to/coverage.json` | `docs/contracts/coverage-input-v1.schema.json` | `lcov-to-readiness` adapter (any LCOV producer) |
+| Production health | `--prod-health path/to/prod_health.json` | `docs/contracts/prod-health-input-v1.schema.json` | Go: `release-readiness-sample-app/cmd/prod-health-probe`. TypeScript: `release-readiness-node-js-sample-app/scripts/prod-health-probe.ts` |
+
+**`prod_health`** is a snapshot of an HTTP health probe captured at evaluation time. Both reference probes write the same shape (`url`, `healthy`, `http_status`, `latency_ms`, `checked_at`, `source`, `body`, optional `error`). `healthy` (or `ok` for backward compatibility) is the engine-readable signal; everything else surfaces in the report.
+
+By default, missing `prod_health` triggers `missing_prod_health_artifact` (5-point soft penalty). Two opt-out paths if your project doesn't yet have a probe:
+
+- Add `prod_health` to `optional_artifacts:` in `config.yaml` to suppress both the warning and the penalty.
+- Or just don't pass `--prod-health` — the penalty fires but no warning is raised.
+
+**When to add a prod_health probe.** Any service with an HTTP health endpoint worth recording on each release evaluation: a real deployment URL in CI (`PROD_HEALTH_URL` env var) or, for sample/demo repos, an in-process probe of the same handler your tests exercise. The reference probes support both modes.
 
 ---
 

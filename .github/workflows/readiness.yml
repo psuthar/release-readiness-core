@@ -126,6 +126,16 @@ on:
         required: false
         type: boolean
         default: true
+      warn-conclusion:
+        description: >-
+          GitHub Check conclusion to publish on WARN outcomes. One of
+          'action_required' (default; blocks merge but keeps the workflow green),
+          'failure' (blocks merge AND turns the workflow red — strict Phase 3),
+          or 'neutral' (visible but non-blocking — Phase 1/2 soft rollout).
+          See docs/how-to/3-ci-integration.md §3.5.
+        required: false
+        type: string
+        default: action_required
 
     outputs:
       gate-status:
@@ -246,6 +256,7 @@ jobs:
           output-dir: ${{ inputs['output-dir'] }}
           check-name: ${{ inputs['check-name'] }}
           run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          warn-conclusion: ${{ inputs['warn-conclusion'] }}
 
       - name: Set up Python (evaluate-only path)
         if: ${{ ! inputs['combine-with-pr-risk'] }}

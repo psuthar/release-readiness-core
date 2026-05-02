@@ -163,7 +163,7 @@ The output JSON shapes are documented under [`docs/contracts/`](../contracts/) �
 
 If you're on GitHub Actions but explicitly want a Tier-3 setup (no cross-repo reusable workflow dependency, all CI logic in your own repo), this section gives you the full workflow YAML. It's stack-agnostic — drop in any evidence-collection block from [`docs/how-to/8-recipe-matrix.md`](8-recipe-matrix.md) and the rest works unchanged.
 
-The blocks below are extracted from a working third-party adopter ([`release-readiness-sample-app`](https://github.com/psuthar/release-readiness-sample-app)) — link there for a real-repo "all stitched together" view.
+The blocks below are extracted from a working third-party adopter ([`release-readiness-sample-app`](https://github.com/psuthar/release-readiness-sample-app), Go, **Phase 2** — `enforcement-mode: block_only`). For a Phase-3 adopter that demonstrates `WARN`-blocks-merge with the conclusion-mapping override in place, see the sister sample [`release-readiness-node-js-sample-app`](https://github.com/psuthar/release-readiness-node-js-sample-app) (TypeScript). The two samples together cover both ends of the [phased rollout](5-branch-protection.md#3-phased-rollout-recommended).
 
 ### Workflow skeleton
 

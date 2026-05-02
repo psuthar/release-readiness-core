@@ -120,6 +120,26 @@ def test_check_payload_validates_against_check_schema(
     assert payload["check_conclusion"] == expected_conclusion
 
 
+@pytest.mark.parametrize("warn_conclusion", ["action_required", "failure", "neutral"])
+def test_warn_payload_validates_for_each_warn_conclusion(tmp_path: Path, warn_conclusion: str):
+    """The expanded check_conclusion enum must accept every --warn-conclusion choice."""
+    schema = _load_schema("pr-gate-check-v1.schema.json")
+    pr_risk = _pr_risk(tmp_path, "PASS")
+    rr = _readiness(tmp_path, "WARN")
+    out = tmp_path / "out"
+    comb.run(pr_risk, rr, None, out)
+
+    payload = chk.run(
+        out / "pr-gate-summary.json",
+        out / "pr-gate-check.json",
+        warn_conclusion=warn_conclusion,
+    )
+
+    jsonschema.validate(instance=payload, schema=schema)
+    assert payload["check_conclusion"] == warn_conclusion
+    assert payload["final_gate_status"] == "WARN"
+
+
 def test_check_payload_for_missing_input_validates_against_check_schema(tmp_path: Path):
     schema = _load_schema("pr-gate-check-v1.schema.json")
     payload = chk.run(tmp_path / "missing.json", tmp_path / "out.json")

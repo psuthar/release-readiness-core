@@ -134,11 +134,20 @@ Don't flip required-check on the first day. Rollout pattern that preserves team 
 | Phase | Duration | Configuration |
 |---|---|---|
 | 0. Soft observability | 1 week | Workflow runs, posts comment, doesn't appear in branch protection. |
-| 1. Visible non-blocking | 1–2 release cycles | Check appears in PR UI as a yellow/green badge. Reviewers see it. Not required. |
-| 2. Required, block-only | 1 release cycle | `enforcement-mode: block_only`, listed in branch protection. WARN does not block; BLOCK does. |
-| 3. Required, warn-and-block | open-ended | Promote to `enforcement-mode: warn_and_block` once WARN false-positives are rare. |
+| 1. Visible non-blocking | 1–2 release cycles | Check appears in PR UI as a yellow/green badge. Reviewers see it. Not required. `warn-conclusion: neutral` (Tier 1) or `WARN: 'neutral'` mapping (Tier 3). |
+| 2. Required, block-only | 1 release cycle | `enforcement-mode: block_only`, listed in branch protection. WARN does not block; BLOCK does. Same `neutral` mapping as Phase 1. |
+| 3. Required, warn-and-block | open-ended | `enforcement-mode: warn_and_block` **plus** a WARN-blocking conclusion. See "Promoting to Phase 3" below. |
 
 If a regression surfaces in any phase, drop back **one phase**, fix the underlying issue, and resume. Skipping phases or removing the gate entirely both damage trust more than the original failure did.
+
+### Promoting to Phase 3
+
+`--enforcement-mode warn_and_block` only changes the *evaluator's process exit code* (so the workflow job goes red on WARN). It does **not** change how GitHub interprets the Check Run conclusion. To make WARN actually block the merge button via the required-status-check rule, the conclusion mapping must also be non-neutral:
+
+- **Tier 1** (reusable workflow): pass `warn-conclusion: action_required` (default, blocks merge but keeps workflow green) or `warn-conclusion: failure` (blocks merge AND turns workflow red — strict). Setting `enforcement-mode: warn_and_block` alone with the default `warn-conclusion: action_required` is enough — the default is Phase-3-compatible.
+- **Tier 3** (own publish step): you must edit your `conclusionMap` literal — change `WARN: 'neutral'` to `WARN: 'action_required'` or `WARN: 'failure'`. Both must change together: enforcement-mode flag + conclusion mapping. This pair is the "two-edit dance" — one without the other silently leaves WARN merges enabled.
+
+See `docs/how-to/3-ci-integration.md` §3.5 for the full table and the trade-offs between the three WARN conclusions. The reference samples at `release-readiness-sample-app` (Phase 2) and `release-readiness-node-js-sample-app` (Phase 3) demonstrate both ends of the rollout.
 
 ---
 

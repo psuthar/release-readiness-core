@@ -14,12 +14,15 @@ If you're adopting as a third-party consumer and want to avoid cross-repo reusab
 | Playwright | `playwright-to-readiness` | required for per-key satisfaction; optional otherwise | [`examples/node-playwright/`](../../examples/node-playwright/.github/workflows/release-readiness.yml) |
 | Cypress + JUnit | `junit-to-readiness` | required for per-key satisfaction | TBD |
 | Jest + JUnit (`jest-junit`) | `junit-to-readiness` | required for per-key satisfaction | TBD |
-| Vitest + JUnit | `junit-to-readiness` | required for per-key satisfaction | TBD |
+| Vitest + JUnit (smoke + e2e split) | `junit-to-readiness` | required for per-key satisfaction | [`release-readiness-node-js-sample-app`](https://github.com/psuthar/release-readiness-node-js-sample-app) |
 | Go test (smoke + e2e split) | inline `smoke.json` / `e2e.json` writers | n/a (use `infer_validations_when_pass`) | [`release-readiness-sample-app`](https://github.com/psuthar/release-readiness-sample-app) |
 | Go cover + LCOV | `lcov-to-readiness` (via `gcov2lcov`) | n/a (coverage is scoring, not validation) | [`release-readiness-sample-app`](https://github.com/psuthar/release-readiness-sample-app) |
-| Vitest + LCOV (coverage) | `lcov-to-readiness` | n/a | TBD |
+| Vitest + LCOV (coverage) | `lcov-to-readiness` | n/a | [`release-readiness-node-js-sample-app`](https://github.com/psuthar/release-readiness-node-js-sample-app) |
+| Custom prod_health probe | inline `prod_health.json` writer | n/a (scoring) | Go: [`release-readiness-sample-app/cmd/prod-health-probe`](https://github.com/psuthar/release-readiness-sample-app/tree/main/cmd/prod-health-probe). TS: [`release-readiness-node-js-sample-app/scripts/prod-health-probe.ts`](https://github.com/psuthar/release-readiness-node-js-sample-app/blob/main/scripts/prod-health-probe.ts) |
 
 > All "TBD" rows can still be wired today using the snippet below — the `examples/<stack>/` working dir hasn't been authored yet.
+
+> **Sister samples demonstrate phased rollout.** [`release-readiness-sample-app`](https://github.com/psuthar/release-readiness-sample-app) (Go) is at **Phase 2** (`enforcement-mode: block_only`, WARN visible but non-blocking). [`release-readiness-node-js-sample-app`](https://github.com/psuthar/release-readiness-node-js-sample-app) (TypeScript) is at **Phase 3** (`enforcement-mode: warn_and_block` with `WARN: 'failure'` Check conclusion mapping). Reading both side-by-side shows the full rollout path — see [`5-branch-protection.md`](5-branch-protection.md#3-phased-rollout-recommended) and [`3-ci-integration.md`](3-ci-integration.md#35-choosing-the-warn-check-conclusion) for the mechanics.
 
 ---
 

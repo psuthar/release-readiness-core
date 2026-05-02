@@ -9,6 +9,7 @@ This directory contains versioned JSON contracts used by the standalone package.
 - `smoke-input-v1.schema.json` — shape for `--smoke-results`.
 - `e2e-input-v1.schema.json` — shape for `--e2e-results`.
 - `coverage-input-v1.schema.json` — shape for `--coverage`.
+- `prod-health-input-v1.schema.json` — shape for `--prod-health`. Captures an HTTP health-probe snapshot. Reference probes ship in both sample apps (Go: `cmd/prod-health-probe`, TS: `scripts/prod-health-probe.ts`).
 - `pr-risk-input-v1.schema.json` — shape for the optional `<output-dir>/pr_risk.json` artifact.
 
 ### Output
@@ -30,13 +31,15 @@ This directory contains versioned JSON contracts used by the standalone package.
 
 **Status → Checks-API mapping:**
 
-| `final_gate.status` | `check_conclusion` | `workflow_should_fail` |
+| `final_gate.status` | `check_conclusion` (default) | `workflow_should_fail` |
 |---|---|---|
 | PASS | `success` | false |
-| WARN | `action_required` | false |
+| WARN | `action_required` (override via `--warn-conclusion`) | false |
 | BLOCK / parse error | `failure` | true |
 
-`action_required` keeps the workflow green but blocks GitHub's `mergeable_state`. `workflow_should_fail` is the canonical signal a calling workflow's enforcement step reads to decide whether to exit non-zero — it is set independently of `check_conclusion` (so adopters who don't publish a Check can still enforce).
+The default `action_required` keeps the workflow green but blocks GitHub's `mergeable_state` (the merge button greys out when the check is required). Pass `--warn-conclusion failure` to also turn the workflow red on WARN (strict Phase-3 rollout); pass `--warn-conclusion neutral` for visible-but-non-blocking (Phase-1/2 soft rollout). See `docs/how-to/3-ci-integration.md` §3.5.
+
+`workflow_should_fail` is the canonical signal a calling workflow's enforcement step reads to decide whether to exit non-zero — it is set independently of `check_conclusion` (so adopters who don't publish a Check can still enforce).
 
 ### Configuration
 

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/psuthar/release-readiness-core/schemas/pr-gate-check-v1.schema.json",
   "title": "PR Gate Check Payload v1",
-  "description": "Output of release-readiness-check-payload: shape consumed by actions/github-script for github.rest.checks.create / checks.update. Status mapping: PASS -> success, WARN -> action_required, BLOCK / error -> failure. workflow_should_fail is the canonical signal for the enforcement step.",
+  "description": "Output of release-readiness-check-payload: shape consumed by actions/github-script for github.rest.checks.create / checks.update. Status mapping: PASS -> success, WARN -> configurable via --warn-conclusion (default action_required; alternatives failure for strict Phase 3, neutral for Phase 1/2 soft rollout), BLOCK / error -> failure. workflow_should_fail is the canonical signal for the enforcement step.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -21,8 +21,8 @@
     },
     "check_conclusion": {
       "type": "string",
-      "enum": ["success", "action_required", "failure"],
-      "description": "GitHub Checks API conclusion value. action_required keeps the workflow green but blocks mergeable_state."
+      "enum": ["success", "action_required", "failure", "neutral"],
+      "description": "GitHub Checks API conclusion value. PASS always maps to 'success' and BLOCK/error to 'failure'. WARN maps to one of {action_required, failure, neutral} per the --warn-conclusion CLI flag (default action_required, which blocks mergeable_state but keeps the workflow green)."
     },
     "title": {
       "type": "string",

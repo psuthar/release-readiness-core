@@ -8,14 +8,17 @@ to feed to ``github.rest.checks.create`` / ``checks.update``.
 
 Status mapping:
 
-  PASS  → check conclusion ``success``,         ``workflow_should_fail`` False
-  WARN  → check conclusion ``action_required``, ``workflow_should_fail`` False
-  BLOCK → check conclusion ``failure``,         ``workflow_should_fail`` True
-  error → check conclusion ``failure``,         ``workflow_should_fail`` True
+  PASS  → check conclusion ``success``,                  ``workflow_should_fail`` False
+  WARN  → check conclusion ``warn_conclusion`` (param),  ``workflow_should_fail`` False
+  BLOCK → check conclusion ``failure``,                  ``workflow_should_fail`` True
+  error → check conclusion ``failure``,                  ``workflow_should_fail`` True
 
-``action_required`` blocks ``mergeable_state`` (prevents auto-merge) while
-keeping the workflow green — semantically "human review needed", not
-"build broken".
+``warn_conclusion`` defaults to ``action_required``: blocks ``mergeable_state``
+(prevents auto-merge and disables the merge button when the check is required)
+while keeping the workflow green — semantically "human review needed", not
+"build broken". Pass ``failure`` for "block AND turn the workflow red"
+(strict Phase-3 rollout) or ``neutral`` for "visible but non-blocking"
+(Phase-1/2 soft rollout).
 """
 
 from __future__ import annotations
@@ -33,17 +36,22 @@ DEFAULT_CHECK_NAME = "release-readiness"
 
 VALID_STATUSES = frozenset({"PASS", "WARN", "BLOCK"})
 
+VALID_WARN_CONCLUSIONS = ("action_required", "failure", "neutral")
+DEFAULT_WARN_CONCLUSION = "action_required"
+
 
 def _norm_status(raw: Any) -> str:
     s = (str(raw) if raw is not None else "").strip().upper()
     return s if s in VALID_STATUSES else "UNKNOWN"
 
 
-def conclusion_for_status(status: str) -> str:
+def conclusion_for_status(
+    status: str, warn_conclusion: str = DEFAULT_WARN_CONCLUSION
+) -> str:
     if status == "PASS":
         return "success"
     if status == "WARN":
-        return "action_required"
+        return warn_conclusion
     return "failure"
 
 
@@ -138,6 +146,7 @@ def build_payload_from_dict(
     *,
     run_url: str = "",
     check_name: str = DEFAULT_CHECK_NAME,
+    warn_conclusion: str = DEFAULT_WARN_CONCLUSION,
 ) -> dict[str, Any]:
     fg = data.get("final_gate") or {}
     status = _norm_status(fg.get("status"))
@@ -156,7 +165,7 @@ def build_payload_from_dict(
 
     return {
         "check_name": check_name,
-        "check_conclusion": conclusion_for_status(status),
+        "check_conclusion": conclusion_for_status(status, warn_conclusion),
         "title": build_title(status, check_name),
         "summary": summary,
         "text": text,
@@ -205,6 +214,7 @@ def run(
     *,
     run_url: str = "",
     check_name: str = DEFAULT_CHECK_NAME,
+    warn_conclusion: str = DEFAULT_WARN_CONCLUSION,
 ) -> dict[str, Any]:
     if not gate_json_path.is_file():
         payload = build_error_payload(
@@ -231,7 +241,10 @@ def run(
                 )
             else:
                 payload = build_payload_from_dict(
-                    data, run_url=run_url, check_name=check_name
+                    data,
+                    run_url=run_url,
+                    check_name=check_name,
+                    warn_conclusion=warn_conclusion,
                 )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -260,6 +273,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         "--check-name", default=DEFAULT_CHECK_NAME,
         help="Check name to use in the Checks API payload (default: %(default)s)",
     )
+    parser.add_argument(
+        "--warn-conclusion",
+        default=DEFAULT_WARN_CONCLUSION,
+        choices=list(VALID_WARN_CONCLUSIONS),
+        help=(
+            "GitHub Check conclusion to publish for WARN outcomes. "
+            "'action_required' (default) blocks PR merge but keeps the workflow green; "
+            "'failure' blocks merge AND turns the workflow red (strict Phase 3 rollout); "
+            "'neutral' is visible but non-blocking (Phase 1/2 soft rollout)."
+        ),
+    )
     args = parser.parse_args(argv)
 
     run_url = (args.run_url or "").strip() or os.environ.get("GITHUB_RUN_URL", "").strip()
@@ -269,6 +293,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         output_path=args.output,
         run_url=run_url,
         check_name=args.check_name,
+        warn_conclusion=args.warn_conclusion,
     )
 
     print(payload["title"], "->", payload["check_conclusion"])

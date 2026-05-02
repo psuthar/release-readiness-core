@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from release_readiness_core import pr_gate_check as chk
 
 
@@ -46,6 +48,24 @@ def test_conclusion_for_unknown_is_failure():
     assert chk.conclusion_for_status("UNKNOWN") == "failure"
 
 
+@pytest.mark.parametrize(
+    "warn_conclusion,expected",
+    [
+        ("action_required", "action_required"),
+        ("failure", "failure"),
+        ("neutral", "neutral"),
+    ],
+)
+def test_conclusion_for_warn_respects_override(warn_conclusion, expected):
+    assert chk.conclusion_for_status("WARN", warn_conclusion) == expected
+
+
+def test_conclusion_for_pass_ignores_warn_conclusion():
+    # WARN override must not affect non-WARN statuses.
+    assert chk.conclusion_for_status("PASS", "failure") == "success"
+    assert chk.conclusion_for_status("BLOCK", "neutral") == "failure"
+
+
 # ---------------------------------------------------------------------------
 # Payload from gate JSON
 # ---------------------------------------------------------------------------
@@ -62,6 +82,17 @@ def test_pass_payload_has_success_and_no_workflow_fail():
 def test_warn_payload_uses_action_required():
     payload = chk.build_payload_from_dict(_gate_summary("WARN", workflow_should_fail=False))
     assert payload["check_conclusion"] == "action_required"
+    assert payload["workflow_should_fail"] is False
+
+
+@pytest.mark.parametrize("warn_conclusion", ["action_required", "failure", "neutral"])
+def test_warn_payload_threads_warn_conclusion(warn_conclusion):
+    payload = chk.build_payload_from_dict(
+        _gate_summary("WARN", workflow_should_fail=False),
+        warn_conclusion=warn_conclusion,
+    )
+    assert payload["check_conclusion"] == warn_conclusion
+    # workflow_should_fail is independent — driven by gate.workflow_should_fail.
     assert payload["workflow_should_fail"] is False
 
 
@@ -159,3 +190,33 @@ def test_main_writes_payload(tmp_path: Path):
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert payload["check_conclusion"] == "failure"
     assert payload["workflow_should_fail"] is True
+
+
+@pytest.mark.parametrize("warn_conclusion", ["action_required", "failure", "neutral"])
+def test_main_threads_warn_conclusion_flag(tmp_path: Path, warn_conclusion):
+    gate = tmp_path / "pr-gate-summary.json"
+    _write(gate, _gate_summary("WARN", workflow_should_fail=False))
+    out = tmp_path / "pr-gate-check.json"
+
+    rc = chk.main([
+        "--gate-json", str(gate),
+        "--output", str(out),
+        "--warn-conclusion", warn_conclusion,
+    ])
+    assert rc == 0
+
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["check_conclusion"] == warn_conclusion
+    assert payload["final_gate_status"] == "WARN"
+
+
+def test_main_rejects_invalid_warn_conclusion(tmp_path: Path):
+    gate = tmp_path / "pr-gate-summary.json"
+    _write(gate, _gate_summary("WARN", workflow_should_fail=False))
+
+    with pytest.raises(SystemExit):
+        chk.main([
+            "--gate-json", str(gate),
+            "--output", str(tmp_path / "out.json"),
+            "--warn-conclusion", "not_a_valid_conclusion",
+        ])

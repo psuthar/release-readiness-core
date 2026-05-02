@@ -1,0 +1,8 @@
+# Code ownership for release-readiness-core.
+#
+# Every path in this repo is owned by @psuthar. GitHub will automatically
+# request review from the listed owner on any PR that touches a matching path.
+# Owner enforcement (require_code_owner_review) is configured in branch
+# protection / repo rulesets — this file alone does not block merges.
+
+* @psuthar

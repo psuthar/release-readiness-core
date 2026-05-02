@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). See `RELEASE.md` for PyPI version pins, git SHA pins, and the release checklist.
 
-## [Unreleased]
+## [0.4.0] — 2026-05-02
+
+> **Coordination note for Tier-1/Tier-2 adopters using `install-source: pypi`.** The `release-readiness-pr-gate` composite now passes `--warn-conclusion` to `release-readiness-check-payload` unconditionally. If you bump the reusable-workflow / pr-gate SHA past this release, also bump `pypi-version` to `0.4.0` (or higher) — earlier CLI versions don't recognize the flag and will fail the step. Tier-3 adopters (raw CLIs in their own workflow) are unaffected unless they use the new flag.
 
 ### Added
 - **`--warn-conclusion` flag on `release-readiness-check-payload`** and a corresponding `warn-conclusion` input on the reusable workflow (`.github/workflows/readiness.yml`) and the `release-readiness-pr-gate` composite action. Choices: `action_required` (default — blocks PR merge but keeps the workflow green; matches existing behavior), `failure` (blocks merge AND turns the workflow red — strict Phase-3 rollout), `neutral` (visible but non-blocking — Phase-1/2 soft rollout). Lets Tier-1/Tier-2 adopters reach strict Phase-3 enforcement without forking. Default preserves current behavior — non-breaking.

@@ -74,6 +74,14 @@ inputs:
       to GITHUB_RUN_URL env var when empty.
     required: false
     default: ""
+  warn-conclusion:
+    description: >-
+      GitHub Check conclusion to publish on WARN outcomes. One of
+      action_required (default; blocks merge but keeps the workflow green),
+      failure (blocks merge AND turns the workflow red — strict Phase 3),
+      or neutral (visible but non-blocking — Phase 1/2 soft rollout).
+    required: false
+    default: action_required
 
 outputs:
   gate-status:
@@ -211,6 +219,7 @@ runs:
           --gate-json "$PARENT/pr-gate-summary.json"
           --output "$PARENT/pr-gate-check.json"
           --check-name "${{ inputs.check-name }}"
+          --warn-conclusion "${{ inputs.warn-conclusion }}"
         )
         [ -n "$RUN_URL" ] && ARGS+=(--run-url "$RUN_URL")
         if ! release-readiness-check-payload "${ARGS[@]}"; then

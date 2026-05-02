@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/psuthar/release-readiness-core/schemas/prod-health-input-v1.schema.json",
+  "title": "Release readiness production health input v1",
+  "description": "Shape consumed by --prod-health. A snapshot of a production (or in-process) HTTP health probe, captured at evaluation time. The engine reads the boolean `healthy` (and falls back to `ok` for backward compatibility) to decide whether the prod_health validation passes; the remaining fields are surfaced in the report. Additional fields beyond those listed here are ignored. Reference probes: release-readiness-sample-app/cmd/prod-health-probe/main.go (Go), release-readiness-node-js-sample-app/scripts/prod-health-probe.ts (TypeScript).",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "url": {
+      "description": "The URL that was probed (full path including the health endpoint, e.g. https://example.com/healthz).",
+      "type": "string"
+    },
+    "healthy": {
+      "description": "Required. Overall result. True when the probe got HTTP 200 AND the body parsed to {status: 'ok'}; false otherwise. The engine uses this as the prod_health validation's pass/fail signal.",
+      "type": "boolean"
+    },
+    "ok": {
+      "description": "Backward-compatibility alias for `healthy`. Older probes used this field name; the engine accepts either.",
+      "type": "boolean"
+    },
+    "http_status": {
+      "description": "HTTP status code returned by the probe. Null when the probe could not connect (e.g. connection refused).",
+      "type": ["integer", "null"]
+    },
+    "latency_ms": {
+      "description": "Round-trip time in milliseconds. Null when the probe could not connect.",
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "checked_at": {
+      "description": "ISO 8601 UTC timestamp of when the probe ran (e.g. '2026-05-02T01:23:45.000Z').",
+      "type": "string"
+    },
+    "source": {
+      "description": "Where the probe ran. 'external' = a real deployment (PROD_HEALTH_URL set); 'in_process' = a local in-process server spun up by the probe (sample/demo scope).",
+      "type": "string",
+      "enum": ["external", "in_process"]
+    },
+    "body": {
+      "description": "The response body. Parsed as JSON when possible; falls back to the raw string. Null on connection error."
+    },
+    "error": {
+      "description": "Error message when the probe could not complete (e.g. 'connection refused'). Omitted on success.",
+      "type": "string"
+    }
+  }
+}

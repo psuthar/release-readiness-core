@@ -3,7 +3,12 @@ description: >-
   Install release-readiness-core, run the deterministic evaluator against
   pre-collected evidence, and append the report to the GitHub job summary.
   Adopters keep responsibility for collecting smoke / E2E / coverage
-  artifacts; this action handles install + invoke + publish.
+  artifacts; this action handles install + evaluate + step summary.
+
+  Evaluate-only — no PR-risk combine and no GitHub Check publication. For
+  the full PR-gate path (PR-risk + readiness + combiner + Check Run), use
+  the reusable workflow at .github/workflows/readiness.yml or the
+  release-readiness-pr-gate + release-readiness-publish composite combo.
 
 inputs:
   install-source:

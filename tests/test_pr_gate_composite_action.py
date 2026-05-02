@@ -64,9 +64,17 @@ def test_action_declares_required_inputs():
         "output-dir",
         "check-name",
         "run-url",
+        "warn-conclusion",
     }
     missing = expected - set(inputs.keys())
     assert not missing, f"missing inputs: {missing}"
+
+
+def test_action_threads_warn_conclusion_to_check_payload_cli():
+    """The composite must pass --warn-conclusion through to release-readiness-check-payload."""
+    text = ACTION_PATH.read_text(encoding="utf-8")
+    assert "--warn-conclusion" in text
+    assert "inputs.warn-conclusion" in text or "inputs['warn-conclusion']" in text
 
 
 def test_action_marks_package_ref_optional_for_pypi_install():

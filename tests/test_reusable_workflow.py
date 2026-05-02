@@ -63,6 +63,7 @@ def test_reusable_workflow_declares_required_inputs():
         "check-name",
         "output-dir",
         "fail-workflow-on-gate-failure",
+        "warn-conclusion",
     }
     missing = expected - set(inputs.keys())
     assert not missing, f"missing inputs: {missing}"

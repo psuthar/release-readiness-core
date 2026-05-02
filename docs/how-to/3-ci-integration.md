@@ -158,14 +158,17 @@ jobs:
             const fs = require('fs');
             const summary = fs.readFileSync('artifacts/release-readiness/release-readiness.json', 'utf8');
             const data = JSON.parse(summary);
-            const conclusionMap = { PASS: 'success', WARN: 'neutral', BLOCK: 'failure' };
+            // WARN: 'action_required' blocks PR merge but keeps the workflow green.
+            // Use 'failure' for workflow-also-red (strict Phase 3); 'neutral' for
+            // visible-but-non-blocking (Phase 1/2 soft rollout). See §3.5 below.
+            const conclusionMap = { PASS: 'success', WARN: 'action_required', BLOCK: 'failure' };
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               name: 'release-readiness',
               head_sha: context.payload.pull_request?.head.sha ?? context.sha,
               status: 'completed',
-              conclusion: conclusionMap[data.outcome] ?? 'neutral',
+              conclusion: conclusionMap[data.outcome] ?? 'failure',
               output: {
                 title: `release-readiness: ${data.outcome} (score ${data.score})`,
                 summary: fs.readFileSync('artifacts/release-readiness/report.md', 'utf8'),
@@ -179,6 +182,45 @@ Notes:
 - The `if: always()` on publish steps ensures the report still posts even when the readiness step exits non-zero on BLOCK. Without that, a BLOCK leaves no PR comment.
 - `marocchino/sticky-pull-request-comment` keeps a single PR comment updated across pushes; `actions/github-script` is just one of many ways to publish the Check.
 - `uvx --from release-readiness-core ...` avoids system Python writes (`pip --system`) and works on externally managed GitHub runners.
+
+## §3.5 Choosing the WARN Check conclusion
+
+The PASS and BLOCK conclusions are pinned: `success` and `failure` respectively. WARN is the interesting one because it's where the **rollout phase** shows up in code. Three choices, picked deliberately:
+
+| `WARN` conclusion | Phased rollout | Merge impact (when required) | Workflow status on WARN |
+|---|---|---|---|
+| `neutral` | Phase 1 / 2 — soft | Does not block | green |
+| `action_required` (default) | Phase 3 — standard | Blocks (`mergeable_state`) | green |
+| `failure` | Phase 3 — strict | Blocks | red |
+
+Pick based on where you are in the rollout:
+
+- **Phase 1/2** (observability): `neutral`. Reviewers see the Check, but a WARN doesn't gate the merge. Workflow stays green so the PR still passes its own CI.
+- **Phase 3 standard** (default): `action_required`. WARN blocks the merge button when the check is a required status check, but the workflow itself stays green — the build isn't broken; it needs human review.
+- **Phase 3 strict**: `failure`. Some teams prefer the workflow to also go red on WARN so the signal is visible in branch lists and notifications, not just in the Check Run. Trade-off: noisier CI for a sharper gate.
+
+### Where to set it
+
+- **Tier 1** (reusable workflow): pass the new `warn-conclusion` input (default `action_required`):
+  ```yaml
+  uses: psuthar/release-readiness-core/.github/workflows/readiness.yml@<sha>
+  with:
+    enforcement-mode: warn_and_block
+    warn-conclusion: failure   # Phase-3 strict
+  ```
+- **Tier 2** (composites): pass `warn-conclusion` to the `release-readiness-pr-gate` composite action (same default).
+- **Tier 3** (own publish step, like the snippet above): edit your own `conclusionMap` literal.
+
+### Critical Tier-3 gotcha — the "two-edit dance"
+
+If you write your own publish step (Tier 3) and want Phase-3 enforcement, both of these have to change together:
+
+1. The evaluator flag: `--enforcement-mode warn_and_block` — makes the *workflow exit code* fail on WARN.
+2. The Check conclusion mapping: `WARN: 'action_required'` (or `'failure'`) — makes the *required-status-check rule* block on WARN.
+
+Setting only #1 is a silent footgun: the evaluator exits non-zero, but if the publish step still maps WARN → `'neutral'`, GitHub's required-check rule treats the Check as passing and the merge button stays enabled. Tier 1/2 don't have this problem because the reusable workflow defaults `warn-conclusion` to `action_required`.
+
+The reference samples at `release-readiness-sample-app` (Phase 2) and `release-readiness-node-js-sample-app` (Phase 3) demonstrate both ends of the rollout.
 
 ### Reusable workflow caveat for private repos
 

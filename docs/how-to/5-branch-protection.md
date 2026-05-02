@@ -58,6 +58,75 @@ You should see `release-readiness` listed in `contexts`.
 
 ---
 
+## 2.5. Rulesets (recommended for new setups)
+
+Classic branch protection still works, but [GitHub Rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets) are the current default. Rulesets are layered (rather than singular), targetable across multiple branches with one config, and reusable at the org level. Prefer rulesets unless you have a reason to stay on classic protection.
+
+### UI path
+
+1. **Settings → Rules → Rulesets → New branch ruleset**.
+2. Name: `require-release-readiness`. Enforcement: **Active**.
+3. Target branches: include `Default branch` (or `main` explicitly).
+4. Rules:
+   - **Require a pull request before merging** (any approval count you want; for sample/demo repos, `0` is fine — the readiness check is the gate).
+   - **Require status checks to pass** → add `release-readiness`. Tick **Require branches to be up to date before merging**.
+5. **Bypass list**: add the `Repository admin` role with **Always** mode. (See §4.5 for who else belongs here.)
+6. Save.
+
+### `gh api` path
+
+```bash
+gh api -X POST /repos/<owner>/<repo>/rulesets --input - <<'JSON'
+{
+  "name": "require-release-readiness",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] }
+  },
+  "rules": [
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "required_status_checks": [
+          { "context": "release-readiness" }
+        ]
+      }
+    }
+  ],
+  "bypass_actors": [
+    { "actor_type": "RepositoryRole", "actor_id": 5, "bypass_mode": "always" }
+  ]
+}
+JSON
+```
+
+`actor_id: 5` is the built-in admin role. For team-scoped bypass, use `"actor_type": "Team"` with the team's numeric id (find it via `gh api orgs/<org>/teams/<slug>`).
+
+Verify:
+
+```bash
+gh api /repos/<owner>/<repo>/rulesets --jq '.[] | {id, name, enforcement}'
+gh api /repos/<owner>/<repo>/rulesets/<id> --jq '.rules, .bypass_actors'
+```
+
+### Don't run both layers by accident
+
+If a repo has *both* a classic branch protection rule and a ruleset that target `main`, GitHub layers them — the most-restrictive combination wins. That's surprising if you forget about the older rule. When migrating from classic to rulesets, delete the classic rule (`gh api -X DELETE /repos/<owner>/<repo>/branches/main/protection`) once the ruleset is verified.
+
+---
+
 ## 3. Phased rollout (recommended)
 
 Don't flip required-check on the first day. Rollout pattern that preserves team trust:
@@ -88,6 +157,65 @@ These are *workflow-level* permissions, separate from CODEOWNERS.
 
 ---
 
+## 4.5. Human intervention: bypass mechanics
+
+A required check that *cannot* be bypassed is a footgun. CI infrastructure has outages; readiness adapters have bugs; a regression in `release-readiness-core` can WARN-storm a whole afternoon of legitimate PRs. You need a documented escape hatch — but a narrow one, with an audit trail.
+
+### Who should be a bypass actor
+
+Pick a small, named set:
+
+- **Repository admins** — sufficient for most teams. (`actor_type: RepositoryRole`, `actor_id: 5` in the ruleset payload.)
+- **A `release-managers` team** — better at organizations where "admin" is a much wider role than "person trusted to override the gate". Create the team in the org, add the trusted humans, reference it in `bypass_actors` with `actor_type: Team`.
+- **Specific named users** — fine for very small teams; doesn't scale and rotates poorly.
+
+Anti-pattern: granting bypass to *everyone with write access*. That turns "required check" into a suggestion.
+
+### How the bypass surfaces in the UI
+
+When the required check fails on a PR:
+
+- **Non-bypass actors** see a disabled merge button with "Required check has failed".
+- **Bypass actors** see an extra link: **"Merge without waiting for requirements to be met (bypass branch protections)"**. Clicking it merges and records the bypass.
+
+The button is identical for both classic protection (with `enforce_admins: false`) and rulesets (with the actor in `bypass_actors`).
+
+### Audit trail
+
+Every bypass is logged. Pull recent bypasses with:
+
+```bash
+gh api /repos/<owner>/<repo>/audit-log \
+  -F phrase='action:protected_branch.policy_override OR action:repo.override_required_status_check' \
+  --jq '.[] | {actor, action, created_at, ref}'
+```
+
+Or in the UI: **Settings → Audit log** (org-level audit log, filterable by repo). For rulesets specifically, `Insights → Rule insights` shows pass/fail/bypass counts per rule and is the better long-term signal.
+
+### When to bypass — and when not to
+
+**Bypass is appropriate when:**
+
+- The CI infrastructure is broken (Actions outage, registry unreachable, evaluator panic on a bug). The gate is wrong, not the code.
+- An incident hotfix needs to ship and the gate is failing on something the hotfix doesn't actually touch (e.g. a flaky e2e in an unrelated module).
+- A `release-readiness-core` upgrade introduced a behavior change that's affecting all PRs and the rollback or pin-fix is in flight.
+
+**Bypass is NOT appropriate when:**
+
+- The check failed because the change actually broke something. Fix the code.
+- You're impatient or under deadline pressure. Schedule pressure is the most common reason a gate gets eroded.
+- A reviewer asked for changes you don't want to make. Push back in the PR; don't merge around them.
+
+### Required follow-up after a bypass
+
+A bypass without follow-up is the gate quietly dying. After every bypass:
+
+1. File an issue (or a comment on the merged PR) capturing: the bypassed commit SHA, what the gate said, why bypass was the right call, and the corrective action taken or planned.
+2. If the bypass was due to a tooling failure: confirm the tool is fixed before the next bypass-able window opens.
+3. Track bypass frequency over time (Rule insights does this for you). Rising frequency means either the gate is too strict or the team is normalizing bypass — both call for action.
+
+---
+
 ## 5. Common pitfalls
 
 ### "Branch protection lists the check but PRs merge anyway"
@@ -110,6 +238,49 @@ Edit the protection rule to match the new name, or rename the workflow job back.
 ### "We made it required, then a 0.x.y release of `release-readiness-core` changed behavior"
 
 Pin a SHA in the composite-action `package-ref` input. SHAs are immutable; tags are not. See `RELEASE.md` for the full versioning and SHA-pin policy.
+
+---
+
+## 5.5. Verifying enforcement actually blocks
+
+Don't trust the configuration — prove it. Most "branch protection silently does nothing" cases (§5) survive both UI inspection and `gh api` readback because the misconfiguration is in a name, not a missing field. The only reliable check is a live failure drill.
+
+### The drill
+
+On a scratch branch, intentionally break a smoke or e2e validation that flows into `release-readiness`:
+
+```bash
+git checkout -b drill/readiness-gate
+# Edit a smoke test so it asserts an impossible condition (e.g. status 999).
+# Or: temporarily flip a `--baseline-percent` to 100 in the workflow so coverage fails.
+git commit -am "drill: deliberately fail readiness to test the gate"
+git push -u origin drill/readiness-gate
+gh pr create --fill --draft
+```
+
+Wait for the workflow to publish a failed `release-readiness` Check, then verify on the PR page:
+
+- ✅ Merge button is disabled with "Required check has failed".
+- ✅ The "Merge without waiting for requirements" link appears for bypass actors only — confirm by viewing as a non-admin user (or asking a teammate without bypass).
+- ✅ `gh pr view <pr> --json mergeable,mergeStateStatus` reports `mergeStateStatus: BLOCKED` (or `BEHIND` if `strict: true` and the branch isn't current).
+
+If the merge button is still enabled, the gate is misconfigured. Most often it's a name mismatch (§5) — re-read the actual Check name on the PR and copy it byte-for-byte into the rule.
+
+### Test the bypass path too
+
+In the same drill PR, exercise the bypass path:
+
+1. As a bypass actor, click "Merge without waiting for requirements".
+2. Confirm the audit log records it: `gh api /repos/<owner>/<repo>/audit-log -F phrase='action:protected_branch.policy_override' --jq '.[0]'`.
+3. Immediately revert the merge so the drill doesn't pollute `main`.
+
+### When to repeat the drill
+
+- After any change to the workflow's Check Run name or job structure.
+- After bumping `release-readiness-core` past a minor version.
+- Once a release cycle as a smoke test that nobody silently weakened the rule.
+
+This drill is the single highest-value check in this doc. Configurations rot quietly; a failed drill turns rot into a loud signal.
 
 ---
 

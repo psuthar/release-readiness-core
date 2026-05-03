@@ -15,6 +15,8 @@ Two valid GitHub approaches:
 
 Use consumer-owned mode when you cannot or do not want to depend on cross-repo reusable workflow access. For private repos, this avoids failures caused by reusable-workflow access policy mismatches.
 
+**pip vs `uvx` in workflows:** examples below use **`uvx --from release-readiness-core==…`** so one step can run `playwright-to-readiness`, `release-readiness-evaluate`, and similar CLIs on GitHub-hosted runners without installing into the **system** Python (PEP 668). Locally, **`pip install`** into a venv is the usual approach. Same policy as the rest of the how-to docs — full rationale: [`9-adoption-tiers.md` § Tier 3 — Python install paths (pragmatic)](9-adoption-tiers.md#python-install-paths-pragmatic).
+
 **Reusable workflow + PyPI wheel:** the `uses: …/readiness.yml@<sha>` line pins the **workflow YAML** to a commit on this repo. You can still install the **Python package** from PyPI (no `git+https` pip install) by passing `install-source: pypi` and `pypi-version: X.Y.Z` — see `docs/how-to/9-adoption-tiers.md`.
 
 ---

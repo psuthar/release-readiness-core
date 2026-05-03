@@ -10,7 +10,7 @@
 
 The tiers are **opt-in deeper**, not opt-out shallower — Tier 1 is built on the same composite actions a Tier-2 adopter calls directly, which call the same CLIs a Tier-3 adopter shells out to. Picking a tier is a decision about how much YAML you want to own.
 
-> **Third-party default:** if you're adopting from outside this repo and want zero dependency on cross-repo reusable-workflow access, start at **Tier 3** and run CLIs directly (prefer `uvx --from release-readiness-core ...` in GitHub Actions).
+> **Third-party default:** if you're adopting from outside this repo and want zero dependency on cross-repo reusable-workflow access, start at **Tier 3** and run CLIs directly. On GitHub Actions stock images, prefer **`uvx --from release-readiness-core ...`** (see [Python install paths](#python-install-paths-pragmatic) below); locally, **`pip install`** into a venv is fine.
 
 ---
 
@@ -111,7 +111,17 @@ jobs:
 
 ## Tier 3 — raw CLIs
 
-Nothing GitHub-specific. The four CLIs read JSON, write JSON, and exit non-zero on failure. Wire them into any CI runner that can install Python and execute a shell.
+### Python install paths (pragmatic)
+
+Docs and examples use a **deliberate mix** of installers:
+
+- **`pip install "release-readiness-core==X.Y.Z"`** — the default story for **local machines** and anywhere you control a **venv** (or a non–externally-managed interpreter). This matches PyPI-first adoption in the [quickstart](0-quickstart.md) and [README](../../README.md).
+- **`uvx --from "release-readiness-core==X.Y.Z" <cli> ...`** — preferred in **GitHub Actions** snippets when you need a one-liner that runs a CLI **without** writing into the runner’s **system** Python. Stock `ubuntu-latest` images are often **PEP 668** “externally managed”; naive `pip install` to system Python fails there, while `uvx` avoids that class of breakage.
+- **`uv pip install --system`** (in some Tier 3 shell examples and in this repo’s own composites) — same pragmatic goal as pip into a dedicated environment, using **uv**’s pip interface where CI already standardizes on uv.
+
+**Pin one version** everywhere you care about (`pip`, `uvx --from`, and `pypi-version` / workflow `@sha`) so local runs, adapters, and CI do not drift.
+
+Nothing GitHub-specific in the *contract* of Tier 3: the four CLIs read JSON, write JSON, and exit non-zero on failure. Wire them into any CI runner that can install Python and execute a shell.
 
 ```bash
 # Install the package once (PyPI — pin the version).

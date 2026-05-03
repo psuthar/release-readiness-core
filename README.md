@@ -24,6 +24,8 @@ release-readiness-init my-project
 
 Pin the version you want (see [PyPI](https://pypi.org/project/release-readiness-core/)). To install a specific commit instead, use a [git SHA install](#install-from-git-sha-pinned) below.
 
+**Toolchain:** docs standardize on **`pip install`** for local / PyPI adoption; some **GitHub Actions** examples use **`uvx --from …`** so CLIs work on PEP 668–managed runners without a venv dance. Why both appear: [`docs/how-to/9-adoption-tiers.md`](docs/how-to/9-adoption-tiers.md#python-install-paths-pragmatic).
+
 Or run the engine directly against an inline JSON list:
 
 ```bash

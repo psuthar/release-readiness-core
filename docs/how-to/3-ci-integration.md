@@ -69,7 +69,7 @@ jobs:
         with:
           package-ref: <sha>          # same SHA — pins @ref and (by default) the git-based pip install
           # install-source: pypi     # optional — pip from PyPI instead of git
-          # pypi-version: "0.3.4"    # required with install-source: pypi
+          # pypi-version: "0.4.0"    # required with install-source: pypi
           config-path: ops/release-readiness/config.yaml
           smoke-results: evidence/smoke.json
           e2e-results: evidence/e2e.json
@@ -320,7 +320,7 @@ The formatter is a `Callable[[GateSummary], Dict[str, Any]]`. Anything JSON-seri
 release-readiness:
   image: python:3.11
   script:
-    - pip install "release-readiness-core==0.3.4"
+    - pip install "release-readiness-core==0.4.0"
     # Or: pip install "git+https://github.com/psuthar/release-readiness-core.git@<sha>"
     - ./ci/collect-evidence.sh    # writes evidence/*.json
     - release-readiness-evaluate

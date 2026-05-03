@@ -11,7 +11,7 @@ The fastest path from "I want to try this" to a green `release-readiness` Check 
 Install the package as a third-party dependency, then scaffold:
 
 ```bash
-pip install "release-readiness-core==0.3.4"
+pip install "release-readiness-core==0.4.0"
 release-readiness-init my-project --demo --stack pytest
 cd my-project && git init && git add . && git commit -m "release-readiness scaffold"
 
@@ -42,14 +42,16 @@ my-project/
 
 The scaffold defaults to Tier-1 reusable workflow integration (`uses: psuthar/release-readiness-core/.../readiness.yml@<sha>`). This is the shortest setup when your repo has access to reusable workflows from `release-readiness-core`.
 
+> **One stack per `init`.** `--stack <X>` writes one stack's evidence-collection block. If your project needs multiple stacks (e.g. Go smoke+e2e *and* Go coverage as the [sample app](https://github.com/psuthar/release-readiness-sample-app) does), concatenate the per-stack snippets from [`8-recipe-matrix.md`](8-recipe-matrix.md) into the `collect-evidence` job by hand — there is no combined flag.
+
 ### Third-party-safe path (no source-workflow coupling)
 
 If you are adopting as an external consumer and do **not** want to rely on cross-repo reusable workflow access, keep the scaffolded config/evidence files but run the CLIs directly in your own workflow (Tier 3):
 
 ```yaml
 - uses: astral-sh/setup-uv@v6
-- run: uvx --from release-readiness-core==0.3.4 release-readiness-doctor --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json
-- run: uvx --from release-readiness-core==0.3.4 release-readiness-evaluate --repo-root . --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json --enforcement-mode block_only
+- run: uvx --from release-readiness-core==0.4.0 release-readiness-doctor --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json
+- run: uvx --from release-readiness-core==0.4.0 release-readiness-evaluate --repo-root . --config ops/release-readiness/config.yaml --smoke-results evidence/smoke.json --e2e-results evidence/e2e.json --coverage evidence/coverage.json --enforcement-mode block_only
 ```
 
 Use this mode when:
@@ -115,12 +117,34 @@ release-readiness-evaluate \
 
 ---
 
-## Next steps
+## From scaffold to required gate — staged adoption
 
-- **Replace synthetic evidence with real CI:** wire your test runner's output through the matching adapter — see [`docs/how-to/8-recipe-matrix.md`](8-recipe-matrix.md) for the per-stack snippet and [`docs/how-to/1-map-evidence.md`](1-map-evidence.md) for the mechanics of validation keys and evidence channels.
-- **Tune the gate:** [`docs/how-to/2-tune-scoring.md`](2-tune-scoring.md) walks through penalties, thresholds, and the warnings-suppress-PASS rule.
-- **Wire CI integrations:** if you outgrow Tier 1, [`docs/how-to/3-ci-integration.md`](3-ci-integration.md) covers GitHub Checks + the generic adapter pattern for non-GitHub CIs.
-- **Make the check required:** once the gate has stabilized, [`docs/how-to/5-branch-protection.md`](5-branch-protection.md) shows the phased rollout to a required check.
+The four-command TL;DR puts a green Check on your first PR. That Check is real but synthetic — nothing about your actual code is being measured yet. The seven stages below take you from there to a gate that's required on `main`. Each stage is one observable PR; pause between stages to confirm the gate behaves as expected.
+
+1. **Scaffold + first green PR.** Run the four commands above. Open a PR. Verify the `release-readiness` Check publishes PASS and the sticky comment renders. *This proves the CI plumbing — install, evaluate, publish — before you've touched any product code, so you can isolate plumbing bugs from evidence-shape bugs.*
+
+2. **Wire real evidence collection.** Replace the synthetic `evidence/*.json` writes with output from your test runner using the per-stack snippet in [`8-recipe-matrix.md`](8-recipe-matrix.md). Keep `continue-on-error: true` on the test steps — load-bearing so BLOCK still publishes a Check when tests fail. Re-run `release-readiness-doctor` locally to validate evidence shape before pushing.
+
+3. **Add coverage and decide on `prod_health`.** Add the `lcov-to-readiness` step from [`8-recipe-matrix.md`](8-recipe-matrix.md). Then make an explicit choice on production health: **either** ship a probe (Go example: [`release-readiness-sample-app/cmd/prod-health-probe`](https://github.com/psuthar/release-readiness-sample-app/tree/main/cmd/prod-health-probe); TS example: [`release-readiness-node-js-sample-app/scripts/prod-health-probe.ts`](https://github.com/psuthar/release-readiness-node-js-sample-app/blob/main/scripts/prod-health-probe.ts)) **or** list `prod_health` under `optional_artifacts:` in `config.yaml`. *The implicit "I haven't gotten to it yet" path silently demotes PASS to WARN-at-100 — pick one explicitly.*
+
+4. **Configure risk-based validation gating.** In `config.yaml`, fill in `risk_from_paths` (file globs → validation categories) and `risk_category_to_required_validation` (categories → validation keys). Without these, every PR demands the same flat checklist; with them, the gate scales with what the PR actually touches. Walkthrough: [`1-map-evidence.md`](1-map-evidence.md). Tune scoring penalties at the same time: [`2-tune-scoring.md`](2-tune-scoring.md).
+
+5. **(Tier 3 only) Add the PR-integration plumbing.** Tier-1 reusable-workflow adopters can skip this stage. Tier-3 adopters need to wire the `BASE_REF` switch (PR vs push), the Check-publish step, the sticky-comment step, and the `Enforce BLOCK outcome` step into their own workflow. The complete worked example with explanations of why each block matters: [`9-adoption-tiers.md` §"Tier 3 in GitHub Actions: complete worked example"](9-adoption-tiers.md#tier-3-in-github-actions-complete-worked-example).
+
+6. **Make the Check required on `main`.** Once you've watched the gate behave correctly across a few real PRs, land the ruleset that requires it. Start at `enforcement-mode: block_only` (Phase 2) and graduate to `warn_and_block` (Phase 3) once warnings are trustworthy. Apply/bypass/drill mechanics: [`5-branch-protection.md`](5-branch-protection.md). The two sister samples demonstrate both phases — see the callout in [`8-recipe-matrix.md`](8-recipe-matrix.md).
+
+7. **(Optional) Add a CODEOWNERS review gate.** If you also want a human-review requirement alongside the readiness gate, add `.github/CODEOWNERS`. The release-readiness gate is automated; CODEOWNERS is the human counterpart. Both compose cleanly — a PR can't merge until both are satisfied. Working example: [`release-readiness-sample-app/.github/CODEOWNERS`](https://github.com/psuthar/release-readiness-sample-app/blob/main/.github/CODEOWNERS).
+
+---
+
+## Other guides
+
+- [`1-map-evidence.md`](1-map-evidence.md) — validation keys + evidence channels (deep dive on stage 4).
+- [`2-tune-scoring.md`](2-tune-scoring.md) — penalties, thresholds, warnings-suppress-PASS rule.
+- [`3-ci-integration.md`](3-ci-integration.md) — GitHub Checks + generic adapter pattern for non-GitHub CIs.
+- [`4-multi-job-ci.md`](4-multi-job-ci.md) — split smoke / e2e / coverage across parallel jobs.
+- [`6-migrate-from-existing-gate.md`](6-migrate-from-existing-gate.md) — running both gates in parallel during cut-over.
+- [`7-configure-pr-risk.md`](7-configure-pr-risk.md) — author a project-specific `pr-risk-config.yaml`.
 
 ---
 

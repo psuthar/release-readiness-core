@@ -18,7 +18,7 @@ Project-agnostic deterministic release-readiness engine and adapters.
 The fastest path (PyPI — no git access to this repo required):
 
 ```bash
-pip install "release-readiness-core==0.3.4"
+pip install "release-readiness-core==0.4.0"
 release-readiness-init my-project
 ```
 
@@ -64,7 +64,7 @@ The N-input PR gate combiner lives in `release_readiness_core.pr_gate` (`combine
 ### Install from PyPI (version-pinned)
 
 ```bash
-pip install "release-readiness-core==0.3.4"
+pip install "release-readiness-core==0.4.0"
 ```
 
 ### Install from Git (SHA-pinned)

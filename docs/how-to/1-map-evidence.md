@@ -105,7 +105,7 @@ evidence_boolean_keys:
   - search_filtering
 ```
 
-> **Important:** if you omit `evidence_boolean_keys` entirely the engine falls back to a TalkBack-flavored default tuple. Always set this explicitly for non-TalkBack projects.
+> **Important:** if you omit `evidence_boolean_keys` entirely the engine uses an empty list — no validation keys will be inferred from booleans. Always set this explicitly for your project.
 
 **Explicit `false` always wins.** Inference cannot upgrade a `validations: { auth_login: false }` to `true`.
 

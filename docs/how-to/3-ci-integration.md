@@ -351,7 +351,7 @@ Two things to note for non-GitHub CIs:
 
 ## 5a. Adopting without PR-risk
 
-`compute_readiness` honors a `pr_risk.json` artifact when one is present at `<output-dir>/pr_risk.json`. This is the integration point TalkBack uses to combine its Go-binary risk scoring with the readiness gate.
+`compute_readiness` honors a `pr_risk.json` artifact when one is present at `<output-dir>/pr_risk.json`. This is the integration point for combining an external risk-scoring source (e.g. a separate Go-binary risk scorer) with the readiness gate.
 
 If your project has no PR-risk source:
 

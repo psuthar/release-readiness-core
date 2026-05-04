@@ -1,6 +1,15 @@
 ## release-readiness-core
 
-Project-agnostic deterministic release-readiness engine and adapters.
+A deterministic release-readiness engine: same evidence in, same PASS / WARN / BLOCK out. Project-agnostic, configured in YAML, with adapters for Playwright, JUnit, and LCOV — and a four-command quickstart that lands a green Check on your first PR.
+
+### Sample apps
+
+End-to-end working examples — the fastest way to see the gate in motion on real PRs:
+
+- [`release-readiness-sample-app`](https://github.com/psuthar/release-readiness-sample-app) (Go) — Phase-2 rollout: `--enforcement-mode block_only` paired with `WARN → neutral` Check mapping. WARN visible on PRs but doesn't block merge.
+- [`release-readiness-node-js-sample-app`](https://github.com/psuthar/release-readiness-node-js-sample-app) (TypeScript) — Phase-3 rollout: `--enforcement-mode warn_and_block` paired with `WARN → failure` Check mapping. WARN PRs are blocked from merging.
+
+Reading the two side by side shows the full phased adoption path.
 
 ### Package layout
 
@@ -15,32 +24,35 @@ Project-agnostic deterministic release-readiness engine and adapters.
 
 ### Quickstart
 
-The fastest path (PyPI — no git access to this repo required):
+The shortest path to a green `release-readiness` Check on your first PR is **four commands**:
 
 ```bash
 pip install "release-readiness-core==0.4.0"
-release-readiness-init my-project
+release-readiness-init my-project --demo --stack <go|pytest|jest|playwright|cypress|vitest|go-coverage>
+cd my-project && git init && git add . && git commit -m "release-readiness scaffold"
+# push, open a PR — the release-readiness Check appears
 ```
 
-Pin the version you want (see [PyPI](https://pypi.org/project/release-readiness-core/)). To install a specific commit instead, use a [git SHA install](#install-from-git-sha-pinned) below.
+`--demo` ships synthetic green evidence so the first PR proves your CI plumbing before you've changed any product code. Full walkthrough including the seven-stage path from synthetic green to a required gate on `main`: [`docs/how-to/0-quickstart.md`](docs/how-to/0-quickstart.md).
 
 **Toolchain:** docs standardize on **`pip install`** for local / PyPI adoption; some **GitHub Actions** examples use **`uvx --from …`** so CLIs work on PEP 668–managed runners without a venv dance. Why both appear: [`docs/how-to/9-adoption-tiers.md`](docs/how-to/9-adoption-tiers.md#python-install-paths-pragmatic).
 
-Or run the engine directly against an inline JSON list:
+### Direct CLI usage
+
+If you'd rather skip the scaffold and call the engine directly:
 
 ```bash
-uv sync
 uv run release-readiness --input-json '[{"key":"go-test","status":"PASS"}]'
 ```
 
-Evaluate from a YAML config and optional JSON artifacts (writes `report.json`, `report.md`, and `artifacts/release-readiness.json` under the repo root):
+Evaluate from a YAML config and JSON evidence (writes `report.json`, `report.md`, `release-readiness.json`):
 
 ```bash
 uv run release-readiness-evaluate --repo-root . --config path/to/config.yaml \
   --empty-diff --output-dir artifacts/release-readiness
 ```
 
-Adapter CLIs:
+### Adapter CLIs
 
 ```bash
 # Playwright JSON reporter -> readiness e2e shape
@@ -83,6 +95,8 @@ Use this when you need an unreleased commit or a fork. Release policy and versio
 uv run pytest
 uv build
 ```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch/PR conventions and how to add an adapter.
 
 ### Configuring PR Risk for your project
 
@@ -133,60 +147,13 @@ Doctor catches config typos, evidence-shape mismatches, and common inconsistenci
 - `release-readiness-evaluate` — the **full evaluator**. Loads `config.yaml`, reads evidence files, computes PASS/WARN/BLOCK, writes `report.json` / `report.md` / `release-readiness.json`. **Use this in CI.**
 - `release-readiness` — a **lightweight summary** of validation booleans given inline JSON. No scoring, no thresholds, no artifacts on disk. Useful for quick sanity checks (`release-readiness --input-json '[{"key":"x","status":"PASS"}]'`) or as a debugging probe in scripts. **Not a substitute for the evaluator in production CI.**
 
-### Contracts and Spike Notes
+### Contracts
 
-- Package boundary API contract spike notes: `docs/spikes/package-boundary-api-contract.md`
-- Validation-key handling prep (validation keys → config): `docs/prep/validation-key-handling.md`
 - PR risk input schema: `docs/contracts/pr-risk-input-v1.schema.json`
 - Readiness output schema: `docs/contracts/release-readiness-output-v1.schema.json`
-- Validation config draft schema: `docs/contracts/validation-config-v1.schema.json`
+- Validation config schema: `docs/contracts/validation-config-v1.schema.json`
 - Contract reference guide: `docs/contracts/README.md`
 
-### MCP Setup (Cursor + Claude)
+### Contributing
 
-This repo mirrors the same MCP server set used in TalkBack:
-- `talkback`
-- `github`
-- `atlassian`
-
-Create `.env.mcp` in the repo root (or export these vars in your shell):
-
-```bash
-TALKBACK_MCP_AUTH_HEADER="Bearer <talkback-api-key>"
-TALKBACK_MCP_ACTING_USER_ID="<talkback-user-uuid>"
-GITHUB_PERSONAL_ACCESS_TOKEN="<github-pat>"
-ATLASSIAN_DOMAIN="<your-domain>.atlassian.net"
-ATLASSIAN_EMAIL="<your-email>"
-ATLASSIAN_API_TOKEN="<atlassian-api-token>"
-```
-
-Then generate local MCP config for both tools:
-
-```bash
-./scripts/setup-mcp-config.sh
-```
-
-This writes:
-- `.cursor/mcp.json` (Cursor)
-- `.mcp.json` (Claude Code project scope)
-
-Both files are gitignored.
-
-### Agent Command Workflows
-
-This repository supports the same Jira automation command patterns as TalkBack.
-
-- `implement <TICKET-KEY>` Standard ticket workflow: code + tests + PR + Jira transition to In Review.
-- `implement <TICKET-KEY> FULL_AUTO` Includes standard workflow plus post-PR gate polling, merge, and Jira Done transition.
-- `run epic <TICKET-KEY>` / `continue epic <TICKET-KEY>` Epic automation mode that runs each child ticket as FULL_AUTO and drains remaining work.
-
-Policy ownership:
-- Entry point: `CLAUDE.md`
-- Jira workflow: `docs/agent/workflow-jira.md`
-- FULL_AUTO merge rules: `docs/agent/workflow-full-auto.md`
-- Epic run rules: `docs/agent/workflow-epic-run.md`
-- Testing policy: `docs/agent/testing-validation.md`
-- Rule map: `docs/agent/rule-ownership.md`
-
-Epic mode uses the same merge gate as FULL_AUTO in this repo: PR Gate `success` plus `mergeable_state: clean`.
-
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development setup, PR conventions, and how to add an adapter for a new test runner. Maintainer-specific tooling (MCP servers, Jira automation) lives there too.

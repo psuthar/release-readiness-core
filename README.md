@@ -2,6 +2,10 @@
 
 A deterministic release-readiness engine: same evidence in, same PASS / WARN / BLOCK out. Project-agnostic, configured in YAML, with adapters for Playwright, JUnit, and LCOV — and a four-command quickstart that lands a green Check on your first PR.
 
+[![release-readiness-core logical flow — how evidence becomes PASS, WARN, or BLOCK](docs/images/logical-flow.svg)](docs/images/logical-flow.svg)
+
+The gate is deterministic: configured rules applied to concrete evidence and changed-file risk, no LLM in the loop. Click the diagram to view it full-size.
+
 ### Sample apps
 
 End-to-end working examples — the fastest way to see the gate in motion on real PRs:

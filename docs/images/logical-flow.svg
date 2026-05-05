@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="2020" viewBox="0 0 1900 2020">
+  <defs>
+    <style>
+      .bg { fill: #fbfbfc; }
+      .title { font-family: Inter, Arial, sans-serif; font-size: 44px; font-weight: 800; fill: #111827; }
+      .subtitle { font-family: Inter, Arial, sans-serif; font-size: 22px; fill: #4b5563; }
+      .start { fill: #eff6ff; stroke: #3b82f6; stroke-width: 2.5; rx: 18; }
+      .process { fill: #f9fafb; stroke: #9ca3af; stroke-width: 2.5; rx: 16; }
+      .decision { fill: #fffbeb; stroke: #f59e0b; stroke-width: 2.8; }
+      .pass { fill: #ecfdf5; stroke: #10b981; stroke-width: 2.8; rx: 18; }
+      .warn { fill: #fff7ed; stroke: #f97316; stroke-width: 2.8; rx: 18; }
+      .block { fill: #fef2f2; stroke: #ef4444; stroke-width: 2.8; rx: 18; }
+      .panel { fill: #ffffff; stroke: #d1d5db; stroke-width: 1.8; rx: 16; }
+      .heading { font-family: Inter, Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #111827; text-anchor: middle; }
+      .text { font-family: Inter, Arial, sans-serif; font-size: 22px; font-weight: 600; fill: #111827; text-anchor: middle; }
+      .small { font-family: Inter, Arial, sans-serif; font-size: 16px; fill: #4b5563; text-anchor: middle; }
+      .legend-text { font-family: Inter, Arial, sans-serif; font-size: 16px; fill: #374151; }
+      .label { font-family: Inter, Arial, sans-serif; font-size: 18px; font-weight: 700; fill: #1f2937; }
+      .caption { font-family: Inter, Arial, sans-serif; font-size: 16px; fill: #6b7280; }
+      .arrow { stroke: #4b5563; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M1,1 L11,6.5 L1,12 Z" fill="#4b5563"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1900" height="2020"/>
+  <text class="title" x="60" y="68">release-readiness-core logical flow</text>
+  <text class="subtitle" x="60" y="105">Decision-oriented view: how evidence becomes PASS, WARN, or BLOCK</text>
+
+  <!-- Legend (top-left) -->
+  <rect class="panel" x="60" y="160" width="400" height="290"/>
+  <text class="heading" x="260" y="200">Legend</text>
+  <rect class="process" x="80" y="220" width="100" height="36"/>
+  <text class="legend-text" x="200" y="244">Process step</text>
+  <polygon class="decision" points="130,288 180,310 130,332 80,310"/>
+  <text class="legend-text" x="200" y="316">Decision</text>
+  <rect class="start" x="80" y="354" width="100" height="34"/>
+  <text class="legend-text" x="200" y="377">Start node</text>
+  <rect class="pass"  x="80"  y="402" width="40" height="28"/>
+  <rect class="warn"  x="128" y="402" width="40" height="28"/>
+  <rect class="block" x="176" y="402" width="40" height="28"/>
+  <text class="legend-text" x="232" y="421">PASS / WARN / BLOCK outcomes</text>
+
+  <!-- Artifacts (top-right) -->
+  <rect class="panel" x="1440" y="160" width="400" height="290"/>
+  <text class="heading" x="1640" y="200">Artifacts emitted</text>
+  <text class="legend-text" x="1465" y="244">• report.md — human-readable summary</text>
+  <text class="legend-text" x="1465" y="278">• report.json — full machine-readable detail</text>
+  <text class="legend-text" x="1465" y="312">• release-readiness.json — lean gate verdict</text>
+  <text class="legend-text" x="1465" y="346">• optional GitHub Check / PR comment</text>
+
+  <!-- PR Start -->
+  <rect class="start" x="720" y="170" width="460" height="90"/>
+  <text class="text" x="950" y="208">Pull request / merge candidate</text>
+  <text class="small" x="950" y="238">CI starts the release-readiness workflow</text>
+
+  <path class="arrow" d="M950 260 L950 290"/>
+
+  <!-- Collect evidence -->
+  <rect class="process" x="720" y="290" width="460" height="110"/>
+  <text class="text" x="950" y="332">Collect available evidence</text>
+  <text class="small" x="950" y="362">Smoke tests · E2E · coverage · prod health</text>
+  <text class="small" x="950" y="384">git diff · optional PR risk signals</text>
+
+  <path class="arrow" d="M950 400 L950 440"/>
+
+  <!-- Decision: Required evidence valid? -->
+  <polygon class="decision" points="950,440 1180,525 950,610 720,525"/>
+  <text class="text" x="950" y="510">Required evidence</text>
+  <text class="text" x="950" y="540">present and valid?</text>
+
+  <!-- No -> Add warning/penalty -->
+  <path class="arrow" d="M1180 525 L1290 525"/>
+  <text class="label" x="1215" y="513">No</text>
+  <rect class="warn" x="1290" y="475" width="420" height="100"/>
+  <text class="text" x="1500" y="513">Add warning / penalty</text>
+  <text class="small" x="1500" y="540">Missing coverage, skipped E2E,</text>
+  <text class="small" x="1500" y="562">missing health snapshot, malformed input</text>
+
+  <!-- Loop back to merge into main flow above normalize -->
+  <path class="arrow" d="M1500 575 L1500 632 L965 632"/>
+
+  <!-- Yes -> down -->
+  <path class="arrow" d="M950 610 L950 650"/>
+  <text class="label" x="965" y="638">Yes</text>
+
+  <!-- Normalize evidence -->
+  <rect class="process" x="720" y="650" width="460" height="110"/>
+  <text class="text" x="950" y="692">Normalize evidence</text>
+  <text class="small" x="950" y="722">Adapters convert runner output</text>
+  <text class="small" x="950" y="744">into readiness JSON</text>
+
+  <path class="arrow" d="M950 760 L950 800"/>
+
+  <!-- Apply project policy -->
+  <rect class="process" x="720" y="800" width="460" height="110"/>
+  <text class="text" x="950" y="842">Apply project policy</text>
+  <text class="small" x="950" y="872">config.yaml thresholds, validation keys,</text>
+  <text class="small" x="950" y="894">risk patterns, and remediation text</text>
+
+  <path class="arrow" d="M950 910 L950 950"/>
+
+  <!-- Decision: Explicit blockers? -->
+  <polygon class="decision" points="950,950 1180,1035 950,1120 720,1035"/>
+  <text class="text" x="950" y="1020">Any explicit</text>
+  <text class="text" x="950" y="1050">blockers found?</text>
+
+  <!-- Yes -> BLOCK -->
+  <path class="arrow" d="M1180 1035 L1290 1035"/>
+  <text class="label" x="1215" y="1023">Yes</text>
+  <rect class="block" x="1290" y="985" width="420" height="100"/>
+  <text class="text" x="1500" y="1023">Outcome: BLOCK</text>
+  <text class="small" x="1500" y="1053">CI/check fails. Merge stops.</text>
+
+  <!-- No -> down -->
+  <path class="arrow" d="M950 1120 L950 1160"/>
+  <text class="label" x="965" y="1148">No</text>
+
+  <!-- Compute readiness score -->
+  <rect class="process" x="720" y="1160" width="460" height="100"/>
+  <text class="text" x="950" y="1200">Compute readiness score</text>
+  <text class="small" x="950" y="1230">Start from configured base, subtract penalties</text>
+
+  <path class="arrow" d="M950 1260 L950 1300"/>
+
+  <!-- Decision: Score below BLOCK threshold? -->
+  <polygon class="decision" points="950,1300 1180,1385 950,1470 720,1385"/>
+  <text class="text" x="950" y="1370">Score below</text>
+  <text class="text" x="950" y="1400">BLOCK threshold?</text>
+
+  <!-- Yes -> BLOCK -->
+  <path class="arrow" d="M1180 1385 L1290 1385"/>
+  <text class="label" x="1215" y="1373">Yes</text>
+  <rect class="block" x="1290" y="1335" width="420" height="100"/>
+  <text class="text" x="1500" y="1373">Outcome: BLOCK</text>
+  <text class="small" x="1500" y="1403">Score too low to merge safely</text>
+
+  <!-- No -> down -->
+  <path class="arrow" d="M950 1470 L950 1510"/>
+  <text class="label" x="965" y="1498">No</text>
+
+  <!-- Decision: Any warnings remaining? -->
+  <polygon class="decision" points="950,1510 1180,1595 950,1680 720,1595"/>
+  <text class="text" x="950" y="1580">Any warnings</text>
+  <text class="text" x="950" y="1610">remaining?</text>
+
+  <!-- No -> PASS -->
+  <path class="arrow" d="M720 1595 L610 1595"/>
+  <text class="label" x="640" y="1583">No</text>
+  <rect class="pass" x="190" y="1545" width="420" height="100"/>
+  <text class="text" x="400" y="1583">Outcome: PASS</text>
+  <text class="small" x="400" y="1613">CI/check succeeds. Merge can proceed.</text>
+
+  <!-- Yes -> down -->
+  <path class="arrow" d="M950 1680 L950 1720"/>
+  <text class="label" x="965" y="1708">Yes</text>
+
+  <!-- Decision: Enforcement mode blocks WARN? -->
+  <polygon class="decision" points="950,1720 1180,1805 950,1890 720,1805"/>
+  <text class="text" x="950" y="1790">Enforcement mode</text>
+  <text class="text" x="950" y="1820">blocks WARN?</text>
+
+  <!-- Yes -> CI failure (BLOCK) -->
+  <path class="arrow" d="M1180 1805 L1290 1805"/>
+  <text class="label" x="1215" y="1793">Yes</text>
+  <rect class="block" x="1290" y="1755" width="420" height="100"/>
+  <text class="text" x="1500" y="1793">CI failure (BLOCK)</text>
+  <text class="small" x="1500" y="1823">WARN must be resolved or waived</text>
+
+  <!-- No -> WARN outcome -->
+  <path class="arrow" d="M720 1805 L610 1805"/>
+  <text class="label" x="640" y="1793">No</text>
+  <rect class="warn" x="190" y="1755" width="420" height="100"/>
+  <text class="text" x="400" y="1793">Outcome: WARN</text>
+  <text class="small" x="400" y="1823">CI neutral; merge with attention</text>
+
+  <!-- Caption -->
+  <text class="caption" x="60" y="1970">Core message: the gate is deterministic. It applies configured rules to concrete evidence and changed-file risk — no LLM is asked whether the PR is safe.</text>
+</svg>
